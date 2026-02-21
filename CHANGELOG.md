@@ -8,11 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-02-19
 
 ### Added
-- **155+ Unity Editor tools** across 13 categories exposed via Model Context Protocol (MCP)
-  - **Core (38)**: GameObject CRUD, component management, scene operations, script tools, memory cache, editor state, screenshots
-  - **Asset (12)**: search, info, previews, import settings, prefab operations, folder/file CRUD (`create_folder`, `delete_asset`, `move_asset`, `copy_asset`)
-  - **Animator (16)**: controller info, parameters, states, transitions, blend trees, clips, flow diagram, validation
-  - **Terrain (16)**: sculpt, texture paint, trees, details, heightmap import/export, neighbors
+- **164 Unity Editor tools** across 13 categories exposed via Model Context Protocol (MCP)
+  - **Core (47)**: GameObject CRUD, component management, scene operations, editor selection, editor workflow, script tools, memory cache, editor state, screenshots
+  - **Asset (16)**: search, info, previews, import settings, prefab operations, folder/file CRUD (`create_folder`, `delete_asset`, `move_asset`, `copy_asset`)
+  - **Animator (23)**: controller CRUD, parameters, layers, states, transitions, blend trees, clips, flow diagram, validation
+  - **Terrain (17)**: sculpt, texture paint, path paint, trees, details, heightmap import/export, neighbors
   - **Rendering (13)**: camera config, render-to-file, lighting bake (sync/async), occlusion, reflection probes, lightmap settings
   - **Settings (11)**: project settings, quality levels, physics layer collision, tags and layers
   - **Build (6)**: build settings, scene management, platform switch, package manager (add/remove/list)
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Input (3)**: Input System actions and bindings
   - **Advanced (5)**: SerializedField references (single + array), ScriptableObject CRUD
 - **New in V1**: `unity_get_gameobject`, `unity_set_transform`, `unity_get_gameobject_components`, `unity_list_scenes_in_project`, `unity_focus_gameobject`, `unity_get_project_overview`, `unity_find_missing_references`, `unity_set_component_enabled`
-- **Dynamic category loading** — only 38 core tools active by default; others loaded on demand via `unity_enable_tool_category` (saves ~70% token usage)
+- **Dynamic category loading** — only 47 core tools active by default; others loaded on demand via `unity_enable_tool_category` (saves ~70% token usage)
 - **Multi-provider AI Chat panel** integrated in Unity Editor
   - 9 providers: Anthropic Claude, OpenAI, Google Gemini, DeepSeek, Groq, Mistral AI, Ollama, LM Studio, Custom
   - Real-time SSE streaming with token-by-token display and Markdown rendering
