@@ -102,7 +102,9 @@ namespace McpUnity.Server
 
                 // Check if NavMeshBuilder is available (Editor only)
 #if UNITY_EDITOR
-                // Use the legacy NavMeshBuilder API which is still functional
+                // NavMeshBuilder.BuildNavMesh() is deprecated but has no replacement API in Unity 6.
+                // The NavMeshSurface component (AI Navigation package) is the modern approach,
+                // but it requires scene setup — this legacy API works universally without config.
 #pragma warning disable CS0618
                 UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
 #pragma warning restore CS0618
@@ -137,7 +139,7 @@ namespace McpUnity.Server
             try
             {
 #if UNITY_EDITOR
-                // Clear all NavMesh data
+                // ClearAllNavMeshes() is deprecated but no replacement exists in Unity 6.
 #pragma warning disable 0618
                 UnityEditor.AI.NavMeshBuilder.ClearAllNavMeshes();
 #pragma warning restore 0618
@@ -237,6 +239,8 @@ namespace McpUnity.Server
                     Undo.RecordObject(obj, "Set Navigation Static");
 
                     var flags = GameObjectUtility.GetStaticEditorFlags(obj);
+                    // NavigationStatic is deprecated in Unity 6 but remains the only way to mark
+                    // objects for legacy NavMesh baking without the AI Navigation package.
 #pragma warning disable 0618
                     if (isStatic)
                         flags |= StaticEditorFlags.NavigationStatic;

@@ -151,6 +151,8 @@ namespace McpUnity.Server
             if (detailed)
             {
                 settings["logWhenShaderIsCompiled"] = GraphicsSettings.logWhenShaderIsCompiled;
+                // defaultRenderingLayerMask is deprecated in Unity 6 but the replacement
+                // (RenderingLayerMask) is SRP-specific and not universally available.
 #pragma warning disable 0618
                 settings["defaultRenderingLayerMask"] = GraphicsSettings.defaultRenderingLayerMask;
 #pragma warning restore 0618
