@@ -202,7 +202,7 @@ namespace McpUnity.Server
                 var (gameObjectPath, pathErr) = RequireArg(args, "gameObjectPath");
                 if (pathErr != null) return pathErr;
 
-                var go = GameObject.Find(gameObjectPath);
+                var go = GameObjectHelpers.FindGameObject(gameObjectPath);
                 if (go == null)
                     return McpToolResult.Error($"GameObject not found: {gameObjectPath}");
 
@@ -325,7 +325,7 @@ namespace McpUnity.Server
                 var (layoutType, typeErr) = RequireArg(args, "layoutType");
                 if (typeErr != null) return typeErr;
 
-                var go = GameObject.Find(gameObjectPath);
+                var go = GameObjectHelpers.FindGameObject(gameObjectPath);
                 if (go == null)
                     return McpToolResult.Error($"GameObject not found: {gameObjectPath}");
 
@@ -433,7 +433,7 @@ namespace McpUnity.Server
                 var (canvasPath, canvasPathErr) = RequireArg(args, "canvasPath");
                 if (canvasPathErr != null) return canvasPathErr;
 
-                var go = GameObject.Find(canvasPath);
+                var go = GameObjectHelpers.FindGameObject(canvasPath);
                 if (go == null)
                     return McpToolResult.Error($"GameObject not found: {canvasPath}");
 
@@ -519,7 +519,7 @@ namespace McpUnity.Server
                 var (gameObjectPath, pathErr) = RequireArg(args, "gameObjectPath");
                 if (pathErr != null) return pathErr;
 
-                var go = GameObject.Find(gameObjectPath);
+                var go = GameObjectHelpers.FindGameObject(gameObjectPath);
                 if (go == null)
                     return McpToolResult.Error($"GameObject not found: {gameObjectPath}");
 
@@ -554,7 +554,7 @@ namespace McpUnity.Server
                 var (gameObjectPath, pathErr) = RequireArg(args, "gameObjectPath");
                 if (pathErr != null) return pathErr;
 
-                var go = GameObject.Find(gameObjectPath);
+                var go = GameObjectHelpers.FindGameObject(gameObjectPath);
                 if (go == null)
                     return McpToolResult.Error($"GameObject not found: {gameObjectPath}");
 

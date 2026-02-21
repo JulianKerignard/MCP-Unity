@@ -96,7 +96,7 @@ namespace McpUnity.Server
             var (gameObjectPath, pathErr) = RequireArg(args, "gameObjectPath");
             if (pathErr != null) return pathErr;
 
-            var go = GameObject.Find(gameObjectPath);
+            var go = GameObjectHelpers.FindGameObject(gameObjectPath);
             if (go == null)
                 return McpToolResult.Error($"GameObject not found: {gameObjectPath}");
 
@@ -210,7 +210,7 @@ namespace McpUnity.Server
             var (savePath, sanitizeErr) = TrySanitizePath(rawSavePath, "save path");
             if (sanitizeErr != null) return sanitizeErr;
 
-            var go = GameObject.Find(gameObjectPath);
+            var go = GameObjectHelpers.FindGameObject(gameObjectPath);
             if (go == null)
                 return McpToolResult.Error($"GameObject not found: {gameObjectPath}");
 

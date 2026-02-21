@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using McpUnity.Helpers;
 using McpUnity.Protocol;
 using McpUnity.Server;
 using UnityEditor;
@@ -524,7 +525,7 @@ namespace McpUnity.Chat
 
             try
             {
-                var go = GameObject.Find(assetRef.gameObjectPath);
+                var go = GameObjectHelpers.FindGameObject(assetRef.gameObjectPath);
                 if (go == null)
                 {
                     sb.Append(" [not found in scene]");

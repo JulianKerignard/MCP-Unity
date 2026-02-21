@@ -514,7 +514,7 @@ namespace McpUnity.Server
 
                     if (!string.IsNullOrEmpty(parentPath))
                     {
-                        var parent = GameObject.Find(parentPath);
+                        var parent = GameObjectHelpers.FindGameObject(parentPath);
                         if (parent == null)
                         {
                             UnityEngine.Object.DestroyImmediate(newObj);
@@ -617,20 +617,7 @@ namespace McpUnity.Server
             var (path, pathErr) = RequireArg(args, "path");
             if (pathErr != null) return pathErr;
 
-            var obj = GameObject.Find(path);
-
-            if (obj == null)
-            {
-                var allObjects = UnityEngine.Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
-                foreach (var go in allObjects)
-                {
-                    if (go.name == path || GameObjectHelpers.GetGameObjectPath(go) == path)
-                    {
-                        obj = go;
-                        break;
-                    }
-                }
-            }
+            var obj = GameObjectHelpers.FindGameObject(path);
 
             if (obj == null)
             {
@@ -677,7 +664,7 @@ namespace McpUnity.Server
 
             if (!string.IsNullOrEmpty(parentPath))
             {
-                newParent = GameObject.Find(parentPath);
+                newParent = GameObjectHelpers.FindGameObject(parentPath);
                 if (newParent == null)
                 {
                     return McpToolResult.Error($"Parent GameObject not found: {parentPath}");
@@ -715,19 +702,7 @@ namespace McpUnity.Server
                 var (path, pathErr) = RequireArg(args, "path");
                 if (pathErr != null) return pathErr;
 
-                var original = GameObject.Find(path);
-                if (original == null)
-                {
-                    var allObjects = UnityEngine.Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
-                    foreach (var go in allObjects)
-                    {
-                        if (go.name == path || GameObjectHelpers.GetGameObjectPath(go) == path)
-                        {
-                            original = go;
-                            break;
-                        }
-                    }
-                }
+                var original = GameObjectHelpers.FindGameObject(path);
 
                 if (original == null)
                     return McpToolResult.Error($"GameObject not found: '{path}'");
@@ -761,19 +736,7 @@ namespace McpUnity.Server
                 var (path, pathErr) = RequireArg(args, "path");
                 if (pathErr != null) return pathErr;
 
-                var gameObject = GameObject.Find(path);
-                if (gameObject == null)
-                {
-                    var allObjects = UnityEngine.Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
-                    foreach (var go in allObjects)
-                    {
-                        if (go.name == path || GameObjectHelpers.GetGameObjectPath(go) == path)
-                        {
-                            gameObject = go;
-                            break;
-                        }
-                    }
-                }
+                var gameObject = GameObjectHelpers.FindGameObject(path);
 
                 if (gameObject == null)
                     return McpToolResult.Error($"GameObject not found: '{path}'");
@@ -884,10 +847,11 @@ namespace McpUnity.Server
 
                 bool active = ArgumentParser.GetBool(args, "active", true);
 
-                // Search active objects first, then include inactive
-                GameObject go = GameObject.Find(path);
+                // FindGameObject handles both active and inactive via scene traversal
+                GameObject go = GameObjectHelpers.FindGameObject(path);
                 if (go == null)
                 {
+                    // Last resort: brute-force search including inactive objects by name
                     var allObjects = UnityEngine.Object.FindObjectsByType<GameObject>(
                         FindObjectsInactive.Include, FindObjectsSortMode.None);
                     foreach (var obj in allObjects)
