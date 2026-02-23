@@ -586,19 +586,11 @@ namespace McpUnity.Server
         }
 
         /// <summary>
-        /// Get the full hierarchy path of a GameObject
+        /// Get the full hierarchy path of a GameObject.
+        /// Delegates to the canonical implementation in GameObjectHelpers.
         /// </summary>
         internal static string GetGameObjectPath(GameObject obj)
-        {
-            string path = obj.name;
-            Transform parent = obj.transform.parent;
-            while (parent != null)
-            {
-                path = parent.name + "/" + path;
-                parent = parent.parent;
-            }
-            return path;
-        }
+            => GameObjectHelpers.GetGameObjectPath(obj);
 
         /// <summary>
         /// Get console logs as a list (used by multiple tools)

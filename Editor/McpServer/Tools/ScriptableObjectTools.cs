@@ -228,10 +228,10 @@ namespace McpUnity.Server
                             }
                         }
                     }
-                    catch
-                    {
-                        // Skip assemblies that can't be loaded
-                    }
+                    catch (Exception ex)
+                {
+                    McpUnity.Editor.McpDebug.LogWarning($"[ScriptableObject] Skipping assembly during type listing: {ex.Message}");
+                }
                 }
 
                 // Sort by name
@@ -318,9 +318,9 @@ namespace McpUnity.Server
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Skip assemblies that can't be loaded
+                    McpUnity.Editor.McpDebug.LogWarning($"[ScriptableObject] Skipping assembly during type search: {ex.Message}");
                 }
             }
             return null;
@@ -346,7 +346,10 @@ namespace McpUnity.Server
                             prop.SetValue(instance, convertedValue);
                             modified.Add(kvp.Key);
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            McpUnity.Editor.McpDebug.LogWarning($"[ScriptableObject] Failed to set property '{kvp.Key}': {ex.Message}");
+                        }
                     }
                     continue;
                 }
@@ -357,7 +360,10 @@ namespace McpUnity.Server
                     field.SetValue(instance, convertedValue);
                     modified.Add(kvp.Key);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    McpUnity.Editor.McpDebug.LogWarning($"[ScriptableObject] Failed to set field '{kvp.Key}': {ex.Message}");
+                }
             }
 
             return modified;

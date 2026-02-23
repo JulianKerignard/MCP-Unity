@@ -496,7 +496,7 @@ namespace McpUnity.Helpers
                         ?? type?.GetProperty("brushesPath", BindingFlags.NonPublic | BindingFlags.Static);
                 _cachedBrushesPath = prop?.GetValue(null) as string;
             }
-            catch { }
+            catch (System.Exception) { /* EditorResources.brushesPath not available in this Unity version */ }
             return _cachedBrushesPath;
         }
 

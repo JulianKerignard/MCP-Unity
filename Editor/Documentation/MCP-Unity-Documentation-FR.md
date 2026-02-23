@@ -32,7 +32,7 @@ Il inclut egalement un **panneau de chat IA multi-provider integre** directement
 ### Fonctionnalites principales
 
 - **164 outils Unity** couvrant toutes les operations majeures
-- **Chargement dynamique par categorie** — 45 outils de base (+ 2 meta-outils) charges initialement, les autres a la demande (economie de tokens)
+- **Chargement dynamique par categorie** — 47 outils Core (dont 2 meta-outils) charges initialement, les autres a la demande (economie de tokens)
 - **Confirmation des operations destructives** — dialogue de confirmation dans le chat pour les operations dangereuses
 - **Authentification WebSocket** — secret partage optionnel pour securiser la connexion bridge/Unity
 - **Systeme de chat integre** — 9 providers IA avec streaming en temps reel
@@ -215,14 +215,14 @@ Les configs auto-generees (via l'onglet Claude Config ou le Setup Wizard) inclue
 
 MCP Unity utilise le **chargement par categorie** pour minimiser l'utilisation des tokens :
 
-- **45 outils de base** (+ 2 meta-outils) toujours disponibles
+- **47 outils Core** (dont 2 meta-outils) toujours disponibles
 - **117 outils supplementaires** charges a la demande par categorie
 - Utiliser `unity_list_tool_categories` pour voir les categories disponibles
 - Utiliser `unity_enable_tool_category` pour charger une categorie
 
 ---
 
-### CORE — Toujours actifs (45 outils + 2 meta)
+### CORE — Toujours actifs (47 outils dont 2 meta)
 
 #### Meta-outils
 

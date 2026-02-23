@@ -362,7 +362,7 @@ namespace McpUnity.Server
                     packages.Add("(package list timed out — call unity_get_project_overview again)");
                 }
             }
-            catch { /* packages unavailable — ignore */ }
+            catch (Exception) { /* Package Manager API unavailable — non-critical for project overview */ }
 
             var activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
 

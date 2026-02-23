@@ -41,7 +41,7 @@
         },
         {
             "displayName": "Terrain Builder",
-            "description": "End-to-end terrain workflow using all 11 terrain tools — sculpt, texture, paint trees and details, import/export heightmaps.",
+            "description": "End-to-end terrain workflow using all 17 terrain tools — sculpt, texture, paint trees and details, import/export heightmaps.",
             "path": "Samples~/02 - Terrain Builder"
         },
         {

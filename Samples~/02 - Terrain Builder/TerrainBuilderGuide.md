@@ -1,6 +1,6 @@
 # MCP Unity — Terrain Builder Sample
 
-This sample shows how to use MCP Unity's 11 terrain tools to build a complete game-ready landscape
+This sample shows how to use MCP Unity's **17 terrain tools** to build a complete game-ready landscape
 entirely through AI prompts, without touching the Unity terrain inspector manually.
 
 ## Tools covered
@@ -10,18 +10,20 @@ entirely through AI prompts, without touching the Unity terrain inspector manual
 | `unity_create_terrain` | Create a new terrain with configurable size and resolution |
 | `unity_get_terrain_info` | Read heightmap, layers, trees, details |
 | `unity_modify_terrain` | Set terrain properties (draw instanced, pixel error, etc.) |
-| `unity_set_terrain_heights` | Sculpt heightmap with raise/lower/flatten/smooth |
-| `unity_paint_terrain_texture` | Paint texture layers (grass, rock, dirt...) |
-| `unity_set_terrain_splat_textures` | Add or replace terrain texture layers |
-| `unity_add_terrain_tree` | Place trees with density/random parameters |
+| `unity_set_terrain_heights_batch` | Sculpt heightmap with raise/lower/flatten/smooth |
+| `unity_add_terrain_layer` | Add or replace terrain texture layers |
+| `unity_paint_terrain_texture_batch` | Paint texture layers (grass, rock, dirt...) |
+| `unity_paint_terrain_path` | Paint a path/road on terrain along waypoints |
+| `unity_add_terrain_trees` | Place trees with density/random parameters |
 | `unity_list_terrain_trees` | List all tree prototypes and placements |
 | `unity_remove_terrain_trees` | Clear trees by prototype index or area |
 | `unity_add_terrain_detail` | Add grass/detail prototypes |
 | `unity_paint_terrain_detail` | Paint detail density maps |
 | `unity_remove_terrain_detail` | Remove detail prototype or clear painted area |
-| `unity_import_heightmap` | Import a PNG heightmap (RAW or PNG 16-bit) |
+| `unity_import_heightmap` | Import a PNG/RAW heightmap |
 | `unity_export_heightmap` | Export terrain heightmap to PNG |
 | `unity_set_terrain_neighbors` | Stitch adjacent terrains for seamless borders |
+| `unity_get_terrain_holes` | Inspect terrain hole data |
 
 ---
 

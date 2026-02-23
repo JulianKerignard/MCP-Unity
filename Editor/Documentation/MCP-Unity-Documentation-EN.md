@@ -32,7 +32,7 @@ It also includes an **integrated multi-provider AI Chat panel** running directly
 ### Key Features
 
 - **164 Unity tools** covering all major Editor operations
-- **Dynamic category loading** — 45 core tools (+ 2 meta-tools) loaded initially, others on demand (saves tokens)
+- **Dynamic category loading** — 47 core tools (incl. 2 meta-tools) loaded initially, others on demand (saves tokens)
 - **Destructive operation confirmation** — confirmation dialog in chat for dangerous operations
 - **WebSocket authentication** — optional shared secret to secure the bridge/Unity connection
 - **Integrated Chat System** — 9 AI provider presets with real-time streaming
@@ -215,14 +215,14 @@ Auto-generated configs (via the Claude Config tab or Setup Wizard) automatically
 
 MCP Unity uses **category-based dynamic loading** to minimize token usage:
 
-- **45 core tools** (+ 2 meta-tools) are always available
+- **47 core tools** (incl. 2 meta-tools) are always available
 - **117 additional tools** are loaded on demand per category
 - Use `unity_list_tool_categories` to see available categories
 - Use `unity_enable_tool_category` to load a category
 
 ---
 
-### CORE — Always Active (45 tools + 2 meta)
+### CORE — Always Active (47 tools incl. 2 meta)
 
 #### Meta-tools
 
@@ -758,7 +758,7 @@ Editor/McpServer/
 Server~/src/
 ├── index.ts                 # MCP stdio server, request handlers, server instructions
 ├── UnityBridge.ts           # WebSocket client with auto-reconnect + secret auth
-├── tools.ts                 # Tool definitions (45 core + category fallbacks)
+├── tools.ts                 # Tool definitions (47 core incl. 2 meta + category fallbacks)
 ├── resources.ts             # Resource definitions + workflow docs
 ├── cache.ts                 # TTL cache + invalidation map
 ├── types.ts                 # Zod schemas, error codes, BridgeConfig

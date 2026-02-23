@@ -4,7 +4,7 @@ This sample demonstrates the most common MCP Unity workflows to get you up and r
 
 ## Prerequisites
 
-1. MCP Unity package installed (Window > MCP Unity)
+1. MCP Unity package installed
 2. Node.js 18+ installed
 3. An AI assistant configured (Claude Code, Cursor, or Claude Desktop)
 
@@ -12,7 +12,6 @@ This sample demonstrates the most common MCP Unity workflows to get you up and r
 
 | File | Purpose |
 |------|---------|
-| `QuickStartScene.unity` | Pre-built scene with example objects |
 | `ExamplePrompts.md` | Copy-paste prompts to try immediately |
 | `McpBootstrapValidator.cs` | Editor script to validate your setup |
 
@@ -21,10 +20,10 @@ This sample demonstrates the most common MCP Unity workflows to get you up and r
 ## Step 1 — Open the MCP Unity window
 
 ```
-Window > MCP Unity
+Tools > MCP Unity > Server Window
 ```
 
-Go to the **Setup** tab and click **Setup All Missing** to configure your AI editor automatically.
+Go to the **Settings** tab and click **Start Server**, or use **Tools > MCP Unity > Setup Wizard** to configure your AI editor automatically.
 
 ## Step 2 — Start the Node server
 
@@ -61,4 +60,4 @@ Find all GameObjects whose name starts with "Cube" and rename them to
 
 **AI can't connect**: Verify the config file path in the Setup tab matches your editor's config directory.
 
-**Tool not found**: Run `unity_ping` first — if it responds, the connection works and you can call any tool.
+**Tool not found**: Try `unity_list_tool_categories` to check which categories are enabled. Use `unity_enable_tool_category` to load additional ones.

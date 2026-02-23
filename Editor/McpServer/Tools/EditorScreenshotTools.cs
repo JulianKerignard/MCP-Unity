@@ -104,17 +104,22 @@ namespace McpUnity.Server
             RenderTexture rt = RenderTexture.GetTemporary(targetWidth, targetHeight);
             rt.filterMode = FilterMode.Bilinear;
 
-            RenderTexture.active = rt;
-            Graphics.Blit(source, rt);
+            try
+            {
+                RenderTexture.active = rt;
+                Graphics.Blit(source, rt);
 
-            Texture2D result = new Texture2D(targetWidth, targetHeight, TextureFormat.RGBA32, false);
-            result.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
-            result.Apply();
+                Texture2D result = new Texture2D(targetWidth, targetHeight, TextureFormat.RGBA32, false);
+                result.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
+                result.Apply();
 
-            RenderTexture.active = null;
-            RenderTexture.ReleaseTemporary(rt);
-
-            return result;
+                return result;
+            }
+            finally
+            {
+                RenderTexture.active = null;
+                RenderTexture.ReleaseTemporary(rt);
+            }
         }
 
         private static McpToolResult TakeScreenshot(Dictionary<string, object> args)

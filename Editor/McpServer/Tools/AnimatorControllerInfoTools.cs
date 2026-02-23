@@ -145,8 +145,9 @@ namespace McpUnity.Server
                 {
                     controllerPath = SanitizePath(controllerPath);
                 }
-                catch (ArgumentException)
+                catch (ArgumentException ex)
                 {
+                    McpUnity.Editor.McpDebug.LogWarning($"[Animator] Invalid controller path '{controllerPath}': {ex.Message}");
                     return null;
                 }
 

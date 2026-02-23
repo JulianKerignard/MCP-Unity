@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using McpUnity.Chat.Providers;
+using McpUnity.Helpers;
 using McpUnity.Server;
 using UnityEditor;
 using UnityEngine;
@@ -2607,16 +2608,6 @@ namespace McpUnity.Chat
         // ====================================================================
 
         private static string GetGameObjectPath(GameObject go)
-        {
-            if (go == null) return "";
-            string path = go.name;
-            var parent = go.transform.parent;
-            while (parent != null)
-            {
-                path = parent.name + "/" + path;
-                parent = parent.parent;
-            }
-            return path;
-        }
+            => GameObjectHelpers.GetGameObjectPath(go);
     }
 }

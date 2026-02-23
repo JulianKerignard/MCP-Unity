@@ -109,7 +109,7 @@ async function main(): Promise<void> {
   const serverCache = new ServerCache();
 
   // Server instructions for Claude - Dynamic tool loading
-  const serverInstructions = `Unity MCP (164 tools, dynamic loading). 45 core tools + 2 meta-tools always loaded.
+  const serverInstructions = `Unity MCP (164 tools, dynamic loading). 47 core tools (incl. 2 meta-tools) always loaded.
 Call unity_enable_tool_category(category) to load more. All tool names use unity_ prefix.
 
 TOKEN RULES: outputMode='tree' for list_gameobjects | returnBase64=false for screenshots | size='small' for previews
@@ -368,6 +368,9 @@ RESOURCES: Read workflows://[category] for detailed guides (core, animator, mate
   process.on('SIGINT', cleanup);
   process.on('SIGTERM', cleanup);
   process.on('SIGHUP', cleanup);
+  process.on('unhandledRejection', (reason) => {
+    log('Unhandled promise rejection:', reason instanceof Error ? reason.message : String(reason));
+  });
 
   // Start MCP server with stdio transport FIRST (don't block on Unity)
   const transport = new StdioServerTransport();

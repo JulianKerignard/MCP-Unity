@@ -223,6 +223,13 @@ export const cacheInvalidators: Record<string, CacheCategory[]> = {
   // ScriptableObject tools
   unity_create_scriptable_object: ['assets'],
   unity_modify_scriptable_object: ['assets'],
+  // Memory tools
+  unity_memory_refresh: ['components'],
+  unity_memory_clear: ['components'],
+  // Selection/focus tools
+  unity_set_selection: ['editorState'],
+  unity_focus_gameobject: ['editorState'],
+  unity_clear_console: ['editorState'],
   // Editor workflow tools — can change anything
   unity_execute_menu_item: ['hierarchy', 'components', 'scenes'],
   unity_undo: ['hierarchy', 'components', 'assets', 'scenes'],

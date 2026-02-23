@@ -461,7 +461,7 @@ namespace McpUnity.Server
                         serializedNames.Add(prop.Name);
                     }
                 }
-                catch { } // Skip properties that throw
+                catch (Exception) { /* Skip properties that throw during reflection serialization */ }
             }
 
             // 2. Fields (Unity [Serializable] classes)

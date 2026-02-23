@@ -118,7 +118,7 @@ export class UnityBridge extends EventEmitter {
           clearTimeout(connectionTimeout);
           this.reconnectAttempts = 0;
           this.setState(ConnectionState.Connected);
-          this.log(`Connected to Unity at ${this.wsUrl}`);
+          this.log(`Connected to Unity at ws://${this.config.unityHost}:${this.config.unityPort}`);
           this.emit('connected');
           resolve();
         });
@@ -318,7 +318,13 @@ export class UnityBridge extends EventEmitter {
       const message = JSON.stringify(request);
       this.log(`Sending:`, message);
 
-      this.ws!.send(message, (error) => {
+      if (!this.ws) {
+        clearTimeout(timeout);
+        this.pendingRequests.delete(id);
+        reject(new McpError(McpErrorCode.ConnectionError, 'WebSocket closed before send'));
+        return;
+      }
+      this.ws.send(message, (error) => {
         if (error) {
           clearTimeout(timeout);
           this.pendingRequests.delete(id);
@@ -347,7 +353,10 @@ export class UnityBridge extends EventEmitter {
     const message = JSON.stringify(notification);
     this.log(`Sending notification:`, message);
 
-    this.ws!.send(message);
+    if (!this.ws) {
+      throw new McpError(McpErrorCode.ConnectionError, 'WebSocket closed before send');
+    }
+    this.ws.send(message);
   }
 
   /**

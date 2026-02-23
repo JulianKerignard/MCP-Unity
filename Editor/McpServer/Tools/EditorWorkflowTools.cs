@@ -462,7 +462,7 @@ namespace McpUnity.Server
                             }
                         }
                     }
-                    catch { /* skip components that throw during serialization */ }
+                    catch (Exception) { /* Skip components that throw during SerializedObject iteration */ }
                 }
             }
 

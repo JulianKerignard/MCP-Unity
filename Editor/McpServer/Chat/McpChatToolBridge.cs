@@ -356,18 +356,8 @@ namespace McpUnity.Chat
             return sb.ToString();
         }
 
-        private string GetGameObjectPath(GameObject go)
-        {
-            if (go == null) return "";
-            string path = go.name;
-            var parent = go.transform.parent;
-            while (parent != null)
-            {
-                path = parent.name + "/" + path;
-                parent = parent.parent;
-            }
-            return path;
-        }
+        private static string GetGameObjectPath(GameObject go)
+            => GameObjectHelpers.GetGameObjectPath(go);
 
         #endregion
 

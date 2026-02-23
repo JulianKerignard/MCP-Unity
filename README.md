@@ -128,7 +128,7 @@ Tools are organized in **13 categories**. Core tools are always available; other
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| **Core** | 45 | `unity_list_gameobjects`, `unity_create_gameobject`, `unity_get_component`, `unity_take_screenshot` |
+| **Core** | 47 | `unity_list_gameobjects`, `unity_create_gameobject`, `unity_get_component`, `unity_take_screenshot` |
 | **Asset** | 16 | `unity_search_assets`, `unity_create_prefab`, `unity_delete_asset`, `unity_move_asset` |
 | **Material** | 3 | `unity_get_material`, `unity_set_material`, `unity_create_material` |
 | **UI** | 9 | `unity_create_canvas`, `unity_create_ui_element`, `unity_set_rect_transform` |
@@ -142,7 +142,7 @@ Tools are organized in **13 categories**. Core tools are always available; other
 | **Input** | 3 | `unity_get_input_actions`, `unity_add_input_action` |
 | **Advanced** | 5 | `unity_set_reference`, `unity_create_scriptable_object` |
 
-The **45 core tools** (+ 2 meta-tools) are always loaded and cover GameObjects, Components, Scenes, Scripts, Editor state, Selection, Memory, and more. Use `unity_list_tool_categories` to see all categories and `unity_enable_tool_category` to load additional ones.
+The **47 core tools** (including 2 meta-tools: `unity_list_tool_categories` and `unity_enable_tool_category`) are always loaded and cover GameObjects, Components, Scenes, Scripts, Editor state, Selection, Memory, and more.
 
 ## Environment Variables
 
@@ -231,7 +231,7 @@ Server~/src/
 ├── index.ts                 # MCP server setup, handlers, server instructions
 ├── UnityBridge.ts           # WebSocket client with auto-reconnect + secret auth
 ├── types.ts                 # Zod schemas, BridgeConfig
-├── tools.ts                 # Tool definitions (45 core + category fallbacks)
+├── tools.ts                 # Tool definitions (47 core incl. 2 meta + category fallbacks)
 ├── resources.ts             # Resource definitions + workflow docs
 ├── cache.ts                 # TTL cache with invalidation map
 └── __tests__/               # vitest tests

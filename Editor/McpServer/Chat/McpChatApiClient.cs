@@ -464,7 +464,7 @@ namespace McpUnity.Chat
                         return errStr;
                 }
             }
-            catch { }
+            catch (Exception) { /* Malformed error response — return null to use fallback message */ }
             return null;
         }
 
