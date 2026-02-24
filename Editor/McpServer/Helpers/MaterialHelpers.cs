@@ -177,7 +177,7 @@ namespace McpUnity.Helpers
             int propertyIndex = shader.FindPropertyIndex(propertyName);
             if (propertyIndex < 0)
             {
-                Debug.LogWarning($"[MCP MaterialHelpers] Property not found: {propertyName}");
+                McpUnity.Editor.McpDebug.LogWarning($"[MCP MaterialHelpers] Property not found: {propertyName}");
                 return false;
             }
 
@@ -248,14 +248,14 @@ namespace McpUnity.Helpers
                                 material.SetTexture(propertyName, texture);
                                 return true;
                             }
-                            Debug.LogWarning($"[MCP MaterialHelpers] Texture not found: {texturePath}");
+                            McpUnity.Editor.McpDebug.LogWarning($"[MCP MaterialHelpers] Texture not found: {texturePath}");
                         }
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[MCP MaterialHelpers] Failed to set {propertyName}: {ex.Message}");
+                McpUnity.Editor.McpDebug.LogWarning($"[MCP MaterialHelpers] Failed to set {propertyName}: {ex.Message}");
             }
 
             return false;
@@ -376,13 +376,13 @@ namespace McpUnity.Helpers
             {
                 // Try to find the correct shader for the current render pipeline
                 string defaultShader = GetDefaultShaderName();
-                Debug.LogWarning($"[MCP MaterialHelpers] Shader not found: {shaderName}, using {defaultShader}");
+                McpUnity.Editor.McpDebug.LogWarning($"[MCP MaterialHelpers] Shader not found: {shaderName}, using {defaultShader}");
                 shader = Shader.Find(defaultShader);
 
                 // Ultimate fallback
                 if (shader == null)
                 {
-                    Debug.LogWarning($"[MCP MaterialHelpers] Default shader not found, trying alternatives...");
+                    McpUnity.Editor.McpDebug.LogWarning($"[MCP MaterialHelpers] Default shader not found, trying alternatives...");
                     // Try common fallbacks
                     shader = Shader.Find("Universal Render Pipeline/Lit") ??
                              Shader.Find("HDRP/Lit") ??

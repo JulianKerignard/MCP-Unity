@@ -122,7 +122,7 @@ namespace McpUnity.Server
             }
             catch (Exception e)
             {
-                Debug.LogError($"[MCP Unity] Failed to save cache: {e.Message}");
+                McpDebug.LogError($"[MCP Unity] Failed to save cache: {e.Message}");
             }
         }
 

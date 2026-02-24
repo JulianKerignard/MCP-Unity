@@ -89,7 +89,7 @@ namespace McpUnity.Utils
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogWarning($"[MCP TypeConverter] Cannot serialize property '{prop.Name}': {ex.Message}");
+                    McpUnity.Editor.McpDebug.LogWarning($"[MCP TypeConverter] Cannot serialize property '{prop.Name}': {ex.Message}");
                 }
             }
 
@@ -174,7 +174,7 @@ namespace McpUnity.Utils
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[MCP TypeConverter] Cannot convert value to type '{targetType.Name}': {ex.Message}");
+                McpUnity.Editor.McpDebug.LogWarning($"[MCP TypeConverter] Cannot convert value to type '{targetType.Name}': {ex.Message}");
                 return null;
             }
         }
@@ -249,7 +249,7 @@ namespace McpUnity.Utils
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning($"[MCP TypeConverter] Cannot set property {kvp.Key}: {ex.Message}");
+                        McpUnity.Editor.McpDebug.LogWarning($"[MCP TypeConverter] Cannot set property {kvp.Key}: {ex.Message}");
                     }
                     continue;
                 }
@@ -269,7 +269,7 @@ namespace McpUnity.Utils
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning($"[MCP TypeConverter] Cannot set field {kvp.Key}: {ex.Message}");
+                        McpUnity.Editor.McpDebug.LogWarning($"[MCP TypeConverter] Cannot set field {kvp.Key}: {ex.Message}");
                     }
                 }
             }

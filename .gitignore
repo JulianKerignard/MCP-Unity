@@ -31,6 +31,10 @@ CLAUDE.md.meta
 # Build output
 Server~/build/
 
+# Secrets
+.env
+.env.*
+
 # OS
 .DS_Store
 Thumbs.db

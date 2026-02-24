@@ -83,7 +83,7 @@ namespace McpUnity.Helpers
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogWarning($"[MCP ComponentHelpers] Cannot search assembly: {ex.Message}");
+                    McpUnity.Editor.McpDebug.LogWarning($"[MCP ComponentHelpers] Cannot search assembly: {ex.Message}");
                 }
             }
 

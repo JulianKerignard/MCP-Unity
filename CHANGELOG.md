@@ -5,6 +5,32 @@ All notable changes to MCP Unity — AI Editor Assistant will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-02-24
+
+### Fixed
+- Consolidate 4 duplicate `GetGameObjectPath` implementations → 1 delegate to `GameObjectHelpers`
+- Replace 8 empty `catch {}` blocks with logged `catch(Exception)` across 7 files
+- Fix `RenderTexture` leak in `EditorScreenshotTools` (added `try/finally` release)
+- Use fully-qualified `System.Exception` in `BrushHelper` (avoids `Object` ambiguity)
+- Standardize 11 `Debug.LogWarning` → `McpDebug.LogWarning` in Helpers and Utils for consistent verbose control
+- Add `process.on('unhandledRejection')` handler in Node.js bridge
+- Add null guards for WebSocket access in `UnityBridge.ts` (2 locations)
+- Redact shared secret from WebSocket connection log
+- Add 5 missing cache invalidators (`unity_set_selection`, `unity_clear_console`, `unity_bake_lighting`, `unity_bake_navmesh`, `unity_create_terrain`)
+- Use relative path in `.mcp.json` for portability
+- Exclude `src/__tests__/` from TypeScript build output
+
+### Changed
+- Harmonize "47 core (incl. 2 meta-tools)" count across all documentation (EN, FR, README, serverInstructions)
+- Rewrite Quick Start, Terrain Builder, and Batch Workflow sample guides with corrected tool names
+- Rewrite `Server~/README.md` with accurate architecture description
+- Update `package.json` terrain sample description (11→17 tools)
+- Update test count: 230 TypeScript tests (was 136), 120+ C# NUnit tests
+
+### Added
+- 4 new TypeScript test files: `cache-mappings`, `types-extended`, `index-config`, `UnityBridge-extended`
+- 4 new C# test files: `PathValidatorTests`, `JsonHelperTests`, `ArgumentParserExtendedTests`, `McpToolRegistryExtendedTests`
+
 ## [1.0.0] - 2026-02-19
 
 ### Added
@@ -33,8 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Conversation export (Markdown, JSON, Plain Text, clipboard)
 - **Setup Wizard** (`Tools > MCP Unity > Setup Wizard`) — auto Node.js check, npm build, Claude config generation
 - **Server-side TTL cache** per category (editorState: 5s, hierarchy: 30s, components: 1min, assets/scenes: 5min) with automatic write invalidation
-- **136 automated tests** (TypeScript vitest): cache, bridge, tools schema, resources, types/schemas
-- **C# NUnit tests** (`Tests~/Editor/`): McpToolRegistry (22 tests), ArgumentParser (34 tests)
+- **230 automated tests** (TypeScript vitest): cache, bridge, tools schema, resources, types/schemas, cache-mappings, index-config
+- **C# NUnit tests** (`Tests~/Editor/`): McpToolRegistry, ArgumentParser, PathValidator, JsonHelper (120+ tests)
 - Documentation in English and French (MD + PDF)
 - Compatible with Claude Desktop, Claude Code CLI, Cursor, and any MCP-compliant client
 
