@@ -575,10 +575,25 @@ namespace McpUnity.Chat
 
         /// <summary>
         /// Build the messages array for the API call, including tool results.
+        /// Validates tool_use/tool_result pairing to prevent API errors after
+        /// session restore or conversation truncation.
         /// </summary>
         public List<object> BuildMessagesArray(List<ChatMessage> conversation)
         {
+            // Collect all tool_use IDs from assistant messages
+            var toolUseIds = new HashSet<string>();
+            foreach (var msg in conversation)
+            {
+                if (msg.role != "assistant") continue;
+                foreach (var block in msg.content)
+                {
+                    if (block is ToolUseContent tu && !string.IsNullOrEmpty(tu.id))
+                        toolUseIds.Add(tu.id);
+                }
+            }
+
             var messages = new List<object>();
+            bool lastWasAssistant = false;
 
             foreach (var msg in conversation)
             {
@@ -606,6 +621,10 @@ namespace McpUnity.Chat
                     }
                     else if (block is ToolResultContent tr)
                     {
+                        // Skip orphaned tool_result blocks whose tool_use was truncated
+                        if (!string.IsNullOrEmpty(tr.tool_use_id) && !toolUseIds.Contains(tr.tool_use_id))
+                            continue;
+
                         var resultBlock = new Dictionary<string, object>
                         {
                             ["type"] = "tool_result",
@@ -618,11 +637,23 @@ namespace McpUnity.Chat
                     }
                 }
 
+                // Skip empty messages (all tool_results were orphaned)
+                if (contentList.Count == 0) continue;
+
+                // Anthropic API requires alternating user/assistant roles
+                string role = msg.role;
+                if (messages.Count == 0 && role != "user")
+                {
+                    // First message must be user — skip invalid leading assistant/tool messages
+                    continue;
+                }
+
                 messages.Add(new Dictionary<string, object>
                 {
-                    ["role"] = msg.role,
+                    ["role"] = role,
                     ["content"] = contentList
                 });
+                lastWasAssistant = role == "assistant";
             }
 
             return messages;

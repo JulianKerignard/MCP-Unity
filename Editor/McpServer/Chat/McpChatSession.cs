@@ -75,6 +75,25 @@ namespace McpUnity.Chat
             var serialized = new List<object>();
             int msgStart = Math.Max(0, conversation.Count - MaxPersistedConversationMessages);
 
+            // Never start on a user message that contains tool_result blocks,
+            // as the preceding assistant message with tool_use would be missing.
+            // Walk forward to find a clean boundary (a plain user text message).
+            while (msgStart < conversation.Count)
+            {
+                var msg = conversation[msgStart];
+                bool hasToolResult = false;
+                foreach (var block in msg.content)
+                {
+                    if (block is ToolResultContent) { hasToolResult = true; break; }
+                }
+                if (!hasToolResult) break;
+                msgStart++;
+            }
+
+            // Also ensure we don't start on an assistant message (API requires user first)
+            while (msgStart < conversation.Count && conversation[msgStart].role != "user")
+                msgStart++;
+
             for (int i = msgStart; i < conversation.Count; i++)
             {
                 var msg = conversation[i];
