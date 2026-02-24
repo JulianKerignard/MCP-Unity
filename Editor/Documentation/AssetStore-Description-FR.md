@@ -81,3 +81,109 @@ Fonctionne aussi hors-ligne avec Ollama ou LM Studio — aucune donnée ne quitt
 - Extensible : ajoutez vos propres outils comme partial classes de McpUnityServer
 
 - Requiert Unity 6 (6000.0.0f1+) et Node.js 18+
+
+---
+---
+---
+
+## 4. COMPATIBILITE
+
+---
+
+| Prerequis | Version |
+|-----------|---------|
+| Unity | 6000.0.0f1+ (Unity 6) |
+| Node.js | 18+ |
+| Plateformes | Windows, macOS, Linux (Editeur uniquement) |
+| Render Pipelines | Built-in, URP, HDRP (detection auto) |
+| Clients MCP | Claude Desktop, Claude Code CLI, Cursor, Windsurf, tout client MCP |
+| IA locale | Ollama, LM Studio (fonctionne hors-ligne) |
+
+---
+---
+---
+
+## 5. TAGS (max 15)
+
+---
+
+AI, MCP, Claude, GPT, LLM, Chat, Automation, Editor Tool, Code Generation, Terrain, Animation, Natural Language, Productivity, Level Design, Scripting
+
+---
+---
+---
+
+## 6. CONTENU DU PACKAGE
+
+---
+
+```
+com.juliank.mcp-unity/
+├── Editor/
+│   ├── McpServer/
+│   │   ├── McpUnityServer.cs          — Serveur principal + 164 outils (partial classes)
+│   │   ├── Chat/                      — Chat IA multi-provider (IMGUI)
+│   │   ├── Tools/                     — 43 fichiers d'implementation d'outils
+│   │   ├── Helpers/                   — ArgumentParser, GameObjectHelpers, etc.
+│   │   ├── Utils/                     — PathValidator, TypeConverter
+│   │   └── Models/                    — Modeles de donnees
+│   └── Documentation/
+│       ├── MCP-Unity-Documentation-EN.md / .pdf
+│       ├── MCP-Unity-Documentation-FR.md / .pdf
+│       ├── AssetStore-Description-EN.md
+│       └── AssetStore-Description-FR.md
+├── Plugins/
+│   └── websocket-sharp.dll            — Librairie WebSocket (Editeur uniquement)
+├── Server~/                           — Bridge Node.js MCP (non importe par Unity)
+│   ├── src/                           — Source TypeScript (6 fichiers + tests)
+│   ├── build/                         — JS compile (auto-build)
+│   └── package.json
+├── Samples~/
+│   ├── 01 - Quick Start/
+│   ├── 02 - Terrain Builder/
+│   └── 03 - Batch Workflow/
+├── Tests~/Editor/                     — Tests C# NUnit (120+ tests)
+├── LICENSE (MIT)
+├── THIRD_PARTY_NOTICES.md
+├── CHANGELOG.md
+└── package.json
+```
+
+---
+---
+---
+
+## 7. NOTES DE VERSION (v1.0.0)
+
+---
+
+Version initiale.
+
+- 164 outils dans 13 categories avec chargement dynamique
+- Chat IA multi-provider (9 fournisseurs, streaming SSE)
+- Boucle d'execution automatique des outils (jusqu'a 10 iterations)
+- Systeme de confirmation des operations destructives
+- Authentification WebSocket par secret partage
+- Cache serveur TTL avec invalidation sur ecriture
+- Assistant de configuration en un clic
+- OAuth 2.0 + PKCE pour Anthropic
+- Glisser-deposer d'assets/GameObjects comme contexte dans le chat
+- Support complet du systeme Undo pour toutes les operations
+- 230 tests TypeScript + 120 tests C# automatises
+- Documentation en francais et en anglais (MD + PDF)
+
+---
+---
+---
+
+## 8. SCREENSHOTS / MEDIA (descriptions pour la soumission)
+
+---
+
+1. **Chat Panel** — Chat IA dans l'editeur Unity avec resultats d'outils, rendu Markdown et compteur de tokens
+2. **Setup Wizard** — Verification Node.js, build du bridge et generation de config Claude en un clic
+3. **Categories d'outils** — Panneau Settings avec 13 categories activables et compteurs
+4. **Sculpting terrain** — IA sculptant le terrain en langage naturel avec avant/apres
+5. **Animator Builder** — IA creant un Animator Controller avec etats, transitions et blend trees
+6. **Diagnostics** — Moniteur de requetes avec chronometrage en temps reel et logs
+7. **Diagramme d'architecture** — Architecture two-tier : Client IA ↔ Bridge Node.js ↔ Plugin Unity
