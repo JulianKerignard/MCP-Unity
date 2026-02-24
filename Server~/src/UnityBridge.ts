@@ -37,6 +37,7 @@ export class UnityBridge extends EventEmitter {
 
   constructor(config: Partial<BridgeConfig> = {}) {
     super();
+    this.setMaxListeners(20);
     this.config = { ...DEFAULT_BRIDGE_CONFIG, ...config };
   }
 
@@ -273,6 +274,13 @@ export class UnityBridge extends EventEmitter {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+
+    // Reject all pending requests before closing the socket
+    for (const [, pending] of this.pendingRequests) {
+      clearTimeout(pending.timeout);
+      pending.reject(new McpError(McpErrorCode.ConnectionError, 'WebSocket disconnected'));
+    }
+    this.pendingRequests.clear();
 
     if (this.ws) {
       this.ws.close();

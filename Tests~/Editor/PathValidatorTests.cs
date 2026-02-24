@@ -37,6 +37,32 @@ namespace McpUnity.Tests
             Assert.AreEqual("Assets/Materials/Wood.mat", result);
         }
 
+        // ── SanitizePath — null byte injection ─────────────────────────────
+
+        [Test]
+        public void SanitizePath_NullByte_ThrowsArgumentException()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                PathValidator.SanitizePath("Assets/Scripts/Player\0.cs"));
+        }
+
+        [Test]
+        public void SanitizePath_NullByteAtStart_ThrowsArgumentException()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                PathValidator.SanitizePath("\0Assets/Scripts/Player.cs"));
+        }
+
+        [Test]
+        public void TryValidatePath_NullByte_ReturnsFalseWithMessage()
+        {
+            bool ok = PathValidator.TryValidatePath("Assets/test\0.txt", out var sanitized, out var error);
+            Assert.IsFalse(ok);
+            Assert.IsNull(sanitized);
+            Assert.IsNotNull(error);
+            StringAssert.Contains("null bytes", error);
+        }
+
         // ── SanitizePath — path traversal blocking ──────────────────────────
 
         [Test]

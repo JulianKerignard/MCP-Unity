@@ -22,6 +22,10 @@ namespace McpUnity.Utils
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException("Path cannot be empty");
 
+            // SEC: Reject null bytes before any processing (prevents null byte injection attacks)
+            if (path.Contains('\0'))
+                throw new ArgumentException("Path contains null bytes");
+
             // Normalize path separators
             path = path.Replace("\\", "/");
 

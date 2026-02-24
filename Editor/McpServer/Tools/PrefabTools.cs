@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using McpUnity.Helpers;
 using McpUnity.Protocol;
+using McpUnity.Utils;
 using UnityEditor;
 using UnityEngine;
 
@@ -101,26 +102,6 @@ namespace McpUnity.Server
             }, RevertPrefabOverrides);
         }
 
-        #region Prefab Helpers
-
-        private static Vector3 ParseVector3(object obj)
-        {
-            if (obj is Dictionary<string, object> dict)
-            {
-                float x = 0f, y = 0f, z = 0f;
-                if (dict.TryGetValue("x", out var xVal))
-                    float.TryParse(xVal?.ToString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out x);
-                if (dict.TryGetValue("y", out var yVal))
-                    float.TryParse(yVal?.ToString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out y);
-                if (dict.TryGetValue("z", out var zVal))
-                    float.TryParse(zVal?.ToString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out z);
-                return new Vector3(x, y, z);
-            }
-            return Vector3.zero;
-        }
-
-        #endregion
-
         #region Prefab Handlers
 
         private static McpToolResult InstantiatePrefab(Dictionary<string, object> args)
@@ -155,13 +136,13 @@ namespace McpUnity.Server
             // Set position
             if (ArgumentParser.TryGetValue<Dictionary<string, object>>(args, "position", out var posDict))
             {
-                instance.transform.position = ParseVector3(posDict);
+                instance.transform.position = TypeConverter.ParseVector3(posDict);
             }
 
             // Set rotation
             if (ArgumentParser.TryGetValue<Dictionary<string, object>>(args, "rotation", out var rotDict))
             {
-                instance.transform.rotation = Quaternion.Euler(ParseVector3(rotDict));
+                instance.transform.rotation = Quaternion.Euler(TypeConverter.ParseVector3(rotDict));
             }
 
             // Set parent if specified

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using McpUnity.Protocol;
 using McpUnity.Helpers;
 using McpUnity.Editor;
+using McpUnity.Utils;
 
 namespace McpUnity.Server
 {
@@ -17,37 +17,6 @@ namespace McpUnity.Server
     public partial class McpUnityServer
     {
         #region Component Discovery
-
-        // Properties to skip during component serialization (allocated once, shared).
-        // Excludes heavy computed values (matrices, bounds) and non-useful Unity internals.
-        private static readonly HashSet<string> SkipProperties = new HashSet<string>
-        {
-            // Asset references (returned as objects, not useful inline)
-            "mesh", "material", "materials", "sharedMesh", "sharedMaterial", "sharedMaterials",
-            // Unity Object base
-            "gameObject", "transform", "tag", "name", "hideFlags", "runInEditMode",
-            // Derived / computed (not serializable state)
-            "isActiveAndEnabled", "attachedRigidbody", "attachedArticulationBody",
-            // 4×4 matrices — enormous output, never useful to an AI
-            "worldToLocalMatrix", "localToWorldMatrix",
-            // Render bounds — large structs, computed from mesh
-            "bounds", "localBounds",
-            // Internal render state
-            "isVisible", "isPartOfStaticBatch", "isReceivingShadows",
-            // Low-level renderer internals
-            "lightProbeProxyVolumeOverride", "probeAnchor",
-            "motionVectorGenerationMode", "allowOcclusionWhenDynamic",
-            // Particle system sub-modules (exposed as objects — each is huge)
-            "collision", "colorBySpeed", "colorOverLifetime", "customData",
-            "emission", "externalForces", "forceOverLifetime", "inheritVelocity",
-            "lights", "limitVelocityOverLifetime", "main", "noise", "rotationBySpeed",
-            "rotationOverLifetime", "shape", "sizeBySpeed", "sizeOverLifetime",
-            "subEmitters", "textureSheetAnimation", "trails", "trigger", "velocityOverLifetime"
-        };
-
-        // Cache PropertyInfo[] per component type — avoids repeated GetProperties() reflection calls
-        private static readonly Dictionary<Type, PropertyInfo[]> _propertyInfoCache
-            = new Dictionary<Type, PropertyInfo[]>();
 
         // Built-in Unity component types for quick lookup (always allowed)
         private static readonly HashSet<string> BuiltInComponentTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -292,7 +261,7 @@ namespace McpUnity.Server
             if (component == null)
                 return McpToolResult.Error($"Component '{componentType}' not found on '{gameObjectPath}'");
 
-            var properties = ConvertToSerializable(component);
+            var properties = TypeConverter.ConvertToSerializable(component);
 
             return McpResponse.Success(new
             {
@@ -340,7 +309,7 @@ namespace McpUnity.Server
                 List<string> modified = new List<string>();
                 if (initialProperties != null && initialProperties.Count > 0)
                 {
-                    modified = ApplyComponentProperties(component, initialProperties);
+                    modified = TypeConverter.ApplyComponentProperties(component, initialProperties);
                 }
 
                 EditorUtility.SetDirty(go);
@@ -351,7 +320,7 @@ namespace McpUnity.Server
                     message = $"Added {componentType} to {gameObjectPath}",
                     componentType = type.Name,
                     initializedProperties = modified,
-                    properties = ConvertToSerializable(component)
+                    properties = TypeConverter.ConvertToSerializable(component)
                 });
             }
             catch (Exception ex)
@@ -433,7 +402,7 @@ namespace McpUnity.Server
                     }
 
                     Undo.RecordObject(component, $"Modify {compType}");
-                    var modified = ApplyComponentProperties(component, properties);
+                    var modified = TypeConverter.ApplyComponentProperties(component, properties);
                     EditorUtility.SetDirty(component);
 
                     results.Add(new Dictionary<string, object>
@@ -586,7 +555,7 @@ namespace McpUnity.Server
                     ["enabled"]  = comp is Behaviour b ? (object)b.enabled : true
                 };
                 if (includeProperties)
-                    compInfo["properties"] = ConvertToSerializable(comp);
+                    compInfo["properties"] = TypeConverter.ConvertToSerializable(comp);
                 components.Add(compInfo);
             }
 
@@ -747,234 +716,8 @@ namespace McpUnity.Server
         {
             _projectScriptsCache = null;
             _componentTypeCache.Clear();
-            _propertyInfoCache.Clear(); // Also clear reflection cache — new types may have been compiled
+            TypeConverter.ClearCaches(); // Also clear reflection cache — new types may have been compiled
             McpDebug.Log("[MCP Unity] Project scripts cache invalidated");
-        }
-
-        /// <summary>
-        /// Convert a Unity value to a JSON-serializable format
-        /// </summary>
-        private static object ConvertValue(object value)
-        {
-            if (value == null) return null;
-
-            var type = value.GetType();
-
-            // Primitives
-            if (type.IsPrimitive || value is string || value is decimal)
-                return value;
-
-            // Unity vectors and types
-            if (value is Vector3 v3)
-                return new { x = v3.x, y = v3.y, z = v3.z };
-            if (value is Vector2 v2)
-                return new { x = v2.x, y = v2.y };
-            if (value is Vector4 v4)
-                return new { x = v4.x, y = v4.y, z = v4.z, w = v4.w };
-            if (value is Quaternion q)
-                return new { x = q.x, y = q.y, z = q.z, w = q.w };
-            if (value is Color c)
-                return new { r = c.r, g = c.g, b = c.b, a = c.a };
-            if (value is Color32 c32)
-                return new { r = c32.r, g = c32.g, b = c32.b, a = c32.a };
-            if (value is Bounds b)
-                return new { center = ConvertValue(b.center), size = ConvertValue(b.size) };
-            if (value is Rect rect)
-                return new { x = rect.x, y = rect.y, width = rect.width, height = rect.height };
-
-            // Enum
-            if (type.IsEnum)
-                return value.ToString();
-
-            // UnityEngine.Object reference
-            if (value is UnityEngine.Object uobj)
-                return uobj != null ? new { name = uobj.name, type = uobj.GetType().Name } : null;
-
-            // Arrays — serialize up to 32 elements to avoid huge outputs
-            if (type.IsArray)
-            {
-                var arr = (System.Array)value;
-                var items = new List<object>(Math.Min(arr.Length, 32));
-                for (int i = 0; i < Math.Min(arr.Length, 32); i++)
-                    items.Add(ConvertValue(arr.GetValue(i)));
-                if (arr.Length > 32) items.Add($"... ({arr.Length - 32} more)");
-                return items;
-            }
-            // Generic Lists — serialize up to 32 elements
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
-            {
-                var list = (System.Collections.IEnumerable)value;
-                var items = new List<object>();
-                foreach (var item in list)
-                {
-                    items.Add(ConvertValue(item));
-                    if (items.Count >= 32) { items.Add("... (truncated)"); break; }
-                }
-                return items;
-            }
-
-            return value.ToString();
-        }
-
-        /// <summary>
-        /// Convert a component's properties to a serializable dictionary
-        /// </summary>
-        private static Dictionary<string, object> ConvertToSerializable(Component component)
-        {
-            var result = new Dictionary<string, object>();
-            if (component == null) return result;
-
-            var type = component.GetType();
-
-            // Cache PropertyInfo[] per type — GetProperties() via reflection is expensive
-            if (!_propertyInfoCache.TryGetValue(type, out var cachedProps))
-            {
-                cachedProps = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                _propertyInfoCache[type] = cachedProps;
-            }
-
-            // Get public properties (from cache)
-            foreach (var prop in cachedProps)
-            {
-                if (!prop.CanRead) continue;
-
-                if (SkipProperties.Contains(prop.Name)) continue;
-
-                try
-                {
-                    var value = prop.GetValue(component);
-                    result[prop.Name] = ConvertValue(value);
-                }
-                catch (Exception ex)
-                {
-                    // Log skipped properties for debugging
-                    McpDebug.LogWarning($"[MCP Unity] Cannot serialize property '{prop.Name}': {ex.Message}");
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Convert a JSON value to a Unity type
-        /// </summary>
-        private static object ConvertJsonToUnity(object jsonValue, Type targetType)
-        {
-            if (jsonValue == null) return null;
-
-            // Handle Dictionary from JSON parser
-            var dict = jsonValue as Dictionary<string, object>;
-
-            // Vector3
-            if (targetType == typeof(Vector3) && dict != null)
-            {
-                return new Vector3(
-                    ArgumentParser.GetFloat(dict, "x", 0f),
-                    ArgumentParser.GetFloat(dict, "y", 0f),
-                    ArgumentParser.GetFloat(dict, "z", 0f)
-                );
-            }
-
-            // Vector2
-            if (targetType == typeof(Vector2) && dict != null)
-            {
-                return new Vector2(
-                    ArgumentParser.GetFloat(dict, "x", 0f),
-                    ArgumentParser.GetFloat(dict, "y", 0f)
-                );
-            }
-
-            // Quaternion
-            if (targetType == typeof(Quaternion) && dict != null)
-            {
-                return new Quaternion(
-                    ArgumentParser.GetFloat(dict, "x", 0f),
-                    ArgumentParser.GetFloat(dict, "y", 0f),
-                    ArgumentParser.GetFloat(dict, "z", 0f),
-                    ArgumentParser.GetFloat(dict, "w", 1f)
-                );
-            }
-
-            // Color
-            if (targetType == typeof(Color) && dict != null)
-            {
-                return new Color(
-                    ArgumentParser.GetFloat(dict, "r", 1f),
-                    ArgumentParser.GetFloat(dict, "g", 1f),
-                    ArgumentParser.GetFloat(dict, "b", 1f),
-                    ArgumentParser.GetFloat(dict, "a", 1f)
-                );
-            }
-
-            // Enum
-            if (targetType.IsEnum && jsonValue is string enumStr)
-            {
-                return Enum.Parse(targetType, enumStr);
-            }
-
-            // Standard conversion
-            try
-            {
-                return Convert.ChangeType(jsonValue, targetType);
-            }
-            catch (Exception ex)
-            {
-                McpDebug.LogWarning($"[MCP Unity] Cannot convert value to type '{targetType.Name}': {ex.Message}");
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Apply properties from a dictionary to a component
-        /// </summary>
-        private static List<string> ApplyComponentProperties(Component component, Dictionary<string, object> properties)
-        {
-            var modified = new List<string>();
-            var type = component.GetType();
-
-            foreach (var kvp in properties)
-            {
-                // Try property first
-                var prop = type.GetProperty(kvp.Key, BindingFlags.Public | BindingFlags.Instance);
-                if (prop != null && prop.CanWrite)
-                {
-                    try
-                    {
-                        var convertedValue = ConvertJsonToUnity(kvp.Value, prop.PropertyType);
-                        if (convertedValue != null)
-                        {
-                            prop.SetValue(component, convertedValue);
-                            modified.Add(kvp.Key);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        McpDebug.LogWarning($"[MCP Unity] Cannot set property {kvp.Key}: {ex.Message}");
-                    }
-                    continue;
-                }
-
-                // Try field
-                var field = type.GetField(kvp.Key, BindingFlags.Public | BindingFlags.Instance);
-                if (field != null)
-                {
-                    try
-                    {
-                        var convertedValue = ConvertJsonToUnity(kvp.Value, field.FieldType);
-                        if (convertedValue != null)
-                        {
-                            field.SetValue(component, convertedValue);
-                            modified.Add(kvp.Key);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        McpDebug.LogWarning($"[MCP Unity] Cannot set field {kvp.Key}: {ex.Message}");
-                    }
-                }
-            }
-
-            return modified;
         }
 
         #endregion

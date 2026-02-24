@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using McpUnity.Protocol;
 using McpUnity.Helpers;
+using McpUnity.Utils;
 
 namespace McpUnity.Server
 {
@@ -571,7 +572,7 @@ namespace McpUnity.Server
                                 addedComponents.Add(type.Name);
                                 if (compDict.TryGetValue("properties", out var propsObj) && propsObj is Dictionary<string, object> props)
                                 {
-                                    ApplyComponentProperties(comp, props);
+                                    TypeConverter.ApplyComponentProperties(comp, props);
                                 }
                             }
                         }
@@ -908,7 +909,7 @@ namespace McpUnity.Server
                     ["enabled"] = comp is Behaviour b ? (object)b.enabled : true
                 };
                 if (includeProperties)
-                    compInfo["properties"] = ConvertToSerializable(comp);
+                    compInfo["properties"] = TypeConverter.ConvertToSerializable(comp);
                 components.Add(compInfo);
             }
 
