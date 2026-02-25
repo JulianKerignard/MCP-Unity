@@ -921,6 +921,13 @@ namespace McpUnity.Server
     /// </summary>
     public class McpBehavior : WebSocketBehavior
     {
+        /// <summary>
+        /// Maximum allowed incoming message size (10 MB).
+        /// Protects against OOM from oversized payloads while still allowing
+        /// large legitimate messages (e.g. base64-encoded screenshots).
+        /// </summary>
+        private const int MaxMessageSize = 10 * 1024 * 1024;
+
         protected override void OnOpen()
         {
             // Shared secret validation: if a secret is configured, require it in the query string
@@ -950,6 +957,14 @@ namespace McpUnity.Server
             if (e.IsText)
             {
                 var message = e.Data;
+
+                // S3: Reject oversized messages to prevent OOM from malicious/accidental huge payloads
+                if (message.Length > MaxMessageSize)
+                {
+                    McpDebug.LogWarning($"[MCP Unity] Rejected oversized message: {message.Length} bytes (max {MaxMessageSize})");
+                    return;
+                }
+
                 McpDebug.Log($"[MCP Unity] Received message: {(message.Length > 100 ? message.Substring(0, 100) + "..." : message)}");
 
                 // Queue message for processing on main thread
