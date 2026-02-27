@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "mcp-unity": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "./build/index.js"
+      ],
+      "env": {}
+    }
+  }
+}

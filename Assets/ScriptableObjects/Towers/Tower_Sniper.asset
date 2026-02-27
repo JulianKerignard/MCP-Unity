@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffe871b37ac32cf4887c8d761042ed24, type: 3}
+  m_Name: Tower_Sniper
+  m_EditorClassIdentifier: Assembly-CSharp::TowerData
+  towerName: Sniper
+  description: Longue portee, degats eleves, tir lent
+  damage: 50
+  range: 14
+  fireRate: 0.25
+  cost: 100
+  upgradeCost: 75
+  upgradeDamageMultiplier: 1.4
+  upgradeRangeMultiplier: 1.1
+  upgradeCost2: 150
+  upgradeDamageMultiplier3: 1.8
+  upgradeRangeMultiplier3: 1.25
+  sellRefundPercent: 0.6
+  damageType: 0
+  isAoE: 0
+  aoERadius: 3
+  isSlow: 0
+  slowFactor: 0.5
+  slowDuration: 2
+  towerColor: {r: 0, g: 0, b: 0, a: 0}
+  fxType: 1
+  prefab: {fileID: 5114453256262038842, guid: 09b74abaa39b0494cbc09058adade0c9, type: 3}
+  projectilePrefab: {fileID: 588053815983594416, guid: 777022ad160e45541a631df9a10c4b62, type: 3}

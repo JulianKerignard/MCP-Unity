@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__mcp-unity__unity_get_project_overview",
+      "mcp__mcp-unity__unity_get_editor_state",
+      "mcp__mcp-unity__unity_get_scene_info",
+      "mcp__mcp-unity__unity_list_gameobjects"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "mcp-unity"
+  ]
+}
