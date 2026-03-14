@@ -26,7 +26,7 @@ namespace McpUnity.Server
             = new Dictionary<string, string>(); // toolName -> category
 
         private readonly HashSet<string> _enabledCategories
-            = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "core" };
+            = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "core", "asset", "material", "ui", "animator", "terrain", "physics", "audio", "rendering", "build", "settings", "input", "advanced" };
 
         private string _currentCategory = "core";
 
