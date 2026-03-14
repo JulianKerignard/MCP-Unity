@@ -38,7 +38,6 @@ namespace McpUnity.Editor
     public class McpSetupWizardWindow : EditorWindow
     {
         private const string ShownKey  = "McpUnity_SetupWizard_Shown_v1";
-        private const string BridgePath = "Assets/Plugins/MCP-Unity-Package/Server~";
 
         private enum Step { NodeCheck, NpmBuild, ClaudeConfig, Done }
         private Step _currentStep = Step.NodeCheck;
@@ -416,9 +415,7 @@ namespace McpUnity.Editor
 
         private static string GetAbsoluteBridgePath()
         {
-            // Assets/ relative → absolute
-            string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-            return Path.Combine(projectRoot, BridgePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+            return McpSettings.GetServerSourcePath();
         }
 
         private void InitStyles()

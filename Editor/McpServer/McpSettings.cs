@@ -219,45 +219,99 @@ namespace McpUnity.Editor
         }
 
         /// <summary>
-        /// Gets the default server path relative to the project
+        /// Find the plugin root directory by locating the McpUnity.Editor asmdef via AssetDatabase.
+        /// Works regardless of where the plugin is installed (Assets/plugin/, Assets/Plugins/, Packages/, etc.).
+        /// Returns null if not found.
+        /// </summary>
+        public static string FindPluginRootPath()
+        {
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("McpUnity.Editor");
+            foreach (var guid in guids)
+            {
+                string assetPath = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                if (assetPath.EndsWith("McpUnity.Editor.asmdef"))
+                {
+                    // asmdef is at <plugin-root>/Editor/McpUnity.Editor.asmdef
+                    string editorDir = Path.GetDirectoryName(assetPath);
+                    string pluginRoot = Path.GetDirectoryName(editorDir);
+                    string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+                    return Path.GetFullPath(Path.Combine(projectRoot, pluginRoot));
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the Server~ source directory (for npm install/build).
+        /// Dynamically detects the plugin location via asmdef.
+        /// </summary>
+        public static string GetServerSourcePath()
+        {
+            string pluginRoot = FindPluginRootPath();
+            if (pluginRoot != null)
+            {
+                string serverDir = Path.Combine(pluginRoot, "Server~");
+                if (Directory.Exists(serverDir))
+                    return serverDir;
+            }
+
+            // Fallback: well-known locations
+            string[] fallbacks = new string[]
+            {
+                Path.Combine(Application.dataPath, "Plugins", "MCP-Unity-Package", "Server~"),
+                Path.Combine(Application.dataPath, "..", "Packages", "com.juliank.mcp-unity", "Server~"),
+                Path.Combine(Application.dataPath, "..", "Packages", "com.claudecode.mcp-unity", "Server~"),
+            };
+            foreach (var path in fallbacks)
+            {
+                string fullPath = Path.GetFullPath(path);
+                if (Directory.Exists(fullPath))
+                    return fullPath;
+            }
+
+            // Return best guess from dynamic detection even if not present
+            if (pluginRoot != null)
+                return Path.Combine(pluginRoot, "Server~");
+
+            return Path.GetFullPath(fallbacks[0]);
+        }
+
+        /// <summary>
+        /// Gets the default server path (build/index.js).
+        /// Dynamically detects the plugin location via asmdef, then falls back to well-known paths.
         /// </summary>
         public static string GetDefaultServerPath()
         {
-            // Check multiple possible locations (ordered by likelihood)
+            // 1. Dynamic detection via asmdef — works for any install location
+            string pluginRoot = FindPluginRootPath();
+            if (pluginRoot != null)
+            {
+                string serverBuild = Path.Combine(pluginRoot, "Server~", "build", "index.js");
+                if (File.Exists(serverBuild))
+                    return serverBuild;
+            }
+
+            // 2. Fallback: check well-known hardcoded locations
             string[] possiblePaths = new string[]
             {
-                // Installed as plugin in Assets/Plugins/
-                Path.Combine(Application.dataPath, "Plugins/MCP-Unity-Package/Server~/build/index.js"),
-                // Installed via Package Manager (Packages/)
-                Path.Combine(Application.dataPath, "../Packages/com.claudecode.mcp-unity/Server~/build/index.js"),
-                // Legacy locations
-                Path.Combine(Application.dataPath, "Server/build/index.js"),
-                Path.Combine(Application.dataPath, "Server/dist/index.js"),
-                Path.Combine(Application.dataPath, "../Packages/com.mcp.unity/Server~/build/index.js"),
-                Path.Combine(Application.dataPath, "McpUnity/Server/build/index.js"),
+                Path.Combine(Application.dataPath, "Plugins", "MCP-Unity-Package", "Server~", "build", "index.js"),
+                Path.Combine(Application.dataPath, "..", "Packages", "com.juliank.mcp-unity", "Server~", "build", "index.js"),
+                Path.Combine(Application.dataPath, "..", "Packages", "com.claudecode.mcp-unity", "Server~", "build", "index.js"),
+                Path.Combine(Application.dataPath, "..", "Packages", "com.mcp.unity", "Server~", "build", "index.js"),
+                Path.Combine(Application.dataPath, "Server", "build", "index.js"),
             };
 
             foreach (var path in possiblePaths)
             {
                 string fullPath = Path.GetFullPath(path);
                 if (File.Exists(fullPath))
-                {
                     return fullPath;
-                }
             }
 
-            // Also try to find via GUID search in AssetDatabase
-            string[] guids = UnityEditor.AssetDatabase.FindAssets("index t:DefaultAsset", new[] { "Assets/Plugins" });
-            foreach (var guid in guids)
-            {
-                string assetPath = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
-                if (assetPath.EndsWith("Server~/build/index.js"))
-                {
-                    return Path.GetFullPath(assetPath);
-                }
-            }
+            // 3. Return best guess from dynamic detection (even if not built yet)
+            if (pluginRoot != null)
+                return Path.Combine(pluginRoot, "Server~", "build", "index.js");
 
-            // Return first path as default even if it doesn't exist yet
             return Path.GetFullPath(possiblePaths[0]);
         }
 
