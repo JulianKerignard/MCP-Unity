@@ -10,7 +10,7 @@
 
 ---
 
-Control Unity with AI: 164 MCP tools, built-in multi-provider chat, zero code. Works with Claude, GPT-4, Gemini, Ollama.
+Control Unity with AI: 165 MCP tools, built-in multi-provider chat, zero code. Works with Claude, GPT-4, Gemini, Ollama.
 
 ---
 ---
@@ -20,19 +20,19 @@ Control Unity with AI: 164 MCP tools, built-in multi-provider chat, zero code. W
 
 ---
 
-Conductor turns your Unity Editor into an AI-driven development environment. Ask Claude, GPT-4, Gemini, or any LLM to create GameObjects, configure components, sculpt terrain, build animators, set up lighting, manage builds — all in natural language.
+Conductor MCP turns your Unity Editor into an AI-driven development environment. Ask Claude, GPT-4, Gemini, or any LLM to create GameObjects, configure components, sculpt terrain, build animators, set up lighting, manage builds — all in natural language.
 
-The plugin implements the Model Context Protocol (MCP), an open standard by Anthropic. It exposes 164 tools covering nearly the entire Unity Editor API, organized into 13 categories that load on demand to save up to 70% on token usage.
+The plugin implements the Model Context Protocol (MCP), an open standard by Anthropic. It exposes 165 tools covering nearly the entire Unity Editor API, organized into 13 categories that load on demand to save up to 70% on token usage.
 
 Conductor also includes an AI chat panel built directly into Unity: 9 AI providers (Claude, GPT-4, Gemini, DeepSeek, Groq, Mistral, Ollama, LM Studio, Custom), real-time token-by-token streaming, automatic tool execution loop (up to 10 iterations per response), and drag & drop assets or GameObjects as context — without ever leaving the Editor.
 
 Every operation goes through Unity's Undo system: everything is reversible with Ctrl+Z. Destructive actions (deletion, script overwrite, baking, platform switch) require confirmation before execution.
 
-The Node.js bridge includes a smart server-side cache with per-category TTL and automatic write invalidation, reducing round-trips to Unity for faster responses.
-
-Compatible with Claude Desktop, Claude Code CLI, Cursor, Windsurf, and any MCP-compliant client. A built-in Setup Wizard checks prerequisites, builds the server, and generates configuration automatically.
+Compatible with Claude Desktop, Claude Code CLI, Cursor, Windsurf, VS Code / GitHub Copilot, and any MCP-compliant client. A built-in Setup Wizard generates configuration for all editors in one click.
 
 Works offline with Ollama or LM Studio — no data leaves your machine.
+
+**Support**: GitHub Issues (github.com/JulianKerignard/MCP-Unity/issues) | Email: jujukerignard4@gmail.com
 
 ---
 ---
@@ -42,7 +42,7 @@ Works offline with Ollama or LM Studio — no data leaves your machine.
 
 ---
 
-- 164 AI-controllable Unity tools across 13 categories: Core (47), Asset (16), Animator (23), Terrain (17), Rendering (13), Settings (11), UI (9), Physics (8), Build (6), Advanced (5), Material (3), Audio (3), Input (3)
+- 165 AI-controllable Unity tools across 13 categories: Core (48), Asset (16), Animator (23), Terrain (17), Rendering (13), Settings (11), UI (9), Physics (8), Build (6), Advanced (5), Material (3), Audio (3), Input (3)
 
 - Dynamic category loading: only 47 Core tools loaded by default, others load on demand via unity_enable_tool_category, reducing token consumption by 70%
 

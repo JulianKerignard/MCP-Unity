@@ -1,23 +1,60 @@
-# MCP Unity — Documentation
+# Conductor MCP — Documentation
 
-**Version**: 1.0.0 | **MCP Protocol**: 2024-11-05 | **Unity**: 6000.0+ | **License**: MIT
+**Version**: 1.1.0 | **MCP Protocol**: 2024-11-05 | **Unity**: 6000.0+ | **License**: MIT
 
 ---
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Architecture](#architecture)
-3. [Installation](#installation)
-4. [Setup Wizard](#setup-wizard)
-5. [Configuration](#configuration)
-6. [Tools Reference (164 tools)](#tools-reference)
-7. [Resources](#resources)
-8. [Editor Window](#editor-window)
-9. [Integrated Chat System](#integrated-chat-system)
-10. [Bridge Caching](#bridge-caching)
-11. [Development Guide](#development-guide)
-12. [Troubleshooting](#troubleshooting)
+1. [Quick Start (5 minutes)](#quick-start-5-minutes)
+2. [Overview](#overview)
+3. [Architecture](#architecture)
+4. [Installation](#installation)
+5. [Installation Verification](#installation-verification)
+6. [Setup Wizard](#setup-wizard)
+7. [Configuration](#configuration)
+8. [Tools Reference (165 tools)](#tools-reference)
+9. [Resources](#resources)
+10. [Editor Window](#editor-window)
+11. [Integrated Chat System](#integrated-chat-system)
+12. [Bridge Caching](#bridge-caching)
+13. [Development Guide](#development-guide)
+14. [Troubleshooting](#troubleshooting)
+15. [FAQ](#faq)
+16. [Known Issues](#known-issues)
+17. [Version Compatibility](#version-compatibility)
+18. [Support](#support)
+19. [Glossary](#glossary)
+
+---
+
+## Quick Start (5 minutes)
+
+Get Conductor MCP running in 5 steps:
+
+**Step 1** — Install Node.js 18+ from [nodejs.org](https://nodejs.org) if not already installed.
+
+**Step 2** — Import Conductor MCP into your Unity project (Package Manager or manual copy).
+
+**Step 3** — Open **Tools > Conductor MCP**, go to the **Setup** tab, click **"Setup All Missing"**. This creates config files for Claude Code, Cursor, Windsurf, and VS Code.
+
+**Step 4** — In the **Server** tab, click **Start Server**. The status dot turns green.
+
+**Step 5** — In your AI editor (Claude Code, Cursor, etc.), ask:
+
+> "List all GameObjects in my scene"
+
+The AI will call `unity_list_gameobjects` and return your scene hierarchy. You're connected.
+
+### First things to try
+
+| Ask the AI | What happens |
+|-----------|-------------|
+| "Create a red cube at position 0, 2, 0" | Creates a GameObject with MeshRenderer + red material |
+| "Take a screenshot of the scene" | Captures and saves a screenshot to Assets/Screenshots/ |
+| "Add a Rigidbody to the cube" | Adds physics component, cube will fall when you play |
+| "Enter play mode" | Starts the game in the editor |
+| "Stop play mode and show me the console logs" | Stops and displays any errors/warnings |
 
 ---
 
@@ -164,6 +201,22 @@ claude mcp add mcp-unity -- node /absolute/path/to/Server~/build/index.js
 In Unity: **Tools > MCP Unity > Server Window** → click **Start Server**.
 
 The status indicator turns **green** when ready.
+
+---
+
+## Installation Verification
+
+After installation, verify everything works:
+
+| Check | How | Expected |
+|-------|-----|----------|
+| Plugin loaded | Open **Tools > Conductor MCP** | Window opens without errors |
+| Node.js available | Open a terminal, run `node --version` | `v18.x.x` or higher |
+| Bridge built | Check `Server~/build/index.js` exists | File present |
+| Server starts | Click **Start Server** in Server tab | Green dot, status "Running" |
+| AI connects | Send a message from your AI editor | Response appears, tool calls execute |
+
+If any check fails, see [Troubleshooting](#troubleshooting).
 
 ---
 
@@ -802,3 +855,97 @@ Server~/src/
 | `Required parameter 'X' is missing` | Tool called without a required argument | Check the tool's `inputSchema.required` fields |
 | `Tool 'X' exists but category 'Y' is not enabled` | Category not loaded | Call `unity_enable_tool_category` with the category name |
 | `Invalid asset path` | Path contains `..` or doesn't start with `Assets/` | Use full `Assets/...` paths |
+
+---
+
+## FAQ
+
+**Q: What is MCP?**
+MCP (Model Context Protocol) is an open standard by Anthropic that lets AI assistants interact with external tools. Conductor MCP implements this protocol to give AI control over the Unity Editor.
+
+**Q: Do I need programming knowledge?**
+No. You interact with the AI in natural language. The AI translates your requests into tool calls automatically.
+
+**Q: Which AI provider should I use?**
+Claude (Anthropic) offers the best MCP support. GPT-4 and Gemini work via the built-in chat panel. For offline use, try Ollama or LM Studio.
+
+**Q: Does my code leave my machine?**
+Only when using cloud AI providers (Claude, GPT-4, etc.) — your prompts and tool results are sent to the provider's API. With Ollama or LM Studio, everything stays local.
+
+**Q: Can I use this in production builds?**
+Conductor MCP is editor-only. It is not included in builds — the entire plugin lives in an `Editor/` assembly.
+
+**Q: Does it work with URP / HDRP?**
+Yes. Materials and shaders are auto-detected and mapped to the active render pipeline.
+
+**Q: Can I add my own custom tools?**
+Yes. Create a partial class of `McpUnityServer`, register your tool with `_toolRegistry.RegisterTool()`, and rebuild the bridge. See [Development Guide](#development-guide).
+
+**Q: How do I uninstall?**
+Remove the plugin folder from your project, delete the `.mcp.json` file at the project root, and optionally remove `.cursor/mcp.json`, `.windsurf/mcp.json`, `.vscode/mcp.json`.
+
+---
+
+## Known Issues
+
+| Issue | Status | Workaround |
+|-------|--------|-----------|
+| OAuth token expires after 24h | By design | Re-authenticate via Server > Provider & Auth |
+| API keys stored in plaintext EditorPrefs | Planned fix | Use environment variables (`ANTHROPIC_API_KEY`) instead |
+| Large screenshots (4096x4096) use significant memory | Mitigated | 128 MB guard added; use smaller dimensions when possible |
+| `McpChatWindow.cs` is 1500+ lines | Cosmetic | No user impact; refactor planned for v1.2 |
+
+---
+
+## Version Compatibility
+
+| Component | Minimum | Tested Up To |
+|-----------|---------|-------------|
+| Unity | 6000.0.0f1 (Unity 6) | 6000.4.x |
+| Node.js | 18.0.0 | 22.x |
+| npm | 9.0.0 | 10.x |
+| Render Pipelines | Built-in, URP, HDRP | All auto-detected |
+| Platforms | Windows, macOS, Linux | Editor only |
+
+### Supported AI Clients
+
+| Client | Config File | Root Key | Status |
+|--------|------------|----------|--------|
+| Claude Code CLI | `.mcp.json` | `mcpServers` | Fully supported |
+| Claude Desktop | Global config | `mcpServers` | Fully supported |
+| Cursor | `.cursor/mcp.json` | `mcpServers` | Fully supported |
+| Windsurf | `.windsurf/mcp.json` | `mcpServers` | Fully supported |
+| VS Code / Copilot | `.vscode/mcp.json` | `servers` | Fully supported |
+
+---
+
+## Support
+
+- **GitHub Issues**: [github.com/JulianKerignard/MCP-Unity/issues](https://github.com/JulianKerignard/MCP-Unity/issues)
+- **Email**: jujukerignard4@gmail.com
+- **Documentation**: Included in package (`Editor/Documentation/`)
+
+When reporting an issue, include:
+1. Unity version
+2. Node.js version (`node --version`)
+3. AI client used (Claude Code, Cursor, etc.)
+4. Console logs (enable via Server > Advanced > Log to Console)
+5. Steps to reproduce
+
+---
+
+## Glossary
+
+| Term | Definition |
+|------|-----------|
+| **MCP** | Model Context Protocol — open standard for AI-to-tool communication |
+| **Bridge** | The Node.js process that translates MCP (stdio) to WebSocket for Unity |
+| **Tool** | A single operation the AI can execute (e.g., `unity_create_gameobject`) |
+| **Category** | A group of related tools (e.g., "terrain", "animator") that can be loaded on demand |
+| **JSON-RPC 2.0** | The message format used over WebSocket between the bridge and Unity |
+| **TTL Cache** | Time-to-live cache on the bridge side that avoids redundant calls to Unity |
+| **stdio** | Standard input/output — how the AI client communicates with the bridge process |
+| **WebSocket** | Persistent bidirectional connection between the bridge and Unity Editor |
+| **EditorPrefs** | Unity's key-value storage for editor settings (per-machine, not version-controlled) |
+| **URP** | Universal Render Pipeline — Unity's lightweight scriptable render pipeline |
+| **HDRP** | High Definition Render Pipeline — Unity's high-fidelity render pipeline |

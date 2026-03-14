@@ -5,6 +5,35 @@ All notable changes to MCP Unity — AI Editor Assistant will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-03-14
+
+### Added
+- **`unity_play_mode` tool** — control Play Mode directly (play, stop, pause, resume, step) without menu item workarounds
+- **Dynamic plugin path detection** — Setup Wizard and server config now find the plugin wherever it's installed via asmdef search (no more hardcoded paths)
+- **VS Code / Copilot support** — Setup generates correct format (`"servers"` root key) for `.vscode/mcp.json`
+- **Setup Wizard writes config files** — "Setup All Editors" button creates `.mcp.json` for Claude Code, Cursor, Windsurf, and VS Code in one click
+- **Memory guard for screenshots** — rejects Texture2D allocations over 128 MB before they happen
+- **`CLAUDE.md`** — development guidance file for Claude Code contributors
+- **`filterMode` / `wrapMode` in SetImportSettings** — TextureImporter properties now applied (were read-only before)
+- **Cache invalidators** for `unity_run_tests`, `unity_cancel_bake`, `unity_export_heightmap`
+
+### Fixed
+- 9 missing `.meta` files added (Unity GUIDs were regenerated on every clone)
+- `cleanBuild` parameter added to TypeScript schema for `unity_refresh_and_compile` (was C#-only)
+- Script template generates lifecycle methods without explicit `private` modifier (Unity convention)
+- Silent `catch {}` blocks replaced with logged warnings in `McpChatOAuth` and `GameObjectTools`
+- `Physics.autoSyncTransforms` removed (deprecated in Unity 6)
+- All `Debug.LogError` calls routed through `McpDebug.LogError` to respect LogToConsole setting
+- npm vulnerabilities resolved (6 HIGH, 1 MODERATE, 1 LOW → 0)
+
+### Changed
+- **Renamed to Conductor MCP** — menu: `Tools > Conductor MCP` (single entry, opens main window)
+- **Console logging disabled by default** — enable via Server > Advanced > Log to Console
+- **UI reorganized** — 4 tabs: Chat, Server, Logs, Setup (was: Chat, Settings, Diagnostics, Setup)
+- **Provider & Auth UI compacted** — inline auth dot, simplified OAuth flow, moved endpoint/prompt to Advanced
+- **Config generator unified** — `GenerateLocalMcpConfig()` and `GenerateVSCodeMcpConfig()` share `GenerateMcpJson()` helper
+- Tool count updated: 165 tools (was 164)
+
 ## [1.0.1] - 2026-02-24
 
 ### Fixed
