@@ -38,10 +38,14 @@ namespace McpUnity.Editor
             {
                 EditorGUILayout.BeginVertical(_boxStyle);
 
-                // Provider popup
+                // --- Provider + Auth Status on same line ---
                 var labels = ProviderRegistry.GetPresetLabels();
                 var ids = ProviderRegistry.GetPresetIds();
-                int newProvider = EditorGUILayout.Popup("Provider", _settingsProviderIndex, labels);
+                var auth = McpChatApiClient.ResolveAuth();
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Provider:", GUILayout.Width(60));
+                int newProvider = EditorGUILayout.Popup(_settingsProviderIndex, labels);
                 if (newProvider != _settingsProviderIndex)
                 {
                     _settingsProviderIndex = newProvider;
@@ -51,46 +55,34 @@ namespace McpUnity.Editor
                     _settingsOAuthStatus = "";
                     LoadProviderSettings();
                 }
+                var origColor = GUI.color;
+                GUI.color = auth.IsValid ? new Color(0.3f, 0.9f, 0.3f) : new Color(1f, 0.4f, 0.4f);
+                EditorGUILayout.LabelField(auth.IsValid ? "\u25CF" : "\u25CB", GUILayout.Width(16));
+                GUI.color = origColor;
+                EditorGUILayout.EndHorizontal();
 
                 string providerId = ids[_settingsProviderIndex];
                 var preset = ProviderRegistry.GetPreset(providerId);
 
-                EditorGUILayout.Space(6);
+                EditorGUILayout.Space(4);
 
-                // Auth status indicator
-                var auth = McpChatApiClient.ResolveAuth();
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Auth Status:", GUILayout.Width(80));
-                var origColor = GUI.color;
-                GUI.color = auth.IsValid ? new Color(0.3f, 0.9f, 0.3f) : new Color(1f, 0.4f, 0.4f);
-                EditorGUILayout.LabelField(auth.IsValid ? "\u25CF Authenticated" : "\u25CF Not Authenticated");
-                GUI.color = origColor;
-                EditorGUILayout.EndHorizontal();
-
-                if (auth.IsValid && !string.IsNullOrEmpty(auth.Source))
-                {
-                    EditorGUILayout.LabelField($"  Source: {auth.Source}", EditorStyles.miniLabel);
-                }
-
-                EditorGUILayout.Space(6);
-
-                // Provider-specific auth UI
+                // --- Auth section (compact) ---
                 if (providerId == "anthropic")
                 {
                     DrawAnthropicAuthSection();
                 }
                 else if (preset != null && preset.isLocal)
                 {
-                    EditorGUILayout.HelpBox("Local provider — no API key required.", MessageType.Info);
+                    EditorGUILayout.LabelField("  No API key required (local provider)", EditorStyles.miniLabel);
                 }
                 else
                 {
                     DrawGenericApiKeySection(providerId, preset);
                 }
 
-                EditorGUILayout.Space(8);
+                EditorGUILayout.Space(6);
 
-                // Model popup
+                // --- Model ---
                 if (preset != null && preset.modelLabels != null && preset.modelLabels.Length > 0)
                 {
                     int newModel = EditorGUILayout.Popup("Model", _settingsModelIndex, preset.modelLabels);
@@ -101,68 +93,30 @@ namespace McpUnity.Editor
                     }
                 }
 
-                // Custom model name (for custom/ollama/lmstudio)
                 if (providerId == "custom" || providerId == "ollama" || providerId == "lmstudio")
                 {
-                    EditorGUILayout.Space(2);
                     string currentModel = ProviderRegistry.GetModel(providerId);
-                    string newModelName = EditorGUILayout.TextField("Custom Model Name", currentModel);
+                    string newModelName = EditorGUILayout.TextField("Custom Model", currentModel);
                     if (newModelName != currentModel)
-                    {
                         ProviderRegistry.SetModel(providerId, newModelName);
-                    }
                 }
 
-                EditorGUILayout.Space(4);
+                EditorGUILayout.Space(2);
 
-                // Max tokens slider
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Max Tokens:", GUILayout.Width(80));
-                int newTokens = EditorGUILayout.IntSlider(_settingsMaxTokens, 256, 64000);
+                // --- Max Tokens + Temperature ---
+                int newTokens = EditorGUILayout.IntSlider("Max Tokens", _settingsMaxTokens, 256, 64000);
                 if (newTokens != _settingsMaxTokens)
                 {
                     _settingsMaxTokens = newTokens;
                     ProviderRegistry.SetMaxTokens(providerId, newTokens);
                 }
-                EditorGUILayout.EndHorizontal();
 
-                // Temperature slider
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Temperature:", GUILayout.Width(80));
                 float maxTemp = providerId == "anthropic" ? 1f : 2f;
-                float newTemp = EditorGUILayout.Slider(_settingsTemperature, 0f, maxTemp);
+                float newTemp = EditorGUILayout.Slider("Temperature", _settingsTemperature, 0f, maxTemp);
                 if (Mathf.Abs(newTemp - _settingsTemperature) > 0.001f)
                 {
                     _settingsTemperature = newTemp;
                     ProviderRegistry.SetTemperature(providerId, newTemp);
-                }
-                EditorGUILayout.EndHorizontal();
-
-                EditorGUILayout.Space(4);
-
-                // Custom endpoint
-                string currentEndpoint = ProviderRegistry.GetCustomEndpoint(providerId);
-                string hint = preset != null ? preset.defaultEndpoint : "";
-                EditorGUILayout.LabelField("Custom Endpoint:", EditorStyles.miniLabel);
-                string newEndpoint = EditorGUILayout.TextField(currentEndpoint);
-                if (newEndpoint != currentEndpoint)
-                {
-                    ProviderRegistry.SetCustomEndpoint(providerId, newEndpoint);
-                }
-                if (!string.IsNullOrEmpty(hint))
-                {
-                    EditorGUILayout.LabelField($"  Default: {hint}", EditorStyles.miniLabel);
-                }
-
-                EditorGUILayout.Space(6);
-
-                // Custom system prompt
-                EditorGUILayout.LabelField("Custom System Prompt:", EditorStyles.miniLabel);
-                string newPrompt = EditorGUILayout.TextArea(_settingsCustomSystemPrompt, GUILayout.MinHeight(60));
-                if (newPrompt != _settingsCustomSystemPrompt)
-                {
-                    _settingsCustomSystemPrompt = newPrompt;
-                    EditorPrefs.SetString(SystemPromptPref, newPrompt);
                 }
 
                 EditorGUILayout.EndVertical();
@@ -173,9 +127,8 @@ namespace McpUnity.Editor
 
         private void DrawAnthropicAuthSection()
         {
-            // API Key vs OAuth toggle
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Auth Method:", GUILayout.Width(90));
+            EditorGUILayout.LabelField("Auth:", GUILayout.Width(38));
             int newAuthMode = GUILayout.Toolbar(_settingsAuthMode, AuthModeLabels);
             if (newAuthMode != _settingsAuthMode)
             {
@@ -184,16 +137,14 @@ namespace McpUnity.Editor
             }
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.Space(4);
+            EditorGUILayout.Space(2);
 
             if (_settingsAuthMode == 0)
             {
-                // API Key mode
                 DrawGenericApiKeySection("anthropic", ProviderRegistry.GetPreset("anthropic"));
             }
             else
             {
-                // OAuth mode
                 DrawOAuthSection();
             }
         }
@@ -207,87 +158,53 @@ namespace McpUnity.Editor
                 EditorGUILayout.BeginHorizontal();
                 var origC = GUI.color;
                 GUI.color = new Color(0.3f, 0.9f, 0.3f);
-                EditorGUILayout.LabelField("\u25CF OAuth Authenticated", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("\u25CF Connected", EditorStyles.boldLabel);
                 GUI.color = origC;
-                EditorGUILayout.EndHorizontal();
-
-                if (GUILayout.Button("Logout", GUILayout.Width(80)))
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Logout", EditorStyles.miniButton, GUILayout.Width(60)))
                 {
                     McpChatOAuth.Logout();
-                    _settingsOAuthStatus = "Logged out.";
+                    _settingsOAuthStatus = "";
                 }
+                EditorGUILayout.EndHorizontal();
             }
             else if (McpChatOAuth.IsExchanging)
             {
-                EditorGUILayout.HelpBox("Exchanging authorization code...", MessageType.Info);
+                EditorGUILayout.LabelField("  Exchanging code...", EditorStyles.miniLabel);
             }
             else
             {
-                EditorGUILayout.HelpBox(
-                    "Login with your Claude Pro/Max/Team subscription.\n" +
-                    "1. Click 'Login with Claude' — your browser opens.\n" +
-                    "2. Authorize the app on claude.ai.\n" +
-                    "3. You land on console.anthropic.com — copy the full code shown (it looks like: abc123...#xyz...).\n" +
-                    "4. Paste it below and click 'Exchange Code'.",
-                    MessageType.Info);
-
-                // Login buttons
-                EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button("Login with Claude (Max)", GUILayout.Height(26)))
+                // Login button
+                if (GUILayout.Button("Login with Claude", GUILayout.Height(24)))
                 {
                     McpChatOAuth.StartLogin("max");
-                    _settingsOAuthStatus = "Browser opened. Authorize, then copy the code from console.anthropic.com.";
+                    _settingsOAuthStatus = "Browser opened — authorize then paste the code below.";
                 }
-                if (GUILayout.Button("Console", GUILayout.Height(26), GUILayout.Width(70)))
-                {
-                    McpChatOAuth.StartLogin("console");
-                    _settingsOAuthStatus = "Browser opened (console mode).";
-                }
-                EditorGUILayout.EndHorizontal();
 
-                EditorGUILayout.Space(4);
-
-                // Code paste
-                EditorGUILayout.LabelField("Paste authorization code:", EditorStyles.miniLabel);
+                // Code input + exchange on same line
+                EditorGUILayout.BeginHorizontal();
                 _settingsOAuthCodeInput = EditorGUILayout.TextField(_settingsOAuthCodeInput);
-
                 EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(_settingsOAuthCodeInput));
-                if (GUILayout.Button("Exchange Code"))
+                if (GUILayout.Button("Exchange", GUILayout.Width(70)))
                 {
                     McpChatOAuth.ExchangeCode(
                         _settingsOAuthCodeInput,
-                        _ => { _settingsOAuthStatus = "Login successful!"; _settingsOAuthCodeInput = ""; Repaint(); },
+                        _ => { _settingsOAuthStatus = ""; _settingsOAuthCodeInput = ""; Repaint(); },
                         err => { _settingsOAuthStatus = $"Error: {err}"; Repaint(); }
                     );
                 }
                 EditorGUI.EndDisabledGroup();
-
-                // Manual bearer token (last resort)
-                EditorGUILayout.Space(4);
-                EditorGUILayout.LabelField("Or paste bearer token manually:", EditorStyles.miniLabel);
-                EditorGUILayout.BeginHorizontal();
-                _settingsOAuthTokenInput = EditorGUILayout.TextField(_settingsOAuthTokenInput);
-                if (GUILayout.Button("Set", GUILayout.Width(40)))
-                {
-                    McpChatOAuth.SetManualToken(_settingsOAuthTokenInput);
-                    _settingsOAuthStatus = "Bearer token set (24h).";
-                    _settingsOAuthTokenInput = "";
-                    Repaint();
-                }
                 EditorGUILayout.EndHorizontal();
             }
 
-            // Status feedback
             if (!string.IsNullOrEmpty(_settingsOAuthStatus))
             {
-                EditorGUILayout.Space(2);
                 EditorGUILayout.LabelField(_settingsOAuthStatus, EditorStyles.miniLabel);
             }
         }
 
         private void DrawGenericApiKeySection(string providerId, ProviderPreset preset)
         {
-            // Load stored key once when provider changes — avoids reading EditorPrefs every frame
             if (_settingsApiKeyCachedProviderId != providerId)
             {
                 _settingsApiKeyCachedProviderId = providerId;
@@ -296,7 +213,7 @@ namespace McpUnity.Editor
             }
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("API Key:", GUILayout.Width(60));
+            EditorGUILayout.LabelField("API Key:", GUILayout.Width(55));
 
             EditorGUI.BeginChangeCheck();
             if (_settingsCredentialVisible)
@@ -305,44 +222,27 @@ namespace McpUnity.Editor
                 _settingsApiKeyInput = EditorGUILayout.PasswordField(_settingsApiKeyInput);
             if (EditorGUI.EndChangeCheck()) _settingsApiKeyDirty = true;
 
-            if (GUILayout.Button(_settingsCredentialVisible ? "Hide" : "Show", GUILayout.Width(45)))
-            {
+            if (GUILayout.Button(_settingsCredentialVisible ? "Hide" : "Show", EditorStyles.miniButton, GUILayout.Width(40)))
                 _settingsCredentialVisible = !_settingsCredentialVisible;
+
+            if (preset != null && !string.IsNullOrEmpty(preset.apiKeyUrl))
+            {
+                if (GUILayout.Button("Get", EditorStyles.miniButton, GUILayout.Width(30)))
+                    Application.OpenURL(preset.apiKeyUrl);
             }
             EditorGUILayout.EndHorizontal();
 
-            // Save key only when the text field loses focus or user presses Enter
-            // (not on every frame — EditorPrefs writes are disk I/O)
             if (_settingsApiKeyDirty && !EditorGUIUtility.editingTextField)
             {
                 ProviderRegistry.SetApiKey(providerId, _settingsApiKeyInput);
                 _settingsApiKeyDirty = false;
             }
 
-            // Env var hint
             if (preset != null && !string.IsNullOrEmpty(preset.apiKeyEnvVar))
             {
                 string envValue = Environment.GetEnvironmentVariable(preset.apiKeyEnvVar);
                 if (!string.IsNullOrEmpty(envValue))
-                {
-                    EditorGUILayout.LabelField($"  Env {preset.apiKeyEnvVar} detected", EditorStyles.miniLabel);
-                }
-                else
-                {
-                    EditorGUILayout.LabelField($"  Or set env: {preset.apiKeyEnvVar}", EditorStyles.miniLabel);
-                }
-            }
-
-            // "Get Key" link
-            if (preset != null && !string.IsNullOrEmpty(preset.apiKeyUrl))
-            {
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Get API Key", _linkStyle, GUILayout.Width(80)))
-                {
-                    Application.OpenURL(preset.apiKeyUrl);
-                }
-                EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.LabelField($"  \u25CF Env {preset.apiKeyEnvVar} detected", EditorStyles.miniLabel);
             }
         }
 
@@ -588,6 +488,31 @@ namespace McpUnity.Editor
                 EditorGUILayout.EndHorizontal();
 
                 DrawToggleSetting("Log to File:", s.LogToFile, v => s.LogToFile = v);
+
+                EditorGUILayout.Space(8);
+
+                // Custom Endpoint
+                EditorGUILayout.LabelField("Provider Endpoint", EditorStyles.boldLabel);
+                var epIds = ProviderRegistry.GetPresetIds();
+                string epId = epIds[_settingsProviderIndex];
+                var epPreset = ProviderRegistry.GetPreset(epId);
+                string currentEndpoint = ProviderRegistry.GetCustomEndpoint(epId);
+                string newEndpoint = EditorGUILayout.TextField(currentEndpoint);
+                if (newEndpoint != currentEndpoint)
+                    ProviderRegistry.SetCustomEndpoint(epId, newEndpoint);
+                if (epPreset != null && !string.IsNullOrEmpty(epPreset.defaultEndpoint))
+                    EditorGUILayout.LabelField($"  Default: {epPreset.defaultEndpoint}", EditorStyles.miniLabel);
+
+                EditorGUILayout.Space(8);
+
+                // Custom System Prompt
+                EditorGUILayout.LabelField("System Prompt Override", EditorStyles.boldLabel);
+                string newPrompt = EditorGUILayout.TextArea(_settingsCustomSystemPrompt, GUILayout.MinHeight(40));
+                if (newPrompt != _settingsCustomSystemPrompt)
+                {
+                    _settingsCustomSystemPrompt = newPrompt;
+                    EditorPrefs.SetString(SystemPromptPref, newPrompt);
+                }
 
                 EditorGUILayout.Space(8);
 
