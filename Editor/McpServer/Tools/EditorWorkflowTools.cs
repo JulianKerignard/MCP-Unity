@@ -65,6 +65,9 @@ namespace McpUnity.Server
             "Component/Audio/Audio Source",
             "Component/Audio/Audio Listener",
 
+            // Tools menu (user scripts, safe)
+            // Prefix-matched in ExecuteMenuItem — any "Tools/..." is allowed
+
             // Window operations (safe)
             "Window/General/Game",
             "Window/General/Scene",
@@ -203,7 +206,11 @@ namespace McpUnity.Server
             if (menuPathErr != null) return menuPathErr;
 
             // SECURITY: Validate menu path against allowlist
-            if (!AllowedMenuPaths.Contains(menuPath))
+            // Tools/ prefix is always allowed (user-created editor scripts)
+            bool allowed = AllowedMenuPaths.Contains(menuPath)
+                        || menuPath.StartsWith("Tools/", System.StringComparison.OrdinalIgnoreCase);
+
+            if (!allowed)
             {
                 McpDebug.LogWarning($"[MCP Unity] Blocked menu item execution (not in allowlist): {menuPath}");
                 return McpToolResult.Error($"Menu item not allowed for security reasons: {menuPath}. Use allowed menu paths only.");
