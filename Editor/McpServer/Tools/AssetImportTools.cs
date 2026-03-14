@@ -193,6 +193,12 @@ namespace McpUnity.Server
 
                     if (settings.TryGetValue("alphaIsTransparency", out v) && v != null)
                     { tex.alphaIsTransparency = Convert.ToBoolean(v); applied.Add("alphaIsTransparency"); }
+
+                    if (settings.TryGetValue("filterMode", out v) && Enum.TryParse<FilterMode>(v?.ToString(), out var fm))
+                    { tex.filterMode = fm; applied.Add("filterMode"); }
+
+                    if (settings.TryGetValue("wrapMode", out v) && Enum.TryParse<TextureWrapMode>(v?.ToString(), out var wm))
+                    { tex.wrapMode = wm; applied.Add("wrapMode"); }
                 }
                 else if (importer is AudioImporter audio)
                 {

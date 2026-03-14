@@ -766,7 +766,7 @@ namespace McpUnity.Server
                     break;
             }
 
-            sb.AppendLine($"{indent}private {returnType} {methodName}({parameters})");
+            sb.AppendLine($"{indent}{returnType} {methodName}({parameters})");
             sb.AppendLine($"{indent}{{");
             sb.AppendLine($"{indent}    // TODO: Implement {methodName}");
             sb.AppendLine($"{indent}}}");

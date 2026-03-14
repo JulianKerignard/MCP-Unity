@@ -108,6 +108,7 @@ const coreTools: ToolDefinition[] = [
       type: 'object',
       properties: {
         recompile: { type: 'boolean', description: 'Request script recompilation (default: true)' },
+        cleanBuild: { type: 'boolean', description: 'Force a clean rebuild clearing build cache (default: false). Only used when recompile is true.' },
       },
     },
   },
