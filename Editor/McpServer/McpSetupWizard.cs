@@ -392,11 +392,14 @@ namespace McpUnity.Editor
                 ("VS Code / Copilot", McpSettings.GetVSCodeConfigPath()),
             };
 
-            string content = McpSettings.Instance.GenerateLocalMcpConfig();
             int created = 0;
 
             foreach (var (label, path) in editors)
             {
+                bool isVSCode = path.Contains(".vscode");
+                string content = isVSCode
+                    ? McpSettings.Instance.GenerateVSCodeMcpConfig()
+                    : McpSettings.Instance.GenerateLocalMcpConfig();
                 string err = McpSettings.WriteConfigFile(path, content);
                 if (err == null)
                     created++;

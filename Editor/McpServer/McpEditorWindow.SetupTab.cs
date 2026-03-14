@@ -177,7 +177,11 @@ namespace McpUnity.Editor
 
         private void WriteEditorConfig(string configPath, string serverPath, string editorLabel)
         {
-            string content = McpSettings.Instance.GenerateLocalMcpConfig();
+            // VS Code uses "servers" root key, others use "mcpServers"
+            bool isVSCode = configPath.Contains(".vscode");
+            string content = isVSCode
+                ? McpSettings.Instance.GenerateVSCodeMcpConfig()
+                : McpSettings.Instance.GenerateLocalMcpConfig();
             string error = McpSettings.WriteConfigFile(configPath, content);
 
             if (error == null)
@@ -206,7 +210,10 @@ namespace McpUnity.Editor
             {
                 if (!File.Exists(path))
                 {
-                    string content = McpSettings.Instance.GenerateLocalMcpConfig();
+                    bool isVSCode = path.Contains(".vscode");
+                    string content = isVSCode
+                        ? McpSettings.Instance.GenerateVSCodeMcpConfig()
+                        : McpSettings.Instance.GenerateLocalMcpConfig();
                     string err = McpSettings.WriteConfigFile(path, content);
                     if (err == null)
                     {

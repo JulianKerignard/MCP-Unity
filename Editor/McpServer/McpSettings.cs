@@ -353,11 +353,22 @@ namespace McpUnity.Editor
         }
 
         /// <summary>
-        /// Generates the shared mcpServers JSON block used by
-        /// Claude Code CLI, Cursor, Windsurf, and VS Code.
-        /// These editors all accept the same minimal format (no "type" key required).
+        /// Generates mcpServers JSON for Claude Code CLI, Cursor, and Windsurf.
         /// </summary>
         public string GenerateLocalMcpConfig()
+        {
+            return GenerateMcpJson("mcpServers");
+        }
+
+        /// <summary>
+        /// Generates servers JSON for VS Code / GitHub Copilot (uses "servers" root key).
+        /// </summary>
+        public string GenerateVSCodeMcpConfig()
+        {
+            return GenerateMcpJson("servers");
+        }
+
+        private string GenerateMcpJson(string rootKey)
         {
             string serverPath = EffectiveServerPath.Replace("\\", "/");
             string escapedPath = serverPath.Replace("\"", "\\\"");
@@ -368,7 +379,7 @@ namespace McpUnity.Editor
                 : "";
 
             return $@"{{
-  ""mcpServers"": {{
+  ""{rootKey}"": {{
     ""mcp-unity"": {{
       ""command"": ""node"",
       ""args"": [""{escapedPath}""],
