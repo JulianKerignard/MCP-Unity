@@ -102,6 +102,17 @@ const coreTools: ToolDefinition[] = [
     },
   },
   {
+    name: 'unity_play_mode',
+    description: 'EDITOR: Control Play Mode — play, stop, pause, resume, or step one frame.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['play', 'stop', 'pause', 'resume', 'step'], description: 'Action to perform' },
+      },
+      required: ['action'],
+    },
+  },
+  {
     name: 'unity_refresh_and_compile',
     description: 'EDITOR: Refresh assets and recompile scripts. Use after modifying C# files.',
     inputSchema: {

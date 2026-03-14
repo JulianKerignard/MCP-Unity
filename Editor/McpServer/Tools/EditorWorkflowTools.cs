@@ -163,6 +163,26 @@ namespace McpUnity.Server
 
             _toolRegistry.RegisterTool(new McpToolDefinition
             {
+                name = "unity_play_mode",
+                description = "Control Unity Play Mode: play, stop, pause, resume, or step one frame. Returns the new play state.",
+                inputSchema = new McpInputSchema
+                {
+                    type = "object",
+                    properties = new Dictionary<string, McpPropertySchema>
+                    {
+                        ["action"] = new McpPropertySchema
+                        {
+                            type = "string",
+                            description = "Action to perform",
+                            @enum = new List<string> { "play", "stop", "pause", "resume", "step" }
+                        }
+                    },
+                    required = new List<string> { "action" }
+                }
+            }, ControlPlayMode);
+
+            _toolRegistry.RegisterTool(new McpToolDefinition
+            {
                 name = "unity_find_missing_references",
                 description = "Scan the current scene for missing (null) object references on all components. Returns a list of affected GameObjects and fields.",
                 inputSchema = new McpInputSchema
@@ -475,6 +495,58 @@ namespace McpUnity.Server
                     ? "No missing references found."
                     : $"Found {missing.Count} missing reference(s). Fix them before using unity_set_reference."
             });
+        }
+
+        private static McpToolResult ControlPlayMode(Dictionary<string, object> args)
+        {
+            var (action, err) = RequireArg(args, "action");
+            if (err != null) return err;
+
+            switch (action.ToLower())
+            {
+                case "play":
+                    if (EditorApplication.isPlaying)
+                        return McpToolResult.Error("Already in Play Mode.");
+                    EditorApplication.isPlaying = true;
+                    return McpResponse.Success("Entering Play Mode", new
+                    {
+                        action = "play",
+                        note = "Play Mode is async — scene will start on next frame. Check unity_get_editor_state for isPlaying status."
+                    });
+
+                case "stop":
+                    if (!EditorApplication.isPlaying)
+                        return McpToolResult.Error("Not in Play Mode.");
+                    EditorApplication.isPlaying = false;
+                    return McpResponse.Success("Exiting Play Mode", new
+                    {
+                        action = "stop",
+                        note = "Returning to Edit Mode. Scene state will be restored."
+                    });
+
+                case "pause":
+                    if (!EditorApplication.isPlaying)
+                        return McpToolResult.Error("Cannot pause — not in Play Mode.");
+                    if (EditorApplication.isPaused)
+                        return McpToolResult.Error("Already paused.");
+                    EditorApplication.isPaused = true;
+                    return McpResponse.Success("Game paused", new { action = "pause" });
+
+                case "resume":
+                    if (!EditorApplication.isPaused)
+                        return McpToolResult.Error("Not paused.");
+                    EditorApplication.isPaused = false;
+                    return McpResponse.Success("Game resumed", new { action = "resume" });
+
+                case "step":
+                    if (!EditorApplication.isPlaying)
+                        return McpToolResult.Error("Cannot step — not in Play Mode.");
+                    EditorApplication.Step();
+                    return McpResponse.Success("Stepped one frame", new { action = "step" });
+
+                default:
+                    return McpToolResult.Error($"Unknown action: '{action}'. Use: play, stop, pause, resume, step.");
+            }
         }
 
         private static McpToolResult RefreshAndCompile(Dictionary<string, object> args)

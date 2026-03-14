@@ -230,6 +230,8 @@ export const cacheInvalidators: Record<string, CacheCategory[]> = {
   unity_set_selection: ['editorState'],
   unity_focus_gameobject: ['editorState'],
   unity_clear_console: ['editorState'],
+  // Play mode — invalidates editor state and hierarchy (runtime objects)
+  unity_play_mode: ['hierarchy', 'editorState'],
   // Editor workflow tools — can change anything
   unity_execute_menu_item: ['hierarchy', 'components', 'scenes'],
   unity_undo: ['hierarchy', 'components', 'assets', 'scenes'],
