@@ -38,7 +38,7 @@ namespace McpUnity.Editor
         // Logging Configuration
         [SerializeField] private int _maxLogEntries = 500;
         [SerializeField] private bool _logToFile = false;
-        [SerializeField] private bool _logToConsole = true;
+        [SerializeField] private bool _logToConsole = false;
         [SerializeField] private string _logFilePath = "Logs/McpUnity.log";
         [SerializeField] private LogLevel _minimumLogLevel = LogLevel.Info;
 
@@ -486,7 +486,7 @@ namespace McpUnity.Editor
             _showNotifications = true;
             _maxLogEntries = 500;
             _logToFile = false;
-            _logToConsole = true;
+            _logToConsole = false;
             _logFilePath = "Logs/McpUnity.log";
             _minimumLogLevel = LogLevel.Info;
             _sharedSecret = "";

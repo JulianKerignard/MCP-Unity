@@ -114,7 +114,7 @@ namespace McpUnity.Server
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCP JSON-RPC] Error processing message: {ex.Message}\n{ex.StackTrace}");
+                McpDebug.LogError($"[MCP JSON-RPC] Error processing message: {ex.Message}\n{ex.StackTrace}");
                 return SerializeResponse(JsonRpcResponse.Error(
                     requestId,
                     JsonRpcError.InternalError,
@@ -156,7 +156,7 @@ namespace McpUnity.Server
             {
                 sw.Stop();
                 McpRequestMonitor.Record(request.method, toolName, sw.Elapsed.TotalMilliseconds, false, ex.Message);
-                Debug.LogError($"[MCP JSON-RPC] Handler error for {request.method}: {ex.Message}");
+                McpDebug.LogError($"[MCP JSON-RPC] Handler error for {request.method}: {ex.Message}");
                 return JsonRpcResponse.Error(
                     request.id,
                     JsonRpcError.InternalError,
@@ -264,7 +264,7 @@ namespace McpUnity.Server
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCP JSON-RPC] Tool execution error: {ex.Message}\n{ex.StackTrace}");
+                McpDebug.LogError($"[MCP JSON-RPC] Tool execution error: {ex.Message}\n{ex.StackTrace}");
                 return JsonRpcResponse.Error(
                     request.id,
                     JsonRpcError.ExecutionError,

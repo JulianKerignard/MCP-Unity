@@ -257,7 +257,7 @@ namespace McpUnity.Server
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[MCP Unity] Error processing message: {ex.Message}\n{ex.StackTrace}");
+                    McpDebug.LogError($"[MCP Unity] Error processing message: {ex.Message}\n{ex.StackTrace}");
                     try
                     {
                         queued.Sender.SendMessage(JsonHelper.ToJson(
@@ -737,7 +737,7 @@ namespace McpUnity.Server
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCP Unity] Failed to start server on port {Port}: {ex.Message}");
+                McpDebug.LogError($"[MCP Unity] Failed to start server on port {Port}: {ex.Message}");
                 _isRunning = false;
             }
         }
@@ -974,7 +974,7 @@ namespace McpUnity.Server
 
         protected override void OnError(ErrorEventArgs e)
         {
-            Debug.LogError($"[MCP Unity] WebSocket error: {e.Message}");
+            McpDebug.LogError($"[MCP Unity] WebSocket error: {e.Message}");
         }
 
         /// <summary>C-02: Check if the WebSocket connection is still alive before sending.</summary>

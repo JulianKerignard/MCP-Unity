@@ -30,12 +30,14 @@ namespace McpUnity.Editor
         }
 
         /// <summary>
-        /// Log error message (always shown - errors are important)
+        /// Log error message (respects LogToConsole setting)
         /// </summary>
         public static void LogError(string message)
         {
-            // Errors are always logged regardless of setting
-            Debug.LogError(message);
+            if (McpSettings.Instance.LogToConsole)
+            {
+                Debug.LogError(message);
+            }
         }
 
         /// <summary>

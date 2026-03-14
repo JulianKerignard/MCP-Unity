@@ -24,13 +24,13 @@ namespace McpUnity.Server
         {
             if (string.IsNullOrEmpty(definition?.uri))
             {
-                Debug.LogError("[MCP Registry] Cannot register resource without a URI");
+                McpDebug.LogError("[MCP Registry] Cannot register resource without a URI");
                 return;
             }
 
             if (handler == null)
             {
-                Debug.LogError($"[MCP Registry] Cannot register resource '{definition.uri}' without a handler");
+                McpDebug.LogError($"[MCP Registry] Cannot register resource '{definition.uri}' without a handler");
                 return;
             }
 
@@ -114,7 +114,7 @@ namespace McpUnity.Server
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCP Registry] Resource read error for '{uri}': {ex.Message}\n{ex.StackTrace}");
+                McpDebug.LogError($"[MCP Registry] Resource read error for '{uri}': {ex.Message}\n{ex.StackTrace}");
                 throw new Exception($"Failed to read resource: {ex.Message}");
             }
         }

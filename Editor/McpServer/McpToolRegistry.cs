@@ -49,13 +49,13 @@ namespace McpUnity.Server
         {
             if (string.IsNullOrEmpty(definition?.name))
             {
-                Debug.LogError("[MCP Registry] Cannot register tool without a name");
+                McpDebug.LogError("[MCP Registry] Cannot register tool without a name");
                 return;
             }
 
             if (handler == null)
             {
-                Debug.LogError($"[MCP Registry] Cannot register tool '{definition.name}' without a handler");
+                McpDebug.LogError($"[MCP Registry] Cannot register tool '{definition.name}' without a handler");
                 return;
             }
 
@@ -162,7 +162,7 @@ namespace McpUnity.Server
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCP Registry] Tool execution error for '{name}': {ex.Message}\n{ex.StackTrace}");
+                McpDebug.LogError($"[MCP Registry] Tool execution error for '{name}': {ex.Message}\n{ex.StackTrace}");
                 return McpToolResult.Error($"Tool execution failed: {ex.Message}");
             }
         }
