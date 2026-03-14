@@ -696,7 +696,7 @@ namespace McpUnity.Server
         /// <summary>
         /// Menu item to quickly start the server
         /// </summary>
-        [MenuItem("Tools/MCP Unity/Start Server", priority = 1)]
+        [MenuItem("Tools/Conductor MCP/Start Server", priority = 1)]
         public static void MenuStartServer()
         {
             if (!_initialized)
@@ -707,7 +707,7 @@ namespace McpUnity.Server
             Start();
         }
 
-        [MenuItem("Tools/MCP Unity/Stop Server", priority = 2)]
+        [MenuItem("Tools/Conductor MCP/Stop Server", priority = 2)]
         public static void MenuStopServer()
         {
             Stop();

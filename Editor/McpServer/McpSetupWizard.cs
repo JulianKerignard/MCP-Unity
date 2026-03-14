@@ -25,7 +25,7 @@ namespace McpUnity.Editor
             }
         }
 
-        [MenuItem("Tools/MCP Unity/Setup Wizard", priority = 50)]
+        [MenuItem("Tools/Conductor MCP/Setup Wizard", priority = 50)]
         public static void ShowWizard()
         {
             McpSetupWizardWindow.Open();
@@ -65,7 +65,7 @@ namespace McpUnity.Editor
 
         public static void Open()
         {
-            var win = GetWindow<McpSetupWizardWindow>(true, "MCP Unity — Setup Wizard", true);
+            var win = GetWindow<McpSetupWizardWindow>(true, "Conductor MCP — Setup Wizard", true);
             win.minSize = new Vector2(520, 420);
             win.maxSize = new Vector2(640, 600);
             win.Show();
@@ -98,7 +98,7 @@ namespace McpUnity.Editor
 
         private void DrawHeader()
         {
-            EditorGUILayout.LabelField("MCP Unity — Setup Wizard", _headerStyle);
+            EditorGUILayout.LabelField("Conductor MCP — Setup Wizard", _headerStyle);
             EditorGUILayout.LabelField(
                 "Connect any AI assistant to your Unity Editor in 3 steps.",
                 EditorStyles.wordWrappedMiniLabel);
@@ -134,7 +134,7 @@ namespace McpUnity.Editor
             EditorGUILayout.LabelField("Step 1 — Check Node.js Installation", EditorStyles.boldLabel);
             GUILayout.Space(6);
             EditorGUILayout.HelpBox(
-                "MCP Unity requires Node.js 18+ to run the bridge that connects AI clients to Unity.\n" +
+                "Conductor MCP requires Node.js 18+ to run the bridge that connects AI clients to Unity.\n" +
                 "If Node.js is not installed, visit https://nodejs.org",
                 MessageType.Info);
             GUILayout.Space(8);
@@ -371,7 +371,7 @@ namespace McpUnity.Editor
             }
             if (GUILayout.Button("Open Settings Window", GUILayout.Height(28)))
             {
-                EditorApplication.ExecuteMenuItem("Tools/MCP Unity/Server Window");
+                EditorApplication.ExecuteMenuItem("Tools/Conductor MCP/Server Window");
             }
             EditorGUILayout.EndHorizontal();
 
@@ -418,15 +418,15 @@ namespace McpUnity.Editor
             EditorGUILayout.LabelField("Setup Complete!", EditorStyles.boldLabel);
             GUILayout.Space(8);
             EditorGUILayout.HelpBox(
-                "MCP Unity is ready.\n\n" +
-                "1. In Unity: Tools > MCP Unity > Server Window → Start Server\n" +
+                "Conductor MCP is ready.\n\n" +
+                "1. In Unity: Tools > Conductor MCP > Server Window → Start Server\n" +
                 "2. In your AI client: restart or reload MCP servers\n" +
                 "3. Ask Claude: \"List the GameObjects in my scene\"",
                 MessageType.None);
             GUILayout.Space(12);
 
             if (GUILayout.Button("Open Server Window", GUILayout.Height(36)))
-                EditorApplication.ExecuteMenuItem("Tools/MCP Unity/Server Window");
+                EditorApplication.ExecuteMenuItem("Tools/Conductor MCP/Server Window");
 
             GUILayout.Space(4);
             if (GUILayout.Button("Close", GUILayout.Height(28)))

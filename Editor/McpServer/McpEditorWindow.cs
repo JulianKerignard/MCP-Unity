@@ -108,18 +108,18 @@ namespace McpUnity.Editor
         // Menu Items
         // ====================================================================
 
-        [MenuItem("Tools/MCP Unity/Server Window", priority = 100)]
+        [MenuItem("Tools/Conductor MCP/Server Window", priority = 100)]
         public static void ShowWindow()
         {
-            var window = GetWindow<McpEditorWindow>("MCP Unity");
+            var window = GetWindow<McpEditorWindow>("Conductor MCP");
             window.minSize = new Vector2(420, 500);
             window.Show();
         }
 
-        [MenuItem("Tools/MCP Unity/Quick Start Server", priority = 101)]
+        [MenuItem("Tools/Conductor MCP/Quick Start Server", priority = 101)]
         public static void QuickStartServer()
         {
-            var window = GetWindow<McpEditorWindow>("MCP Unity");
+            var window = GetWindow<McpEditorWindow>("Conductor MCP");
             window.StartServer();
         }
 
@@ -303,7 +303,7 @@ namespace McpUnity.Editor
         private void DrawHeader()
         {
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("MCP Unity", _headerStyle);
+            EditorGUILayout.LabelField("Conductor MCP", _headerStyle);
             GUILayout.FlexibleSpace();
             DrawStatusIndicator();
             EditorGUILayout.EndHorizontal();
