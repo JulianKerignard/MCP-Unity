@@ -170,8 +170,7 @@ namespace McpUnity.Server
                 ["defaultSolverVelocityIterations"] = Physics.defaultSolverVelocityIterations,
                 ["bounceThreshold"] = Physics.bounceThreshold,
                 ["defaultContactOffset"] = Physics.defaultContactOffset,
-                ["autoSimulation"] = Physics.simulationMode.ToString(),
-                ["autoSyncTransforms"] = Physics.autoSyncTransforms
+                ["autoSimulation"] = Physics.simulationMode.ToString()
             };
 
             if (detailed)
@@ -369,7 +368,7 @@ namespace McpUnity.Server
                     Physics.defaultContactOffset = Convert.ToSingle(value);
                     return true;
                 case "autosynctransforms":
-                    Physics.autoSyncTransforms = Convert.ToBoolean(value);
+                    // Deprecated in Unity 6 — sync is now automatic
                     return true;
                 default:
                     return false;

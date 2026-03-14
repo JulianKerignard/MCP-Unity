@@ -6,6 +6,7 @@ using UnityEngine;
 using McpUnity.Protocol;
 using McpUnity.Helpers;
 using McpUnity.Utils;
+using McpUnity.Editor;
 
 namespace McpUnity.Server
 {
