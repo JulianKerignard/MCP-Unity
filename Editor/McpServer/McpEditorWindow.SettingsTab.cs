@@ -20,8 +20,6 @@ namespace McpUnity.Editor
             DrawSettingsProviderSection();
             EditorGUILayout.Space(4);
             DrawSettingsAdvancedSection();
-            EditorGUILayout.Space(4);
-            DrawDiagnosticsClaudeConfigSection();
         }
 
         // ----------------------------------------------------------------
