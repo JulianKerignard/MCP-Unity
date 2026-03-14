@@ -340,22 +340,29 @@ namespace McpUnity.Editor
             EditorGUILayout.LabelField("Step 3 — Configure Your AI Client", EditorStyles.boldLabel);
             GUILayout.Space(6);
 
-            string buildPath = Path.Combine(GetAbsoluteBridgePath(), "build", "index.js")
-                .Replace("\\", "/");
-
-            string config = GenerateClaudeConfig(buildPath);
+            // Use the canonical config generator (includes UNITY_HOST, UNITY_SECRET, etc.)
+            string config = McpSettings.Instance.GenerateLocalMcpConfig();
+            string buildPath = McpSettings.Instance.EffectiveServerPath.Replace("\\", "/");
 
             EditorGUILayout.HelpBox(
-                "Add this to your AI client configuration.\n" +
-                "Claude Desktop: ~/Library/Application Support/Claude/claude_desktop_config.json (macOS)\n" +
-                "Claude Code CLI: claude mcp add mcp-unity -- node \"" + buildPath + "\"",
+                "Click 'Setup All Editors' to automatically create config files for Claude Code, Cursor, Windsurf, and VS Code.\n" +
+                "Or copy the JSON below to configure manually.",
                 MessageType.Info);
 
             GUILayout.Space(4);
-            EditorGUILayout.LabelField("claude_desktop_config.json:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(".mcp.json / mcp.json:", EditorStyles.boldLabel);
             EditorGUILayout.TextArea(config, _codeStyle, GUILayout.Height(140));
             GUILayout.Space(4);
 
+            // Auto-setup button — writes .mcp.json and editor configs
+            GUI.backgroundColor = new Color(0.3f, 0.7f, 0.4f);
+            if (GUILayout.Button("Setup All Editors (Claude Code, Cursor, Windsurf, VS Code)", GUILayout.Height(32)))
+            {
+                SetupAllEditorConfigs();
+            }
+            GUI.backgroundColor = Color.white;
+
+            GUILayout.Space(4);
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Copy to Clipboard", GUILayout.Height(28)))
             {
@@ -373,20 +380,35 @@ namespace McpUnity.Editor
                 _currentStep = Step.Done;
         }
 
-        private static string GenerateClaudeConfig(string buildPath)
+        /// <summary>
+        /// Write config files for all supported editors (Claude Code, Cursor, Windsurf, VS Code).
+        /// </summary>
+        private void SetupAllEditorConfigs()
         {
-            int port = McpSettings.Instance.Port;
-            return "{\n" +
-                   "  \"mcpServers\": {\n" +
-                   "    \"mcp-unity\": {\n" +
-                   "      \"command\": \"node\",\n" +
-                   $"      \"args\": [\"{buildPath}\"],\n" +
-                   "      \"env\": {\n" +
-                   $"        \"UNITY_PORT\": \"{port}\"\n" +
-                   "      }\n" +
-                   "    }\n" +
-                   "  }\n" +
-                   "}";
+            var editors = new[]
+            {
+                ("Claude Code CLI",   McpSettings.GetClaudeCodeConfigPath()),
+                ("Cursor",            McpSettings.GetCursorConfigPath()),
+                ("Windsurf",          McpSettings.GetWindsurfConfigPath()),
+                ("VS Code / Copilot", McpSettings.GetVSCodeConfigPath()),
+            };
+
+            string content = McpSettings.Instance.GenerateLocalMcpConfig();
+            int created = 0;
+
+            foreach (var (label, path) in editors)
+            {
+                string err = McpSettings.WriteConfigFile(path, content);
+                if (err == null)
+                    created++;
+                else
+                    McpDebug.LogWarning($"[MCP Unity] Failed to write {label} config: {err}");
+            }
+
+            EditorUtility.DisplayDialog("Setup Complete",
+                $"{created} config file(s) created.\n\n" +
+                "Restart your AI editor (Claude Code, Cursor, etc.) to connect to Unity.",
+                "OK");
         }
 
         // ── Step 4 : Done ────────────────────────────────────────────────────
