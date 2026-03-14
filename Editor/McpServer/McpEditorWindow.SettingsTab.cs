@@ -10,18 +10,26 @@ namespace McpUnity.Editor
     public partial class McpEditorWindow
     {
         // ====================================================================
-        // Tab 1: Settings (4 foldout sections)
+        // Tab 1: Server (merged Settings + Diagnostics)
         // ====================================================================
 
-        private void DrawSettingsTab()
+        private void DrawServerTab()
         {
+            // Server control first — most important
+            DrawSettingsServerSection();
+            EditorGUILayout.Space(4);
             DrawSettingsProviderSection();
             EditorGUILayout.Space(4);
             DrawSettingsToolsSection();
             EditorGUILayout.Space(4);
-            DrawSettingsServerSection();
+            // Diagnostics sections (from DiagnosticsTab)
+            DrawDiagnosticsMonitorSection();
+            EditorGUILayout.Space(4);
+            DrawDiagnosticsLogsSection();
             EditorGUILayout.Space(4);
             DrawSettingsAdvancedSection();
+            EditorGUILayout.Space(4);
+            DrawDiagnosticsClaudeConfigSection();
         }
 
         // ----------------------------------------------------------------
@@ -572,7 +580,7 @@ namespace McpUnity.Editor
 
                 if (!s.LogToConsole)
                 {
-                    EditorGUILayout.HelpBox("MCP logs are hidden from Unity Console. View them in the Diagnostics > Logs section.", MessageType.Info);
+                    EditorGUILayout.HelpBox("MCP logs are hidden from Unity Console. View them in the Logs section below.", MessageType.Info);
                 }
 
                 EditorGUILayout.BeginHorizontal();

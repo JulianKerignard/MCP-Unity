@@ -8,17 +8,8 @@ namespace McpUnity.Editor
     public partial class McpEditorWindow
     {
         // ====================================================================
-        // Tab 2: Diagnostics (3 foldout sections)
+        // Diagnostics Sections (drawn from Server tab)
         // ====================================================================
-
-        private void DrawDiagnosticsTab()
-        {
-            DrawDiagnosticsMonitorSection();
-            EditorGUILayout.Space(4);
-            DrawDiagnosticsLogsSection();
-            EditorGUILayout.Space(4);
-            DrawDiagnosticsClaudeConfigSection();
-        }
 
         // ----------------------------------------------------------------
         // Diagnostics Section 1: Request Monitor
