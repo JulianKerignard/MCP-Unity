@@ -21,7 +21,7 @@ namespace McpUnity.Editor
         // Tab Management
         // ====================================================================
         private int _selectedTab = 0;
-        private readonly string[] _tabNames = { "Chat", "Server", "Setup" };
+        private readonly string[] _tabNames = { "Chat", "Server", "Logs", "Setup" };
 
         // ====================================================================
         // Setup Tab State
@@ -277,6 +277,11 @@ namespace McpUnity.Editor
                     EditorGUILayout.EndScrollView();
                     break;
                 case 2:
+                    _diagnosticsScrollPosition = EditorGUILayout.BeginScrollView(_diagnosticsScrollPosition);
+                    DrawLogsTab();
+                    EditorGUILayout.EndScrollView();
+                    break;
+                case 3:
                     _setupScrollPosition = EditorGUILayout.BeginScrollView(_setupScrollPosition);
                     DrawSetupTab();
                     EditorGUILayout.EndScrollView();

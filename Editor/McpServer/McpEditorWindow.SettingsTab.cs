@@ -15,17 +15,9 @@ namespace McpUnity.Editor
 
         private void DrawServerTab()
         {
-            // Server control first — most important
             DrawSettingsServerSection();
             EditorGUILayout.Space(4);
             DrawSettingsProviderSection();
-            EditorGUILayout.Space(4);
-            DrawSettingsToolsSection();
-            EditorGUILayout.Space(4);
-            // Diagnostics sections (from DiagnosticsTab)
-            DrawDiagnosticsMonitorSection();
-            EditorGUILayout.Space(4);
-            DrawDiagnosticsLogsSection();
             EditorGUILayout.Space(4);
             DrawSettingsAdvancedSection();
             EditorGUILayout.Space(4);
