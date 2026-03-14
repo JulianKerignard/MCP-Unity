@@ -459,7 +459,7 @@ namespace McpUnity.Server
                     return McpResponse.Success(singleResult);
                 }
             }
-            catch { /* fall through to raw batch result */ }
+            catch (Exception ex) { McpDebug.LogWarning($"[MCP Unity] Batch result parsing failed: {ex.Message}"); }
             return batchResult;
         }
 

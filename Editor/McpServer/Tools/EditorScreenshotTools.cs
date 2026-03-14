@@ -129,6 +129,12 @@ namespace McpUnity.Server
             int jpgQuality = ArgumentParser.GetIntClamped(args, "jpgQuality", 75, 1, 100);
             int width = ArgumentParser.GetIntClamped(args, "width", 640, 1, MaxScreenshotDimension);
             int height = ArgumentParser.GetIntClamped(args, "height", 360, 1, MaxScreenshotDimension);
+
+            // Guard: reject allocations over 128 MB (e.g. 4096x4096 RGB24 ≈ 48 MB)
+            const long MaxScreenshotBytes = 128L * 1024 * 1024;
+            if ((long)width * height * 3 > MaxScreenshotBytes)
+                return McpToolResult.Error($"Screenshot {width}x{height} would exceed memory limit ({MaxScreenshotBytes / (1024 * 1024)} MB).");
+
             bool returnBase64 = ArgumentParser.GetBool(args, "returnBase64", false);
 
             string extension = format == "png" ? ".png" : ".jpg";

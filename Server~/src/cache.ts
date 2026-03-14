@@ -235,6 +235,11 @@ export const cacheInvalidators: Record<string, CacheCategory[]> = {
   // Editor workflow tools — can change anything
   unity_execute_menu_item: ['hierarchy', 'components', 'scenes'],
   unity_undo: ['hierarchy', 'components', 'assets', 'scenes'],
+  // Tests — can change project state
+  unity_run_tests: ['scenes', 'editorState'],
+  // Baking — can cancel/export
+  unity_cancel_bake: ['assets'],
+  unity_export_heightmap: ['assets'],
   // Refresh/Compile — invalidates everything
   unity_refresh_and_compile: ['hierarchy', 'components', 'assets', 'scenes', 'editorState'],
 };

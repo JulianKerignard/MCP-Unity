@@ -354,7 +354,7 @@ namespace McpUnity.Chat
                             else if (parsed != null && parsed.TryGetValue("error", out var err))
                                 error = err.ToString();
                         }
-                        catch { /* ignore */ }
+                        catch (Exception parseEx) { McpDebug.LogWarning($"[Chat OAuth] Failed to parse error response: {parseEx.Message}"); }
                     }
                     McpDebug.LogError($"[Chat OAuth] Token request failed: {error}");
                     _pendingRequest.Dispose();
