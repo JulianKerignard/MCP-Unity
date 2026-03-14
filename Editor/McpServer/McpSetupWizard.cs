@@ -25,7 +25,6 @@ namespace McpUnity.Editor
             }
         }
 
-        [MenuItem("Tools/Conductor MCP/Setup Wizard", priority = 50)]
         public static void ShowWizard()
         {
             McpSetupWizardWindow.Open();
@@ -371,7 +370,7 @@ namespace McpUnity.Editor
             }
             if (GUILayout.Button("Open Settings Window", GUILayout.Height(28)))
             {
-                EditorApplication.ExecuteMenuItem("Tools/Conductor MCP/Server Window");
+                EditorApplication.ExecuteMenuItem("Tools/Conductor MCP");
             }
             EditorGUILayout.EndHorizontal();
 
@@ -426,7 +425,7 @@ namespace McpUnity.Editor
             GUILayout.Space(12);
 
             if (GUILayout.Button("Open Server Window", GUILayout.Height(36)))
-                EditorApplication.ExecuteMenuItem("Tools/Conductor MCP/Server Window");
+                EditorApplication.ExecuteMenuItem("Tools/Conductor MCP");
 
             GUILayout.Space(4);
             if (GUILayout.Button("Close", GUILayout.Height(28)))

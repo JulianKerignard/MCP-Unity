@@ -693,10 +693,6 @@ namespace McpUnity.Server
 
         #region Server Lifecycle
 
-        /// <summary>
-        /// Menu item to quickly start the server
-        /// </summary>
-        [MenuItem("Tools/Conductor MCP/Start Server", priority = 1)]
         public static void MenuStartServer()
         {
             if (!_initialized)
@@ -707,7 +703,6 @@ namespace McpUnity.Server
             Start();
         }
 
-        [MenuItem("Tools/Conductor MCP/Stop Server", priority = 2)]
         public static void MenuStopServer()
         {
             Stop();

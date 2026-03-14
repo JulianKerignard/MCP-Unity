@@ -108,19 +108,12 @@ namespace McpUnity.Editor
         // Menu Items
         // ====================================================================
 
-        [MenuItem("Tools/Conductor MCP/Server Window", priority = 100)]
+        [MenuItem("Tools/Conductor MCP")]
         public static void ShowWindow()
         {
             var window = GetWindow<McpEditorWindow>("Conductor MCP");
             window.minSize = new Vector2(420, 500);
             window.Show();
-        }
-
-        [MenuItem("Tools/Conductor MCP/Quick Start Server", priority = 101)]
-        public static void QuickStartServer()
-        {
-            var window = GetWindow<McpEditorWindow>("Conductor MCP");
-            window.StartServer();
         }
 
         // ====================================================================
