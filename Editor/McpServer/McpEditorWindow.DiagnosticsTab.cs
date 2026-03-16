@@ -173,7 +173,7 @@ namespace McpUnity.Editor
                 EditorGUILayout.Space(4);
 
                 // .mcp.json status
-                string localMcpPath = Path.Combine(Application.dataPath, ".mcp.json");
+                string localMcpPath = McpSettings.GetClaudeCodeConfigPath();
                 bool localExists = File.Exists(localMcpPath);
 
                 EditorGUILayout.BeginHorizontal();
@@ -182,7 +182,7 @@ namespace McpUnity.Editor
                 GUI.color = localExists ? new Color(0.5f, 1f, 0.5f) : new Color(1f, 0.5f, 0.5f);
                 EditorGUILayout.LabelField(localExists ? "OK" : "MISSING", GUILayout.Width(50));
                 GUI.color = origColor;
-                EditorGUILayout.SelectableLabel("Assets/.mcp.json", GUILayout.Height(18));
+                EditorGUILayout.SelectableLabel(localMcpPath, GUILayout.Height(18));
                 EditorGUILayout.EndHorizontal();
 
                 // Server script status
@@ -224,7 +224,7 @@ namespace McpUnity.Editor
                     EditorGUILayout.Space(3);
                     if (GUILayout.Button("Create .mcp.json for Claude Code", GUILayout.Height(26)))
                     {
-                        CreateLocalMcpJson(localMcpPath, serverPath);
+                        CreateLocalMcpJson(localMcpPath);
                     }
                 }
 
@@ -485,29 +485,21 @@ namespace McpUnity.Editor
             }
         }
 
-        private void CreateLocalMcpJson(string path, string serverPath)
+        private void CreateLocalMcpJson(string path)
         {
-            try
+            string content = McpSettings.Instance.GenerateLocalMcpConfig();
+            string error = McpSettings.WriteConfigFile(path, content);
+
+            if (error == null)
             {
-                string escapedServerPath = serverPath.Replace("\\", "/");
-                string json = $@"{{
-  ""mcpServers"": {{
-    ""mcp-unity"": {{
-      ""type"": ""stdio"",
-      ""command"": ""node"",
-      ""args"": [""{escapedServerPath}""],
-      ""env"": {{}}
-    }}
-  }}
-}}";
-                File.WriteAllText(path, json);
                 McpServerLogger.Instance.Info($"Created .mcp.json at {path}");
-                AssetDatabase.Refresh();
+                if (path.StartsWith(Application.dataPath))
+                    AssetDatabase.Refresh();
             }
-            catch (Exception ex)
+            else
             {
-                McpServerLogger.Instance.Error("Failed to create .mcp.json", ex);
-                EditorUtility.DisplayDialog("Error", $"Failed to create .mcp.json:\n{ex.Message}", "OK");
+                McpServerLogger.Instance.Error("Failed to create .mcp.json", null);
+                EditorUtility.DisplayDialog("Error", $"Failed to create .mcp.json:\n{error}", "OK");
             }
         }
     }
