@@ -298,7 +298,10 @@ export class UnityBridge extends EventEmitter {
       throw new McpError(McpErrorCode.ConnectionError, 'Not connected to Unity');
     }
 
-    const id = ++this.requestId;
+    // Wrap around well before Number.MAX_SAFE_INTEGER to avoid losing integer precision
+    // and routing responses to the wrong pending request.
+    this.requestId = (this.requestId + 1) % Number.MAX_SAFE_INTEGER;
+    const id = this.requestId;
     const request: JsonRpcRequest = {
       jsonrpc: '2.0',
       id,
@@ -364,7 +367,15 @@ export class UnityBridge extends EventEmitter {
     if (!this.ws) {
       throw new McpError(McpErrorCode.ConnectionError, 'WebSocket closed before send');
     }
-    this.ws.send(message);
+    this.ws.send(message, (error) => {
+      if (error) {
+        this.log(`Failed to send notification:`, error);
+        this.emit(
+          'error',
+          new McpError(McpErrorCode.ConnectionError, `Notify failed: ${error.message}`)
+        );
+      }
+    });
   }
 
   /**
