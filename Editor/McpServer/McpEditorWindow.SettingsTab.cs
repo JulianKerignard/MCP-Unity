@@ -39,12 +39,24 @@ namespace McpUnity.Editor
                 // --- Provider + Auth Status on same line ---
                 var labels = ProviderRegistry.GetPresetLabels();
                 var ids = ProviderRegistry.GetPresetIds();
+                if (ids == null || ids.Length == 0)
+                {
+                    EditorGUILayout.HelpBox("No providers registered.", MessageType.Warning);
+                    EditorGUILayout.EndVertical();
+                    EditorGUILayout.EndFoldoutHeaderGroup();
+                    return;
+                }
+                // Defensive clamp: the persisted index may point past the current preset list
+                // (e.g. a preset was removed between sessions). Without clamping, the reads below
+                // throw IndexOutOfRangeException on every repaint.
+                if (_settingsProviderIndex < 0 || _settingsProviderIndex >= ids.Length)
+                    _settingsProviderIndex = 0;
                 var auth = McpChatApiClient.ResolveAuth();
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Provider:", GUILayout.Width(60));
                 int newProvider = EditorGUILayout.Popup(_settingsProviderIndex, labels);
-                if (newProvider != _settingsProviderIndex)
+                if (newProvider != _settingsProviderIndex && newProvider >= 0 && newProvider < ids.Length)
                 {
                     _settingsProviderIndex = newProvider;
                     ProviderRegistry.ActiveProviderId = ids[newProvider];
@@ -81,13 +93,31 @@ namespace McpUnity.Editor
                 EditorGUILayout.Space(6);
 
                 // --- Model ---
+                // Clamp the popup to the intersection of modelLabels and modelIds so we never
+                // display a label the user can't actually select, and guard against a null
+                // modelIds array when modelLabels is non-null.
                 if (preset != null && preset.modelLabels != null && preset.modelLabels.Length > 0)
                 {
-                    int newModel = EditorGUILayout.Popup("Model", _settingsModelIndex, preset.modelLabels);
-                    if (newModel != _settingsModelIndex && newModel >= 0 && newModel < preset.modelIds.Length)
+                    int modelCount = Math.Min(preset.modelLabels.Length, preset.modelIds?.Length ?? 0);
+                    if (modelCount > 0)
                     {
-                        _settingsModelIndex = newModel;
-                        ProviderRegistry.SetModel(providerId, preset.modelIds[newModel]);
+                        string[] modelLabels;
+                        if (modelCount == preset.modelLabels.Length)
+                        {
+                            modelLabels = preset.modelLabels;
+                        }
+                        else
+                        {
+                            modelLabels = new string[modelCount];
+                            Array.Copy(preset.modelLabels, modelLabels, modelCount);
+                        }
+                        int clampedIndex = Mathf.Clamp(_settingsModelIndex, 0, modelCount - 1);
+                        int newModel = EditorGUILayout.Popup("Model", clampedIndex, modelLabels);
+                        if (newModel != _settingsModelIndex && newModel >= 0 && newModel < modelCount)
+                        {
+                            _settingsModelIndex = newModel;
+                            ProviderRegistry.SetModel(providerId, preset.modelIds[newModel]);
+                        }
                     }
                 }
 
@@ -492,6 +522,14 @@ namespace McpUnity.Editor
                 // Custom Endpoint
                 EditorGUILayout.LabelField("Provider Endpoint", EditorStyles.boldLabel);
                 var epIds = ProviderRegistry.GetPresetIds();
+                if (epIds == null || epIds.Length == 0)
+                {
+                    EditorGUILayout.EndVertical();
+                    EditorGUILayout.EndFoldoutHeaderGroup();
+                    return;
+                }
+                if (_settingsProviderIndex < 0 || _settingsProviderIndex >= epIds.Length)
+                    _settingsProviderIndex = 0;
                 string epId = epIds[_settingsProviderIndex];
                 var epPreset = ProviderRegistry.GetPreset(epId);
                 string currentEndpoint = ProviderRegistry.GetCustomEndpoint(epId);

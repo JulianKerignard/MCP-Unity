@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using UnityEditor;
 using UnityEngine;
 using McpUnity.Server;
@@ -13,6 +14,7 @@ namespace McpUnity.Editor
     public static class McpServerStatus
     {
         private static DateTime _startTime;
+        private static readonly Stopwatch _uptimeStopwatch = new Stopwatch();
 
         /// <summary>
         /// Event fired when server state changes
@@ -40,9 +42,10 @@ namespace McpUnity.Editor
         public static DateTime StartTime => _startTime;
 
         /// <summary>
-        /// Server uptime
+        /// Server uptime. Uses a monotonic Stopwatch so it is immune to wall-clock
+        /// changes (DST transitions, NTP corrections, manual clock edits).
         /// </summary>
-        public static TimeSpan Uptime => IsRunning ? DateTime.Now - _startTime : TimeSpan.Zero;
+        public static TimeSpan Uptime => IsRunning ? _uptimeStopwatch.Elapsed : TimeSpan.Zero;
 
         /// <summary>
         /// Current server endpoint
@@ -51,21 +54,28 @@ namespace McpUnity.Editor
 
         static McpServerStatus()
         {
-            // Subscribe to McpUnityServer events
+            // Unsubscribe first to guard against duplicate handlers across domain reloads
+            // ([InitializeOnLoad] re-runs this constructor on every reload).
+            McpUnityServer.OnServerStarted -= OnServerStarted;
             McpUnityServer.OnServerStarted += OnServerStarted;
+            McpUnityServer.OnServerStopped -= OnServerStopped;
             McpUnityServer.OnServerStopped += OnServerStopped;
+            McpUnityServer.OnClientConnected -= OnClientConnected;
             McpUnityServer.OnClientConnected += OnClientConnected;
+            McpUnityServer.OnClientDisconnected -= OnClientDisconnected;
             McpUnityServer.OnClientDisconnected += OnClientDisconnected;
         }
 
         private static void OnServerStarted()
         {
-            _startTime = DateTime.Now;
+            _startTime = DateTime.UtcNow;
+            _uptimeStopwatch.Restart();
             OnServerStateChanged?.Invoke(true);
         }
 
         private static void OnServerStopped()
         {
+            _uptimeStopwatch.Stop();
             OnServerStateChanged?.Invoke(false);
         }
 

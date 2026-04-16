@@ -14,13 +14,15 @@ namespace McpUnity.Editor
         private static McpServerLogger _instance;
         public static McpServerLogger Instance => _instance ??= new McpServerLogger();
 
-        private readonly List<LogEntry> _logs = new List<LogEntry>();
+        // Queue gives O(1) enqueue/dequeue, avoiding the O(n) shift of List.RemoveAt(0)
+        // once the buffer is full (every new log entry on a hot path).
+        private readonly Queue<LogEntry> _logs = new Queue<LogEntry>();
         private readonly object _lock = new object();
 
         public event Action<LogEntry> OnLogAdded;
 
         /// <summary>
-        /// All log entries
+        /// Snapshot of all log entries, ordered oldest-first.
         /// </summary>
         public IReadOnlyList<LogEntry> Logs
         {
@@ -28,7 +30,7 @@ namespace McpUnity.Editor
             {
                 lock (_lock)
                 {
-                    return _logs.AsReadOnly();
+                    return _logs.ToArray();
                 }
             }
         }
@@ -107,13 +109,13 @@ namespace McpUnity.Editor
 
             lock (_lock)
             {
-                _logs.Add(entry);
+                _logs.Enqueue(entry);
 
-                // Trim old logs if exceeding max
+                // Trim old logs if exceeding max (O(1) dequeue)
                 int maxEntries = McpSettings.Instance.MaxLogEntries;
                 while (_logs.Count > maxEntries)
                 {
-                    _logs.RemoveAt(0);
+                    _logs.Dequeue();
                 }
             }
 
