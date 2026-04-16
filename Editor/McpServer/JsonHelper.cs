@@ -80,6 +80,16 @@ namespace McpUnity.Server
                 return;
             }
 
+            // Enums — serialize by name (string) so clients get a human-readable value instead
+            // of the internal field layout reflection would produce.
+            if (obj is Enum e)
+            {
+                sb.Append('"');
+                AppendEscaped(sb, e.ToString());
+                sb.Append('"');
+                return;
+            }
+
             // Lists / arrays
             if (obj is System.Collections.IList list)
             {

@@ -13,7 +13,13 @@ export type CacheCategory = 'hierarchy' | 'editorState' | 'components' | 'assets
 export class ServerCache {
   private cache = new Map<string, CacheEntry>();
   private static readonly MAX_ENTRIES = 500;
-  private cleanupTimer = setInterval(() => this.cleanup(), 60_000);
+  // unref() ensures this timer does not keep the Node.js event loop alive.
+  // If destroy() is never called (e.g. unhandled exception), the process can still exit.
+  private cleanupTimer = (() => {
+    const timer = setInterval(() => this.cleanup(), 60_000);
+    if (typeof timer.unref === 'function') timer.unref();
+    return timer;
+  })();
 
   // TTL values in milliseconds
   private static TTL: Record<CacheCategory, number> = {
