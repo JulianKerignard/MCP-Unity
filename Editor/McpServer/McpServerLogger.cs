@@ -147,6 +147,11 @@ namespace McpUnity.Editor
             OnLogAdded?.Invoke(entry);
         }
 
+        // SEC-#433: keep silent-fail semantics so a bad disk doesn't spam the console every
+        // log line, but surface the failure once per session so disk-full / permission issues
+        // are visible.
+        private bool _fileLogErrorReported;
+
         private void WriteToFile(LogEntry entry)
         {
             try
@@ -162,9 +167,14 @@ namespace McpUnity.Editor
                 string line = $"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{entry.Level}] {entry.Message}\n";
                 File.AppendAllText(logPath, line);
             }
-            catch
+            catch (Exception ex)
             {
-                // Silently fail file logging to avoid infinite loops
+                if (!_fileLogErrorReported)
+                {
+                    _fileLogErrorReported = true;
+                    // Bypass the normal logging path to avoid recursion.
+                    UnityEngine.Debug.LogError($"[MCP Logger] Failed to write log file (further errors suppressed): {ex.Message}");
+                }
             }
         }
 

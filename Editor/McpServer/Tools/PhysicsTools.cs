@@ -424,22 +424,8 @@ namespace McpUnity.Server
                     if (pathErr != null) return pathErr;
                     savePath = sanitizedPath;
 
-                    // Ensure directory exists
-                    var directory = System.IO.Path.GetDirectoryName(savePath);
-                    if (!string.IsNullOrEmpty(directory) && !AssetDatabase.IsValidFolder(directory))
-                    {
-                        var parts = directory.Split('/');
-                        var currentPath = parts[0];
-                        for (int i = 1; i < parts.Length; i++)
-                        {
-                            var parentPath = currentPath;
-                            currentPath = currentPath + "/" + parts[i];
-                            if (!AssetDatabase.IsValidFolder(currentPath))
-                            {
-                                AssetDatabase.CreateFolder(parentPath, parts[i]);
-                            }
-                        }
-                    }
+                    // SEC-#434: centralized helper replaces the copy-pasted folder creation loop.
+                    AssetDatabaseHelpers.EnsureFolderExists(System.IO.Path.GetDirectoryName(savePath));
 
                     AssetDatabase.CreateAsset(mat, savePath);
                     AssetDatabase.SaveAssets();

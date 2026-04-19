@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using McpUnity.Helpers;
 using McpUnity.Protocol;
 using UnityEditor;
 using UnityEditor.Build;
@@ -484,8 +485,10 @@ namespace McpUnity.Server
 
         private static McpToolResult HandleGetProjectSettings(Dictionary<string, object> args)
         {
-            var category = args.ContainsKey("category") ? args["category"].ToString().ToLower() : "quality";
-            var detailed = args.ContainsKey("detailed") && Convert.ToBoolean(args["detailed"]);
+            // SEC-#435: consistent use of ArgumentParser — handles null, missing keys, and
+            // type mismatches instead of raw dict access that throws on bad input.
+            var category = (ArgumentParser.GetString(args, "category", "quality") ?? "quality").ToLower();
+            var detailed = ArgumentParser.GetBool(args, "detailed", false);
 
             Dictionary<string, object> settings;
 
@@ -535,8 +538,9 @@ namespace McpUnity.Server
 
         private static McpToolResult HandleSetProjectSettings(Dictionary<string, object> args)
         {
-            var category = args.ContainsKey("category") ? args["category"].ToString().ToLower() : "";
-            var settingsObj = args.ContainsKey("settings") ? args["settings"] : null;
+            // SEC-#435: consistent ArgumentParser usage.
+            var category = (ArgumentParser.GetString(args, "category", "") ?? "").ToLower();
+            args.TryGetValue("settings", out var settingsObj);
 
             if (settingsObj == null || !(settingsObj is Dictionary<string, object> settings))
             {
@@ -586,11 +590,12 @@ namespace McpUnity.Server
 
         private static McpToolResult HandleSetQualityLevel(Dictionary<string, object> args)
         {
-            var applyExpensive = !args.ContainsKey("applyExpensiveChanges") || Convert.ToBoolean(args["applyExpensiveChanges"]);
+            // SEC-#435: default true for applyExpensiveChanges when absent, via ArgumentParser.
+            var applyExpensive = ArgumentParser.GetBool(args, "applyExpensiveChanges", true);
 
-            if (args.ContainsKey("level"))
+            if (ArgumentParser.HasKey(args, "level"))
             {
-                var level = Convert.ToInt32(args["level"]);
+                var level = ArgumentParser.GetInt(args, "level", 0);
                 if (level < 0 || level >= QualitySettings.names.Length)
                 {
                     return McpToolResult.Error($"Level {level} out of range. Valid: 0-{QualitySettings.names.Length - 1}");

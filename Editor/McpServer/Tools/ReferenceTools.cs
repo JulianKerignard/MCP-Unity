@@ -393,9 +393,10 @@ namespace McpUnity.Server
                 if (fieldInfo != null)
                     return fieldInfo.FieldType;
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore reflection errors
+                // SEC-#433: log ignored reflection errors so unexpected failures aren't silent.
+                McpUnity.Editor.McpDebug.LogWarning($"[ReferenceTools] Ignored reflection error resolving field type: {ex.Message}");
             }
 
             return typeof(UnityEngine.Object);

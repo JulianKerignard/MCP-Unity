@@ -211,22 +211,8 @@ namespace McpUnity.Server
 
             try
             {
-                // Ensure directory exists
-                var directory = System.IO.Path.GetDirectoryName(savePath);
-                if (!string.IsNullOrEmpty(directory) && !AssetDatabase.IsValidFolder(directory))
-                {
-                    var parts = directory.Split('/');
-                    var currentPath = parts[0];
-                    for (int i = 1; i < parts.Length; i++)
-                    {
-                        var parentPath = currentPath;
-                        currentPath = currentPath + "/" + parts[i];
-                        if (!AssetDatabase.IsValidFolder(currentPath))
-                        {
-                            AssetDatabase.CreateFolder(parentPath, parts[i]);
-                        }
-                    }
-                }
+                // SEC-#434: centralized helper replaces the copy-pasted folder creation loop.
+                AssetDatabaseHelpers.EnsureFolderExists(System.IO.Path.GetDirectoryName(savePath));
 
                 // AudioMixer cannot be created via 'new AudioMixer()' — it has no public constructor.
                 // Use the ProjectWindowUtil approach to create the asset via Unity's internal API.
@@ -238,9 +224,11 @@ namespace McpUnity.Server
                 {
                     mixer = UnityEditor.ObjectFactory.CreateInstance<AudioMixer>();
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // ObjectFactory may not support AudioMixer
+                    // SEC-#433: ObjectFactory may not support AudioMixer on all Unity versions.
+                    // Log the reason so the fallback path isn't completely silent.
+                    McpUnity.Editor.McpDebug.LogWarning($"[AudioTools] ObjectFactory.CreateInstance<AudioMixer> failed, falling back: {ex.Message}");
                     mixer = null;
                 }
 
