@@ -435,20 +435,11 @@ namespace McpUnity.Server
             return Convert.ChangeType(value, underlyingType);
         }
 
+        // SEC-#434: thin forwarder — behavior now lives in AssetDatabaseHelpers so the folder
+        // creation pattern isn't duplicated across 4+ tool files.
         private static void CreateAssetFolder(string folderPath)
         {
-            string[] folders = folderPath.Split('/');
-            string parentFolder = folders[0];
-
-            for (int i = 1; i < folders.Length; i++)
-            {
-                string newFolder = parentFolder + "/" + folders[i];
-                if (!AssetDatabase.IsValidFolder(newFolder))
-                {
-                    AssetDatabase.CreateFolder(parentFolder, folders[i]);
-                }
-                parentFolder = newFolder;
-            }
+            AssetDatabaseHelpers.EnsureFolderExists(folderPath);
         }
 
         private static string GetFriendlyTypeName(Type type)

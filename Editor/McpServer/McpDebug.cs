@@ -30,14 +30,13 @@ namespace McpUnity.Editor
         }
 
         /// <summary>
-        /// Log error message (respects LogToConsole setting)
+        /// Log error message.
+        /// SEC-#433: errors always reach the Unity console, regardless of LogToConsole.
+        /// Suppressing errors hides real problems from users.
         /// </summary>
         public static void LogError(string message)
         {
-            if (McpSettings.Instance.LogToConsole)
-            {
-                Debug.LogError(message);
-            }
+            Debug.LogError(message);
         }
 
         /// <summary>

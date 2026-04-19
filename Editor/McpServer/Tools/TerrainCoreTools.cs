@@ -229,6 +229,10 @@ namespace McpUnity.Server
         // ====================================================================
         private static McpToolResult CreateTerrain(Dictionary<string, object> args)
         {
+            // SEC-#433: wrap the whole handler so unexpected exceptions surface as a tool
+            // error instead of propagating unhandled through the editor update loop.
+            try
+            {
             var (name, nameErr) = RequireArg(args, "name");
             if (nameErr != null) return nameErr;
 
@@ -289,6 +293,12 @@ namespace McpUnity.Server
                 ["heightmapResolution"] = hmRes,
                 ["alphamapResolution"] = amRes
             });
+            }
+            catch (Exception ex)
+            {
+                McpDebug.LogWarning($"[TerrainCoreTools.CreateTerrain] {ex}");
+                return McpToolResult.Error($"Failed to create terrain: {ex.Message}");
+            }
         }
 
         // ====================================================================
@@ -296,14 +306,22 @@ namespace McpUnity.Server
         // ====================================================================
         private static McpToolResult GetTerrainInfo(Dictionary<string, object> args)
         {
-            var terrain = TerrainHelpers.FindTerrain(args);
-            if (terrain == null)
-                return McpToolResult.Error("No Terrain found. Provide a valid gameObjectPath or ensure a Terrain exists in the scene.");
+            try
+            {
+                var terrain = TerrainHelpers.FindTerrain(args);
+                if (terrain == null)
+                    return McpToolResult.Error("No Terrain found. Provide a valid gameObjectPath or ensure a Terrain exists in the scene.");
 
-            if (terrain.terrainData == null)
-                return McpToolResult.Error($"Terrain '{terrain.name}' has no TerrainData assigned.");
+                if (terrain.terrainData == null)
+                    return McpToolResult.Error($"Terrain '{terrain.name}' has no TerrainData assigned.");
 
-            return McpResponse.Success(TerrainHelpers.SerializeTerrainInfo(terrain));
+                return McpResponse.Success(TerrainHelpers.SerializeTerrainInfo(terrain));
+            }
+            catch (Exception ex)
+            {
+                McpDebug.LogWarning($"[TerrainCoreTools.GetTerrainInfo] {ex}");
+                return McpToolResult.Error($"Failed to get terrain info: {ex.Message}");
+            }
         }
 
         // ====================================================================
@@ -311,6 +329,8 @@ namespace McpUnity.Server
         // ====================================================================
         private static McpToolResult ModifyTerrain(Dictionary<string, object> args)
         {
+            try
+            {
             var terrain = TerrainHelpers.FindTerrain(args);
             if (terrain == null)
                 return McpToolResult.Error("No Terrain found. Provide a valid gameObjectPath or ensure a Terrain exists in the scene.");
@@ -390,6 +410,12 @@ namespace McpUnity.Server
 
             return McpResponse.Success($"Modified terrain '{terrain.name}': {string.Join(", ", changed)}",
                 TerrainHelpers.SerializeTerrainInfo(terrain));
+            }
+            catch (Exception ex)
+            {
+                McpDebug.LogWarning($"[TerrainCoreTools.ModifyTerrain] {ex}");
+                return McpToolResult.Error($"Failed to modify terrain: {ex.Message}");
+            }
         }
 
         // ====================================================================
