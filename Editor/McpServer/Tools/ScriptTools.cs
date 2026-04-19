@@ -445,6 +445,16 @@ namespace McpUnity.Server
                 if (fileExists && !overwrite)
                     return McpToolResult.Error($"File already exists: {filePath}. Set overwrite=true to replace it.");
 
+                // SEC-#409: overwriting a script under Assets/Editor/** or Assets/Plugins/**
+                // injects code that runs at the next compilation — log a conspicuous warning
+                // for auditability even if the caller already set overwrite=true.
+                if (fileExists && overwrite && IsSensitiveScriptPath(filePath))
+                {
+                    McpDebug.LogWarning(
+                        $"[MCP Unity] Overwriting script in sensitive folder: {filePath}. " +
+                        "This file will compile and run at the next domain reload.");
+                }
+
                 // Dry run — validate only
                 if (dryRun)
                 {
@@ -516,6 +526,15 @@ namespace McpUnity.Server
                 // File must exist
                 if (!System.IO.File.Exists(filePath))
                     return McpToolResult.Error($"Script not found: {filePath}");
+
+                // SEC-#409: audit log when modifying a script under Assets/Editor/** or
+                // Assets/Plugins/** — these paths compile and can hook editor callbacks.
+                if (IsSensitiveScriptPath(filePath))
+                {
+                    McpDebug.LogWarning(
+                        $"[MCP Unity] Updating script in sensitive folder: {filePath}. " +
+                        "This file will compile and run at the next domain reload.");
+                }
 
                 // Read current content
                 string currentContent = System.IO.File.ReadAllText(filePath);
@@ -589,6 +608,21 @@ namespace McpUnity.Server
         /// <summary>
         /// L-01: Count lines without allocating a string array (avoids Split('\n') GC pressure).
         /// </summary>
+        /// <summary>
+        /// SEC-#409: true if the path lives under Assets/Editor/** or Assets/Plugins/**.
+        /// These folders compile automatically and can hook editor callbacks, so an overwrite
+        /// there is a potential code-injection vector and deserves an explicit audit log entry.
+        /// </summary>
+        private static bool IsSensitiveScriptPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            var norm = path.Replace('\\', '/');
+            return norm.StartsWith("Assets/Editor/", StringComparison.OrdinalIgnoreCase)
+                || norm.Contains("/Editor/")
+                || norm.StartsWith("Assets/Plugins/", StringComparison.OrdinalIgnoreCase)
+                || norm.Contains("/Plugins/");
+        }
+
         private static int CountLines(string s)
         {
             if (string.IsNullOrEmpty(s)) return 0;

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using McpUnity.Protocol;
 using McpUnity.Helpers;
 using McpUnity.Utils;
@@ -602,6 +604,15 @@ namespace McpUnity.Server
             }
 
             Undo.CollapseUndoOperations(undoGroup);
+
+            // SEC-#391: mark the active scene dirty so Unity shows the unsaved-changes
+            // indicator and the user can't close the editor without prompt. SetDirty on
+            // individual objects isn't enough; a scene-level dirty flag is required.
+            if (created > 0)
+            {
+                try { EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene()); }
+                catch (Exception ex) { McpDebug.LogWarning($"[MCP Unity] MarkSceneDirty failed: {ex.Message}"); }
+            }
 
             return McpResponse.Success(
                 $"Batch create: {created} created, {failed} failed (total: {objectsRaw.Count})",

@@ -30,6 +30,16 @@ export const JsonRpcResponseSchema = z.object({
 
 export type JsonRpcResponse = z.infer<typeof JsonRpcResponseSchema>;
 
+// SEC-#394: validated shape for Unity-initiated notifications so the bridge never
+// forwards arbitrary untyped data to downstream handlers.
+export const JsonRpcNotificationSchema = z.object({
+  jsonrpc: z.literal('2.0'),
+  method: z.string().min(1),
+  params: z.unknown().optional(),
+});
+
+export type JsonRpcNotification = z.infer<typeof JsonRpcNotificationSchema>;
+
 // ============================================================================
 // MCP Tool Types
 // ============================================================================
