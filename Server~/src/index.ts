@@ -357,17 +357,28 @@ RESOURCES: Read workflows://[category] for detailed guides (core, animator, mate
     log('Server error:', error);
   };
 
-  // Handle process termination
-  const cleanup = async () => {
-    log('Shutting down...');
-    serverCache.destroy();
-    await bridge.disconnect();
-    process.exit(0);
+  // SEC-#442: graceful shutdown — close MCP server transport + disconnect bridge.
+  // Signal handlers don't await async functions, so wrap the body in try/catch and
+  // use the returned promise to surface rejections instead of leaking unhandledRejection.
+  let shuttingDown = false;
+  const cleanup = async (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    log(`Shutting down (${signal})...`);
+    try {
+      serverCache.destroy();
+      await server.close();
+      await bridge.disconnect();
+      process.exit(0);
+    } catch (err) {
+      log('Shutdown error:', err instanceof Error ? err.message : String(err));
+      process.exit(1);
+    }
   };
 
-  process.on('SIGINT', cleanup);
-  process.on('SIGTERM', cleanup);
-  process.on('SIGHUP', cleanup);
+  process.on('SIGINT', () => { void cleanup('SIGINT'); });
+  process.on('SIGTERM', () => { void cleanup('SIGTERM'); });
+  process.on('SIGHUP', () => { void cleanup('SIGHUP'); });
   process.on('unhandledRejection', (reason) => {
     log('Unhandled promise rejection:', reason instanceof Error ? reason.message : String(reason));
   });

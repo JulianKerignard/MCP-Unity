@@ -227,6 +227,16 @@ namespace McpUnity.Server
             width = Math.Clamp(width, 1, 4096);
             height = Math.Clamp(height, 1, 4096);
 
+            // SEC-#432: cap raw pixel area to match the EditorScreenshotTools guard so this
+            // tool can't allocate a 4096x4096x4 (~64 MB) RenderTexture + readback unexpectedly.
+            const long MaxRenderPixels = 8_400_000L; // ~4K (3840x2160)
+            if ((long)width * height > MaxRenderPixels)
+            {
+                return McpToolResult.Error(
+                    $"Render size too large: {width}x{height} ({(long)width * height:N0} pixels, max {MaxRenderPixels:N0}). " +
+                    "Reduce width/height (e.g. 1920x1080 or 2560x1440).");
+            }
+
             // Ensure correct file extension
             if (format == "jpg" && !savePath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) && !savePath.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase))
                 savePath = System.IO.Path.ChangeExtension(savePath, ".jpg");

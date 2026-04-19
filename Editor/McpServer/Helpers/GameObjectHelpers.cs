@@ -135,12 +135,18 @@ namespace McpUnity.Helpers
             return children;
         }
 
+        // SEC-#432: hard cap on recursive walks so a scene with tens of thousands of nested
+        // GameObjects can't return a giant payload that blows through the context window.
+        private const int MaxChildrenResults = 5000;
+
         private static void GetChildrenRecursive(Transform parent, List<Dictionary<string, object>> list, bool recursive, int depth, int maxDepth)
         {
             if (depth >= maxDepth) return;
 
             foreach (Transform child in parent)
             {
+                if (list.Count >= MaxChildrenResults) return;
+
                 var info = new Dictionary<string, object>
                 {
                     ["name"] = child.name,

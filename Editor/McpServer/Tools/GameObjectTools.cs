@@ -794,9 +794,27 @@ namespace McpUnity.Server
                         componentType = assembly.GetType(componentTypeName);
                         if (componentType != null) break;
 
-                        // Try searching by simple name
-                        foreach (var t in assembly.GetTypes())
+                        // SEC-#440: GetTypes() can throw ReflectionTypeLoadException for assemblies
+                        // with broken refs — fall back to the partially-loaded Types array so one
+                        // bad assembly doesn't abort the whole search.
+                        Type[] assemblyTypes;
+                        try
                         {
+                            assemblyTypes = assembly.GetTypes();
+                        }
+                        catch (System.Reflection.ReflectionTypeLoadException ex)
+                        {
+                            assemblyTypes = ex.Types;
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                        }
+
+                        // Try searching by simple name
+                        foreach (var t in assemblyTypes)
+                        {
+                            if (t == null) continue;
                             if (t.Name == componentTypeName && typeof(Component).IsAssignableFrom(t))
                             {
                                 componentType = t;

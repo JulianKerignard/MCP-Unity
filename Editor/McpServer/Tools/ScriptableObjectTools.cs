@@ -234,8 +234,13 @@ namespace McpUnity.Server
                 }
                 }
 
-                // Sort by name
-                types = types.OrderBy(t => ((dynamic)t).name).ToList();
+                // SEC-#440: dynamic dispatch on anonymous types incurs DLR overhead and breaks
+                // under AOT (IL2CPP). Use reflection to extract the string `name` field once.
+                types = types.OrderBy(t =>
+                {
+                    var prop = t.GetType().GetProperty("name");
+                    return prop != null ? prop.GetValue(t) as string ?? "" : "";
+                }, StringComparer.Ordinal).ToList();
 
                 return McpResponse.Success(new
                 {

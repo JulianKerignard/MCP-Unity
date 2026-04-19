@@ -183,11 +183,17 @@ namespace McpUnity.Server
 
             _consoleLogs.Enqueue(entry);
 
-            // Keep only the configured number of log entries (respects Settings > MaxLogEntries)
+            // SEC-#431: cap dequeue iterations so a log storm can't pin this method.
+            // ConcurrentQueue.Count is O(n) on some runtimes, and if producers run faster than
+            // we trim, an unbounded while loop can spin forever. Dequeue at most N extras per
+            // enqueue — worst case the queue stays close to (maxEntries + batchLimit).
             int maxEntries = McpUnity.Editor.McpSettings.Instance.MaxLogEntries;
-            while (_consoleLogs.Count > maxEntries)
+            const int batchLimit = 32;
+            int drained = 0;
+            while (_consoleLogs.Count > maxEntries && drained < batchLimit)
             {
-                _consoleLogs.TryDequeue(out _);
+                if (!_consoleLogs.TryDequeue(out _)) break;
+                drained++;
             }
         }
 
