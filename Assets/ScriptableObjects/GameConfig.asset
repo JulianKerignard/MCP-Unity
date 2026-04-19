@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79e5454960ce06f449af81df9ba9ec02, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: Assembly-CSharp::GameConfig
+  startingGold: 200
+  startingLives: 20
+  timeBetweenWaves: 15
+  waveSet: {fileID: 11400000, guid: 2f37bb24778225146bfbae9dea0bab70, type: 2}
+  availableTowers:
+  - {fileID: 11400000, guid: 51ddd9918f06e5e4d82d7cc3d10e991d, type: 2}
+  - {fileID: 11400000, guid: 846e646569e382e479cb63da33844b90, type: 2}
+  - {fileID: 11400000, guid: 3f8965918b7f0714f90d19d856852390, type: 2}
+  - {fileID: 11400000, guid: d9fbc501a24c4a2469e3b6cb87d2a336, type: 2}

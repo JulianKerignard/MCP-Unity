@@ -1,0 +1,53 @@
+{
+    "name": "com.juliank.mcp-unity",
+    "version": "1.0.0",
+    "displayName": "MCP Unity \u2014 AI Editor Assistant",
+    "description": "Connect any AI assistant (Claude, GPT-4, Gemini, Ollama...) to your Unity Editor via Model Context Protocol. 164 Unity tools + multi-provider AI Chat panel built-in.",
+    "unity": "6000.0",
+    "unityRelease": "0f1",
+    "documentationUrl": "https://github.com/juliankerignard/mcp-unity#readme",
+    "changelogUrl": "https://github.com/juliankerignard/mcp-unity/blob/main/CHANGELOG.md",
+    "license": "MIT",
+    "licensesUrl": "https://github.com/juliankerignard/mcp-unity/blob/main/LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/JulianKerignard/MCP-Unity.git"
+    },
+    "keywords": [
+        "mcp",
+        "ai",
+        "claude",
+        "chatgpt",
+        "llm",
+        "automation",
+        "editor",
+        "tools",
+        "copilot",
+        "assistant"
+    ],
+    "author": {
+        "name": "Julian Kerignard",
+        "email": "jujukerignard4@gmail.com",
+        "url": "https://github.com/juliankerignard"
+    },
+    "dependencies": {
+        "com.unity.textmeshpro": "3.0.6"
+    },
+    "samples": [
+        {
+            "displayName": "Quick Start",
+            "description": "Setup validation, example prompts, and an editor utility to verify your MCP Unity installation in under 5 minutes.",
+            "path": "Samples~/01 - Quick Start"
+        },
+        {
+            "displayName": "Terrain Builder",
+            "description": "End-to-end terrain workflow using all 17 terrain tools — sculpt, texture, paint trees and details, import/export heightmaps.",
+            "path": "Samples~/02 - Terrain Builder"
+        },
+        {
+            "displayName": "Batch Workflow",
+            "description": "Advanced multi-step AI prompt templates and C# editor utilities for scene audits, prefab generation, level layout, and animator setup.",
+            "path": "Samples~/03 - Batch Workflow"
+        }
+    ]
+}

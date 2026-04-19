@@ -1,0 +1,11 @@
+using UnityEngine;
+using UnityEditor;
+
+public class MaterialGenerator : EditorWindow
+{
+    [MenuItem("Tools/MaterialGenerator")]
+    public static void ShowWindow()
+    {
+        GetWindow<MaterialGenerator>("MaterialGenerator");
+    }
+}

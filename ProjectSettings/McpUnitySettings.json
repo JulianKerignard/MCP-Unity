@@ -1,0 +1,16 @@
+{
+    "_port": 8090,
+    "_host": "localhost",
+    "_allowRemoteConnections": false,
+    "_requestTimeoutMs": 30000,
+    "_autoStartServer": true,
+    "_showNotifications": true,
+    "_maxLogEntries": 500,
+    "_logToFile": false,
+    "_logToConsole": false,
+    "_logFilePath": "Logs/McpUnity.log",
+    "_minimumLogLevel": 1,
+    "_sharedSecret": "",
+    "_customServerPath": "",
+    "_useCustomServerPath": false
+}

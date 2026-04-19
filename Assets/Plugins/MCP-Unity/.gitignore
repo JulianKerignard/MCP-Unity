@@ -1,0 +1,40 @@
+# Node
+Server~/node_modules/
+npm-debug.log*
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+.vs/
+.vscode/
+.idea/
+
+# MCP
+Assets/.mcp-cache/
+Assets/Screenshots/
+
+# Claude Code local config
+.claude/
+CLAUDE.md
+CLAUDE.md.meta
+
+# Build output
+Server~/build/
+
+# Secrets
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db

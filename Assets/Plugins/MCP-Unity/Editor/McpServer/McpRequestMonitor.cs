@@ -1,0 +1,118 @@
+using System;
+using System.Collections.Generic;
+
+namespace McpUnity.Editor
+{
+    /// <summary>
+    /// Lightweight request monitor for MCP JSON-RPC calls.
+    /// Tracks recent requests with timing and success/error status.
+    /// </summary>
+    public static class McpRequestMonitor
+    {
+        /// <summary>
+        /// Maximum number of request entries to keep
+        /// </summary>
+        private const int MaxEntries = 100;
+
+        private static readonly List<RequestEntry> _entries = new List<RequestEntry>();
+        private static readonly object _lock = new object();
+
+        // C-03: volatile ensures cross-thread reads see up-to-date values without a lock
+        private static volatile int _totalRequests;
+        private static volatile int _totalErrors;
+
+        /// <summary>
+        /// Event fired when a new request is recorded
+        /// </summary>
+        public static event Action<RequestEntry> OnRequestRecorded;
+
+        /// <summary>
+        /// All recorded entries (newest last)
+        /// </summary>
+        public static IReadOnlyList<RequestEntry> Entries
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _entries.AsReadOnly();
+                }
+            }
+        }
+
+        public static int Count
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _entries.Count;
+                }
+            }
+        }
+
+        public static int TotalRequests => _totalRequests;
+        public static int TotalErrors => _totalErrors;
+
+        /// <summary>
+        /// Record a completed request
+        /// </summary>
+        public static void Record(string method, string toolName, double durationMs, bool success, string error = null)
+        {
+            var entry = new RequestEntry
+            {
+                Timestamp = DateTime.Now,
+                Method = method,
+                ToolName = toolName,
+                DurationMs = durationMs,
+                Success = success,
+                Error = error
+            };
+
+            lock (_lock)
+            {
+                _entries.Add(entry);
+                _totalRequests++;
+                if (!success) _totalErrors++;
+
+                while (_entries.Count > MaxEntries)
+                {
+                    _entries.RemoveAt(0);
+                }
+            }
+
+            OnRequestRecorded?.Invoke(entry);
+        }
+
+        /// <summary>
+        /// Clear all entries and counters
+        /// </summary>
+        public static void Clear()
+        {
+            lock (_lock)
+            {
+                _entries.Clear();
+                _totalRequests = 0;
+                _totalErrors = 0;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Single recorded MCP request
+    /// </summary>
+    public struct RequestEntry
+    {
+        public DateTime Timestamp;
+        public string Method;
+        public string ToolName;
+        public double DurationMs;
+        public bool Success;
+        public string Error;
+
+        /// <summary>
+        /// Display name: tool name if tools/call, otherwise method
+        /// </summary>
+        public string DisplayName => !string.IsNullOrEmpty(ToolName) ? ToolName : Method;
+    }
+}

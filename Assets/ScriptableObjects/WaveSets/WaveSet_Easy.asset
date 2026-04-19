@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3058d0c60f71f041a6e87714d19fecd, type: 3}
+  m_Name: WaveSet_Easy
+  m_EditorClassIdentifier: Assembly-CSharp::WaveSet
+  setName: Facile
+  description: Moins d ennemis, pas de boss, HP reduits
+  waves:
+  - entries:
+    - enemyType: {fileID: 11400000, guid: 63bfc460c2aebaa47ad66852ddb9c898, type: 2}
+      count: 5
+    timeBetweenSpawns: 1.2
+    bonusGold: 60
+    healthMultiplier: 0.8
+  - entries:
+    - enemyType: {fileID: 11400000, guid: 63bfc460c2aebaa47ad66852ddb9c898, type: 2}
+      count: 8
+    timeBetweenSpawns: 1.2
+    bonusGold: 60
+    healthMultiplier: 0.8
+  - entries:
+    - enemyType: {fileID: 11400000, guid: 63bfc460c2aebaa47ad66852ddb9c898, type: 2}
+      count: 8
+    - enemyType: {fileID: 11400000, guid: fe4bb9df3c224b14eb48d2cf327ca328, type: 2}
+      count: 4
+    timeBetweenSpawns: 1.1
+    bonusGold: 70
+    healthMultiplier: 0.9
+  - entries:
+    - enemyType: {fileID: 11400000, guid: 63bfc460c2aebaa47ad66852ddb9c898, type: 2}
+      count: 6
+    - enemyType: {fileID: 11400000, guid: fe4bb9df3c224b14eb48d2cf327ca328, type: 2}
+      count: 8
+    timeBetweenSpawns: 1
+    bonusGold: 80
+    healthMultiplier: 0.9
+  - entries:
+    - enemyType: {fileID: 11400000, guid: 63bfc460c2aebaa47ad66852ddb9c898, type: 2}
+      count: 8
+    - enemyType: {fileID: 11400000, guid: fe4bb9df3c224b14eb48d2cf327ca328, type: 2}
+      count: 5
+    - enemyType: {fileID: 11400000, guid: e68e05558e8464e4dac23a86da7e1bd0, type: 2}
+      count: 2
+    timeBetweenSpawns: 1
+    bonusGold: 90
+    healthMultiplier: 1
+  - entries:
+    - enemyType: {fileID: 11400000, guid: 63bfc460c2aebaa47ad66852ddb9c898, type: 2}
+      count: 6
+    - enemyType: {fileID: 11400000, guid: fe4bb9df3c224b14eb48d2cf327ca328, type: 2}
+      count: 8
+    - enemyType: {fileID: 11400000, guid: e68e05558e8464e4dac23a86da7e1bd0, type: 2}
+      count: 3
+    timeBetweenSpawns: 0.9
+    bonusGold: 100
+    healthMultiplier: 1
+  - entries:
+    - enemyType: {fileID: 11400000, guid: fe4bb9df3c224b14eb48d2cf327ca328, type: 2}
+      count: 10
+    - enemyType: {fileID: 11400000, guid: e68e05558e8464e4dac23a86da7e1bd0, type: 2}
+      count: 4
+    - enemyType: {fileID: 11400000, guid: d665c5aae30764b4da78f74d6a86a8d9, type: 2}
+      count: 2
+    timeBetweenSpawns: 0.9
+    bonusGold: 120
+    healthMultiplier: 1.1
+  - entries:
+    - enemyType: {fileID: 11400000, guid: 63bfc460c2aebaa47ad66852ddb9c898, type: 2}
+      count: 10
+    - enemyType: {fileID: 11400000, guid: fe4bb9df3c224b14eb48d2cf327ca328, type: 2}
+      count: 8
+    - enemyType: {fileID: 11400000, guid: e68e05558e8464e4dac23a86da7e1bd0, type: 2}
+      count: 4
+    - enemyType: {fileID: 11400000, guid: d665c5aae30764b4da78f74d6a86a8d9, type: 2}
+      count: 2
+    timeBetweenSpawns: 0.8
+    bonusGold: 150
+    healthMultiplier: 1.2
