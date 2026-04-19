@@ -509,6 +509,18 @@ namespace McpUnity.Server
             if (totalW <= 0 || totalH <= 0)
                 return McpToolResult.Error("All strokes have zero pixel area after clamping.");
 
+            // SEC-#432: guard against multi-hundred-MB allocations. A 4097x4097 terrain
+            // already allocates ~64MB of float for the full heightmap; refuse anything beyond
+            // ~100 MP (== 400 MB of float[,]) to keep memory use bounded.
+            const long MaxHeightmapPixels = 100_000_000L;
+            long requestedPixels = (long)totalW * totalH;
+            if (requestedPixels > MaxHeightmapPixels)
+            {
+                return McpToolResult.Error(
+                    $"Heightmap region too large: {totalW}x{totalH} = {requestedPixels:N0} pixels " +
+                    $"(max {MaxHeightmapPixels:N0}). Split the operation into smaller strokes.");
+            }
+
             // ---- Phase 2: Load heightmap once ----
             Undo.RecordObject(data, "Set Terrain Heights Batch");
             float[,] heights = data.GetHeights(unionX1, unionY1, totalW, totalH);
