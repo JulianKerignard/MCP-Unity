@@ -300,9 +300,13 @@ namespace McpUnity.Server
                 if (type == null)
                     return McpToolResult.Error($"Component type not found or not allowed: {componentType}");
 
-                // Check if component already exists (non-Transform — allows multiple colliders etc. where Unity permits)
-                if (go.GetComponent(type) != null)
-                    return McpToolResult.Error($"Component '{componentType}' already exists on '{gameObjectPath}'");
+                // SEC-#406: Unity explicitly allows multiple instances of many components
+                // (colliders, AudioSource, LineRenderer, etc.). Only block duplicates for
+                // types annotated with [DisallowMultipleComponent] (Rigidbody, Animator, …).
+                if (go.GetComponent(type) != null && DisallowsMultiple(type))
+                    return McpToolResult.Error(
+                        $"Component '{componentType}' is marked [DisallowMultipleComponent] " +
+                        $"and already exists on '{gameObjectPath}'.");
 
                 Undo.RecordObject(go, $"Add {componentType}");
                 var component = go.AddComponent(type);
@@ -608,6 +612,22 @@ namespace McpUnity.Server
         #endregion
 
         #region Component Helpers
+
+        /// <summary>
+        /// <summary>
+        /// SEC-#406: true when the component type (or any of its bases) declares
+        /// [DisallowMultipleComponent]. We walk the base chain because the attribute
+        /// is inherited (e.g. Rigidbody → Component).
+        /// </summary>
+        private static bool DisallowsMultiple(Type t)
+        {
+            for (Type cur = t; cur != null && cur != typeof(Component); cur = cur.BaseType)
+            {
+                if (cur.GetCustomAttributes(typeof(DisallowMultipleComponent), inherit: false).Length > 0)
+                    return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// Find a component type by name - supports both Unity built-in and custom project scripts
