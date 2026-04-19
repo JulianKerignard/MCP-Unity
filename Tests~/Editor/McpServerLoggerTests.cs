@@ -290,17 +290,27 @@ namespace McpUnity.Tests
             LogEntry captured = default;
             bool fired = false;
 
-            _logger.OnLogAdded += entry =>
+            // SEC-#437: capture the handler so we can actually unsubscribe — _logger is a
+            // long-lived singleton, so leaking lambdas leads to cross-test contamination.
+            Action<LogEntry> handler = entry =>
             {
                 captured = entry;
                 fired = true;
             };
+            _logger.OnLogAdded += handler;
 
-            _logger.Info("event test");
+            try
+            {
+                _logger.Info("event test");
 
-            Assert.IsTrue(fired);
-            Assert.AreEqual("event test", captured.Message);
-            Assert.AreEqual(LogLevel.Info, captured.Level);
+                Assert.IsTrue(fired);
+                Assert.AreEqual("event test", captured.Message);
+                Assert.AreEqual(LogLevel.Info, captured.Level);
+            }
+            finally
+            {
+                _logger.OnLogAdded -= handler;
+            }
         }
 
         // ── LogEntry struct ────────────────────────────────────────────────

@@ -34,6 +34,11 @@ export class UnityBridge extends EventEmitter {
   private reconnectTimer: NodeJS.Timeout | null = null;
   private _state: ConnectionState = ConnectionState.Disconnected;
   private config: BridgeConfig;
+  // SEC-#422: share a single in-flight connect() promise across concurrent callers so we
+  // don't spawn multiple WebSockets when several MCP handlers race to connect.
+  private connectPromise: Promise<void> | null = null;
+  // SEC-#422: reject of the in-flight connect promise so handleDisconnect can unblock it.
+  private connectReject: ((err: Error) => void) | null = null;
 
   constructor(config: Partial<BridgeConfig> = {}) {
     super();
@@ -95,66 +100,53 @@ export class UnityBridge extends EventEmitter {
   }
 
   /**
-   * Connect to Unity WebSocket server
+   * Connect to Unity WebSocket server.
+   *
+   * SEC-#422:
+   *  - Concurrent callers share the same in-flight promise (no double WebSocket).
+   *  - Connection timeout, error during handshake, and unexpected close all transition
+   *    state to Failed (or Disconnected on user-requested disconnect) so a future
+   *    connect() can succeed instead of being rejected as "already in progress".
+   *  - Old socket listeners are removed before swapping in a new socket.
    */
   async connect(): Promise<void> {
-    if (this._state === ConnectionState.Connected) {
-      return;
-    }
+    if (this._state === ConnectionState.Connected) return;
+    if (this.connectPromise) return this.connectPromise;
 
-    if (this._state === ConnectionState.Connecting) {
-      throw new McpError(McpErrorCode.ConnectionError, 'Connection already in progress');
-    }
+    this.connectPromise = this.doConnect().finally(() => {
+      this.connectPromise = null;
+      this.connectReject = null;
+    });
+    return this.connectPromise;
+  }
 
+  private doConnect(): Promise<void> {
     this.setState(ConnectionState.Connecting);
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
+      // Capture the rejector so handleDisconnect() can unblock us if the socket
+      // closes during the handshake (was previously a stuck promise).
+      this.connectReject = reject;
+
+      // Tear down any leftover socket from a prior failed attempt before opening a new one.
+      if (this.ws) {
+        try { this.ws.removeAllListeners(); } catch { /* noop */ }
+        try { this.ws.close(); } catch { /* noop */ }
+        this.ws = null;
+      }
+
+      let settled = false;
+      const settle = (fn: () => void) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(connectionTimeout);
+        fn();
+      };
+
       try {
         // SEC: cap incoming payload at 10 MB to prevent OOM from a malicious
         // or buggy Unity server. Default in `ws` is 100 MB.
         this.ws = new WebSocket(this.wsUrl, { maxPayload: 10 * 1024 * 1024 });
-
-        const connectionTimeout = setTimeout(() => {
-          if (this._state === ConnectionState.Connecting) {
-            this.ws?.close();
-            reject(
-              new McpError(
-                McpErrorCode.TimeoutError,
-                `Connection timeout after ${this.config.requestTimeout}ms`
-              )
-            );
-          }
-        }, this.config.requestTimeout);
-
-        this.ws.on('open', () => {
-          clearTimeout(connectionTimeout);
-          this.reconnectAttempts = 0;
-          this.setState(ConnectionState.Connected);
-          this.log(`Connected to Unity at ws://${this.config.unityHost}:${this.config.unityPort}`);
-          this.emit('connected');
-          resolve();
-        });
-
-        this.ws.on('message', (data: WebSocket.Data) => {
-          this.handleMessage(data);
-        });
-
-        this.ws.on('error', (error: Error) => {
-          this.log(`WebSocket error:`, error);
-          this.emit('error', error);
-
-          if (this._state === ConnectionState.Connecting) {
-            clearTimeout(connectionTimeout);
-            reject(
-              new McpError(McpErrorCode.ConnectionError, `Connection failed: ${error.message}`)
-            );
-          }
-        });
-
-        this.ws.on('close', (code: number, reason: Buffer) => {
-          this.log(`WebSocket closed: ${code} - ${reason.toString()}`);
-          this.handleDisconnect();
-        });
       } catch (error) {
         this.setState(ConnectionState.Failed);
         reject(
@@ -163,7 +155,52 @@ export class UnityBridge extends EventEmitter {
             `Failed to create WebSocket: ${error instanceof Error ? error.message : String(error)}`
           )
         );
+        return;
       }
+
+      const connectionTimeout = setTimeout(() => {
+        if (this._state === ConnectionState.Connecting) {
+          this.setState(ConnectionState.Failed);
+          try { this.ws?.removeAllListeners(); } catch { /* noop */ }
+          try { this.ws?.close(); } catch { /* noop */ }
+          this.ws = null;
+          settle(() => reject(
+            new McpError(
+              McpErrorCode.TimeoutError,
+              `Connection timeout after ${this.config.requestTimeout}ms`
+            )
+          ));
+        }
+      }, this.config.requestTimeout);
+
+      this.ws.on('open', () => {
+        this.reconnectAttempts = 0;
+        this.setState(ConnectionState.Connected);
+        this.log(`Connected to Unity at ws://${this.config.unityHost}:${this.config.unityPort}`);
+        this.emit('connected');
+        settle(() => resolve());
+      });
+
+      this.ws.on('message', (data: WebSocket.Data) => {
+        this.handleMessage(data);
+      });
+
+      this.ws.on('error', (error: Error) => {
+        this.log(`WebSocket error:`, error);
+        this.emit('error', error);
+
+        if (this._state === ConnectionState.Connecting) {
+          this.setState(ConnectionState.Failed);
+          settle(() => reject(
+            new McpError(McpErrorCode.ConnectionError, `Connection failed: ${error.message}`)
+          ));
+        }
+      });
+
+      this.ws.on('close', (code: number, reason: Buffer) => {
+        this.log(`WebSocket closed: ${code} - ${reason.toString()}`);
+        this.handleDisconnect();
+      });
     });
   }
 
@@ -237,6 +274,14 @@ export class UnityBridge extends EventEmitter {
     }
     this.pendingRequests.clear();
 
+    // SEC-#422: if the socket closes while a connect() is still pending, unblock the
+    // caller instead of leaving the promise dangling forever.
+    if (this.connectReject) {
+      const reject = this.connectReject;
+      this.connectReject = null;
+      reject(new McpError(McpErrorCode.ConnectionError, 'Connection closed during handshake'));
+    }
+
     const wasConnected = this._state === ConnectionState.Connected;
 
     if (wasConnected && this.reconnectAttempts < this.config.maxReconnectAttempts) {
@@ -294,7 +339,10 @@ export class UnityBridge extends EventEmitter {
     this.pendingRequests.clear();
 
     if (this.ws) {
-      this.ws.close();
+      // SEC-#422: drop listeners before close() so an asynchronous 'close' event
+      // can't fire handleDisconnect() and trigger an unwanted reconnect storm.
+      try { this.ws.removeAllListeners(); } catch { /* noop */ }
+      try { this.ws.close(); } catch { /* noop */ }
       this.ws = null;
     }
 
@@ -340,10 +388,10 @@ export class UnityBridge extends EventEmitter {
       const message = JSON.stringify(request);
       this.log(`Sending:`, this.truncateForLog(message));
 
-      if (!this.ws) {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
         clearTimeout(timeout);
         this.pendingRequests.delete(id);
-        reject(new McpError(McpErrorCode.ConnectionError, 'WebSocket closed before send'));
+        reject(new McpError(McpErrorCode.ConnectionError, 'WebSocket not open'));
         return;
       }
       this.ws.send(message, (error) => {

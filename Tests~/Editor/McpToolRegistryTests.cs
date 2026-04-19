@@ -253,35 +253,37 @@ namespace McpUnity.Tests
         [Test]
         public void GetAllTools_OnlyReturnsEnabledCategories()
         {
-            // Register in core (enabled) and asset (not yet enabled)
+            // SEC-#438: production defaults enable every known category — explicitly disable
+            // 'asset' here so the assertion that the tool is hidden actually exercises the gate.
             _registry.SetCurrentCategory("core");
             _registry.RegisterTool(MakeDef("unity_core_tool"), EchoHandler);
 
             _registry.SetCurrentCategory("asset");
             _registry.RegisterTool(MakeDef("unity_search_assets"), EchoHandler);
+            _registry.DisableCategory("asset");
 
             var visibleTools = _registry.GetAllTools();
             var names = new System.Collections.Generic.HashSet<string>();
             foreach (var t in visibleTools) names.Add(t.name);
 
             Assert.IsTrue(names.Contains("unity_core_tool"), "Core tool must be visible");
-            Assert.IsFalse(names.Contains("unity_search_assets"), "Asset tool must be hidden until category enabled");
+            Assert.IsFalse(names.Contains("unity_search_assets"), "Asset tool must be hidden when category disabled");
         }
 
         [Test]
-        public void ExecuteTool_DisabledCategoryTool_ReturnsHelpfulError()
+        public void ExecuteTool_DisabledCategoryTool_StillExecutes()
         {
+            // SEC-#438: production behavior is documented as "ExecuteTool works for ALL registered
+            // tools regardless of category state" — only tools/list filters by category. The
+            // previous version of this test asserted a helpful-error path that is dead code
+            // (handlers and definitions are always set/removed together), so it was testing
+            // incorrect behavior. Replace with a test of the documented contract.
             _registry.SetCurrentCategory("terrain");
             _registry.RegisterTool(MakeDef("unity_create_terrain"), EchoHandler);
+            _registry.DisableCategory("terrain");
 
             var result = _registry.ExecuteTool("unity_create_terrain", new Dictionary<string, object>());
-            Assert.IsTrue(result.isError);
-            Assert.IsNotNull(result.content);
-            // Error message should mention the category
-            bool mentionsTerrain = false;
-            foreach (var c in result.content)
-                if (c.text != null && c.text.Contains("terrain")) mentionsTerrain = true;
-            Assert.IsTrue(mentionsTerrain, "Error should mention the 'terrain' category");
+            Assert.IsFalse(result.isError, "Disabled category must NOT block execution — only visibility");
         }
 
         [Test]

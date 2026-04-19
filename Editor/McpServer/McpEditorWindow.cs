@@ -228,7 +228,7 @@ namespace McpUnity.Editor
                 richText = true,
                 wordWrap = true,
                 fontSize = 11,
-                font = Font.CreateDynamicFontFromOSFont("Consolas", 11)
+                font = GetMonoFont()
             };
 
             _boxStyle = new GUIStyle("box")
@@ -250,6 +250,17 @@ namespace McpUnity.Editor
             };
 
             _stylesInitialized = true;
+        }
+
+        // SEC-#428: cache the dynamic Font once per Editor session — Font.CreateDynamicFontFromOSFont
+        // creates a native object that Unity does not GC, so re-creating it on every InitStyles()
+        // leaks native memory across window open/close cycles.
+        private static Font _cachedMonoFont;
+        private static Font GetMonoFont()
+        {
+            if (_cachedMonoFont == null)
+                _cachedMonoFont = Font.CreateDynamicFontFromOSFont("Consolas", 11);
+            return _cachedMonoFont;
         }
 
         // ====================================================================

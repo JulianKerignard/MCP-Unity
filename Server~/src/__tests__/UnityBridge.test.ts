@@ -17,6 +17,7 @@ const { MockWebSocket } = vi.hoisted(() => {
       super();
       this.url = url;
       MockWebSocket._lastInstance = this;
+      MockWebSocket._instanceCount++;
     }
 
     send = vi.fn((_data: string, cb?: (err?: Error) => void) => {
@@ -28,6 +29,7 @@ const { MockWebSocket } = vi.hoisted(() => {
     });
 
     static _lastInstance: MockWebSocket | null = null;
+    static _instanceCount = 0;
   }
   return { MockWebSocket };
 });
@@ -46,6 +48,7 @@ describe('UnityBridge', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     MockWebSocket._lastInstance = null;
+    MockWebSocket._instanceCount = 0;
     bridge = new UnityBridge({
       unityHost: 'localhost',
       unityPort: 8090,
@@ -123,10 +126,20 @@ describe('UnityBridge', () => {
       await expect(connectPromise).rejects.toThrow('Connection failed');
     });
 
-    it('should reject if already connecting', async () => {
-      bridge.connect().catch(() => {});
+    it('should coalesce concurrent connect() calls into a single in-flight connection', async () => {
+      // SEC-#422: previously the second call threw "already in progress", which combined with
+      // a stuck Connecting state made the bridge permanently unusable. Now both calls share the
+      // same promise and resolve/reject together.
+      const first = bridge.connect();
+      const second = bridge.connect();
 
-      await expect(bridge.connect()).rejects.toThrow('Connection already in progress');
+      const ws = MockWebSocket._lastInstance!;
+      ws.emit('open');
+
+      await expect(first).resolves.toBeUndefined();
+      await expect(second).resolves.toBeUndefined();
+      // Only one underlying socket should have been created.
+      expect(MockWebSocket._instanceCount).toBe(1);
     });
 
     it('should return immediately if already connected', async () => {

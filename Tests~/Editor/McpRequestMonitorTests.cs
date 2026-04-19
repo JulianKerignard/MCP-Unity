@@ -191,11 +191,15 @@ namespace McpUnity.Tests
             RequestEntry captured = default;
             bool fired = false;
 
-            McpRequestMonitor.OnRequestRecorded += entry =>
+            // SEC-#437: capture the handler in a named delegate so we can actually unsubscribe.
+            // Previously `-= null` removed nothing and the lambda leaked into the static event,
+            // contaminating subsequent test runs.
+            Action<RequestEntry> handler = entry =>
             {
                 captured = entry;
                 fired = true;
             };
+            McpRequestMonitor.OnRequestRecorded += handler;
 
             try
             {
@@ -206,8 +210,7 @@ namespace McpUnity.Tests
             }
             finally
             {
-                // Clean up event subscription to avoid leaking between tests
-                McpRequestMonitor.OnRequestRecorded -= null;
+                McpRequestMonitor.OnRequestRecorded -= handler;
             }
         }
 

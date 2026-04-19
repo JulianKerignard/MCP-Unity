@@ -33,6 +33,10 @@ namespace McpUnity.Server
         // Cached tool list — invalidated on register/unregister/category change
         private List<McpToolDefinition> _cachedToolList = null;
 
+        // SEC-#430: synchronize mutations and cache rebuild. Editor-side this protects
+        // against concurrent tools/list reads + unity_enable_tool_category writes.
+        private readonly object _lock = new object();
+
         /// <summary>
         /// Set the current category for subsequent RegisterTool calls.
         /// </summary>
@@ -59,10 +63,13 @@ namespace McpUnity.Server
                 return;
             }
 
-            _toolDefinitions[definition.name] = definition;
-            _toolHandlers[definition.name] = handler;
-            _toolCategories[definition.name] = _currentCategory;
-            _cachedToolList = null; // invalidate cache
+            lock (_lock)
+            {
+                _toolDefinitions[definition.name] = definition;
+                _toolHandlers[definition.name] = handler;
+                _toolCategories[definition.name] = _currentCategory;
+                _cachedToolList = null; // invalidate cache
+            }
 
             McpDebug.Log($"[MCP Registry] Registered tool: {definition.name} (category: {_currentCategory})");
         }
@@ -74,16 +81,17 @@ namespace McpUnity.Server
         {
             if (string.IsNullOrEmpty(name)) return false;
 
-            bool removed = _toolDefinitions.Remove(name);
-            _toolHandlers.Remove(name);
-            _toolCategories.Remove(name);
-
-            if (removed)
+            bool removed;
+            lock (_lock)
             {
-                _cachedToolList = null;
-                McpDebug.Log($"[MCP Registry] Unregistered tool: {name}");
+                removed = _toolDefinitions.Remove(name);
+                _toolHandlers.Remove(name);
+                _toolCategories.Remove(name);
+
+                if (removed) _cachedToolList = null;
             }
 
+            if (removed) McpDebug.Log($"[MCP Registry] Unregistered tool: {name}");
             return removed;
         }
 
@@ -101,15 +109,18 @@ namespace McpUnity.Server
         /// </summary>
         public List<McpToolDefinition> GetAllTools()
         {
-            if (_cachedToolList == null)
+            lock (_lock)
             {
-                _cachedToolList = _toolDefinitions
-                    .Where(kvp => _enabledCategories.Contains(
-                        _toolCategories.TryGetValue(kvp.Key, out var cat) ? cat : "core"))
-                    .Select(kvp => kvp.Value)
-                    .ToList();
+                if (_cachedToolList == null)
+                {
+                    _cachedToolList = _toolDefinitions
+                        .Where(kvp => _enabledCategories.Contains(
+                            _toolCategories.TryGetValue(kvp.Key, out var cat) ? cat : "core"))
+                        .Select(kvp => kvp.Value)
+                        .ToList();
+                }
+                return _cachedToolList;
             }
-            return _cachedToolList;
         }
 
         /// <summary>
@@ -194,26 +205,29 @@ namespace McpUnity.Server
         {
             if (string.IsNullOrEmpty(category)) return false;
 
-            // Check category exists (case-insensitive to match _enabledCategories comparer)
-            bool exists = false;
-            foreach (var cat in _toolCategories.Values)
+            lock (_lock)
             {
-                if (string.Equals(cat, category, StringComparison.OrdinalIgnoreCase))
+                // Check category exists (case-insensitive to match _enabledCategories comparer)
+                bool exists = false;
+                foreach (var cat in _toolCategories.Values)
                 {
-                    category = cat; // normalize to registered casing
-                    exists = true;
-                    break;
+                    if (string.Equals(cat, category, StringComparison.OrdinalIgnoreCase))
+                    {
+                        category = cat; // normalize to registered casing
+                        exists = true;
+                        break;
+                    }
                 }
-            }
-            if (!exists) return false;
+                if (!exists) return false;
 
-            if (_enabledCategories.Add(category))
-            {
-                _cachedToolList = null;
-                McpDebug.Log($"[MCP Registry] Enabled category: {category}");
-                return true;
+                if (_enabledCategories.Add(category))
+                {
+                    _cachedToolList = null;
+                    McpDebug.Log($"[MCP Registry] Enabled category: {category}");
+                    return true;
+                }
+                return false; // already enabled
             }
-            return false; // already enabled
         }
 
         /// <summary>
@@ -225,13 +239,16 @@ namespace McpUnity.Server
             if (string.IsNullOrEmpty(category)) return false;
             if (category.Equals("core", StringComparison.OrdinalIgnoreCase)) return false;
 
-            if (_enabledCategories.Remove(category))
+            lock (_lock)
             {
-                _cachedToolList = null;
-                McpDebug.Log($"[MCP Registry] Disabled category: {category}");
-                return true;
+                if (_enabledCategories.Remove(category))
+                {
+                    _cachedToolList = null;
+                    McpDebug.Log($"[MCP Registry] Disabled category: {category}");
+                    return true;
+                }
+                return false;
             }
-            return false;
         }
 
         /// <summary>
@@ -290,13 +307,16 @@ namespace McpUnity.Server
         /// </summary>
         public void Clear()
         {
-            _toolDefinitions.Clear();
-            _toolHandlers.Clear();
-            _toolCategories.Clear();
-            _cachedToolList = null;
-            _enabledCategories.Clear();
-            _enabledCategories.Add("core");
-            _currentCategory = "core";
+            lock (_lock)
+            {
+                _toolDefinitions.Clear();
+                _toolHandlers.Clear();
+                _toolCategories.Clear();
+                _cachedToolList = null;
+                _enabledCategories.Clear();
+                _enabledCategories.Add("core");
+                _currentCategory = "core";
+            }
             McpDebug.Log("[MCP Registry] Cleared all tools");
         }
 
