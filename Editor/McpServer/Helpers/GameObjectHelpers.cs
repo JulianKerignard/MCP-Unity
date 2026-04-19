@@ -42,12 +42,21 @@ namespace McpUnity.Helpers
 
             if (current == null) return null;
 
-            // Traverse children
+            // SEC-#392: walk children manually via transform.childCount / GetChild so inactive
+            // intermediate nodes are findable. Transform.Find skips inactive children, which
+            // broke path lookups like "Root/InactiveParent/Leaf".
             for (int i = 1; i < parts.Length; i++)
             {
-                var child = current.transform.Find(parts[i]);
-                if (child == null) return null;
-                current = child.gameObject;
+                Transform found = null;
+                var parent = current.transform;
+                int count = parent.childCount;
+                for (int c = 0; c < count; c++)
+                {
+                    var child = parent.GetChild(c);
+                    if (child.name == parts[i]) { found = child; break; }
+                }
+                if (found == null) return null;
+                current = found.gameObject;
             }
 
             return current;

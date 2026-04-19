@@ -135,7 +135,10 @@ namespace McpUnity.Chat
                     {
                         _inputText = "";
                         GUI.FocusControl(null);
-                        OnSendRequested?.Invoke(text, new List<AssetReference>(_referencedAssets));
+                        // SEC-#395: snapshot + clear referenced assets so chips don't persist
+                        // into the next message.
+                        var refs = ConsumeReferencedAssets();
+                        OnSendRequested?.Invoke(text, refs);
                     }
                 }
                 EditorGUI.EndDisabledGroup();

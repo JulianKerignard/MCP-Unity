@@ -335,6 +335,23 @@ namespace McpUnity.Server
             // Parse scene mode
             NewSceneMode sceneMode = ArgumentParser.GetEnum(args, "mode", NewSceneMode.Single);
 
+            // SEC-#391: Single mode replaces all open scenes and would silently throw away
+            // unsaved changes. Mirror the guard from LoadScene and let the user decide.
+            bool hadUnsavedChanges = false;
+            if (sceneMode == NewSceneMode.Single)
+            {
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    if (SceneManager.GetSceneAt(i).isDirty) { hadUnsavedChanges = true; break; }
+                }
+
+                if (hadUnsavedChanges &&
+                    !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                {
+                    return McpToolResult.Error("CreateScene cancelled — user declined to save unsaved changes.");
+                }
+            }
+
             try
             {
                 // Create the new scene

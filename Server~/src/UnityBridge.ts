@@ -4,6 +4,7 @@ import {
   BridgeConfig,
   ConnectionState,
   DEFAULT_BRIDGE_CONFIG,
+  JsonRpcNotificationSchema,
   JsonRpcRequest,
   JsonRpcResponse,
   JsonRpcResponseSchema,
@@ -214,10 +215,16 @@ export class UnityBridge extends EventEmitter {
 
       const json = JSON.parse(message);
 
-      // Check if this is a notification from Unity (has method, no id)
+      // SEC-#394: validate notification shape before forwarding downstream so a
+      // malformed / untrusted Unity response can't feed arbitrary data to handlers.
       if (json.method && json.id === undefined) {
-        this.log(`Received notification: ${json.method}`);
-        this.emit('notification', json);
+        const notif = JsonRpcNotificationSchema.safeParse(json);
+        if (!notif.success) {
+          this.log(`Rejected malformed notification:`, notif.error.message);
+          return;
+        }
+        this.log(`Received notification: ${notif.data.method}`);
+        this.emit('notification', notif.data);
         return;
       }
 

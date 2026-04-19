@@ -166,17 +166,22 @@ namespace McpUnity.Chat
             // Escape to cancel streaming
             if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
             {
+                bool cancelled = false;
                 if (_pendingToolBlocks != null)
                 {
                     _toolExecCancelled = true;
                     _toolExecEpoch++; // Invalidate any pending delayCall lambdas
+                    cancelled = true;
                 }
                 if (_apiClient.IsProcessing)
                 {
                     _apiClient.Cancel();
                     FinalizeStreamingEntry();
+                    cancelled = true;
                 }
-                Event.current.Use();
+                // SEC-#395: only consume the Escape event when we actually cancelled
+                // something, so other controls (text fields, popups) keep their default behavior.
+                if (cancelled) Event.current.Use();
             }
 
             DrawTopBar();
@@ -402,7 +407,9 @@ namespace McpUnity.Chat
 
             EditorGUILayout.EndScrollView();
 
-            if (Event.current.type == EventType.ScrollWheel)
+            // SEC-#395: only disable auto-scroll when the user scrolls UP (away from the
+            // latest message). Scrolling down is consistent with auto-follow, so keep it on.
+            if (Event.current.type == EventType.ScrollWheel && Event.current.delta.y < 0)
                 _autoScroll = false;
 
             // Scroll-to-bottom button when user has scrolled up
