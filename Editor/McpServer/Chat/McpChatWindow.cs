@@ -29,6 +29,8 @@ namespace McpUnity.Chat
         // State
         // ====================================================================
         private McpChatApiClient _apiClient;
+        // SEC-#429: tracked so we can dispose if the panel closes mid-compaction.
+        private McpChatApiClient _compactApiClient;
         private McpChatToolBridge _toolBridge;
         private List<ChatMessage> _conversation = new List<ChatMessage>();
         private List<ChatDisplayEntry> _displayEntries = new List<ChatDisplayEntry>();
@@ -105,6 +107,9 @@ namespace McpUnity.Chat
 
             _apiClient?.Dispose();
             _apiClient = null;
+
+            _compactApiClient?.Dispose();
+            _compactApiClient = null;
         }
 
         /// <summary>
@@ -120,6 +125,21 @@ namespace McpUnity.Chat
             McpChatSession.SaveInterruptedState(
                 _pendingToolBlocks, _toolExecIndex,
                 _pendingToolResultMessage, _apiClient);
+        }
+
+        // SEC-#443: cap in-memory chat history to keep memory bounded across long sessions.
+        // We keep more than McpChatSession persists (50/30) so the visible chat doesn't shrink
+        // mid-session while still preventing unbounded growth.
+        private const int MaxInMemoryConversation = 200;
+        private const int MaxInMemoryDisplayEntries = 200;
+
+        private void TrimChatHistory()
+        {
+            int convExtra = _conversation.Count - MaxInMemoryConversation;
+            if (convExtra > 0) _conversation.RemoveRange(0, convExtra);
+
+            int dispExtra = _displayEntries.Count - MaxInMemoryDisplayEntries;
+            if (dispExtra > 0) _displayEntries.RemoveRange(0, dispExtra);
         }
 
         private McpChatToolBridge GetToolBridge()
@@ -894,6 +914,7 @@ namespace McpUnity.Chat
             var assistantEntry = ChatDisplayEntry.AssistantMessage("", true);
             assistantEntry.isWaitingForFirstChunk = true;
             _displayEntries.Add(assistantEntry);
+            TrimChatHistory();
             _autoScroll = true;
 
             string customPrompt = EditorPrefs.GetString(SystemPromptPref, "");
@@ -1288,7 +1309,11 @@ namespace McpUnity.Chat
                 ["content"] = sb.ToString()
             });
 
+            // SEC-#429: hold a reference so Dispose() can clean it up if the panel
+            // closes while the request is still in flight.
+            _compactApiClient?.Dispose();
             var compactClient = new McpChatApiClient();
+            _compactApiClient = compactClient;
 
             compactClient.OnStreamComplete += (state) =>
             {
@@ -1299,6 +1324,7 @@ namespace McpUnity.Chat
                     _displayEntries.Add(ChatDisplayEntry.SystemMessage("Compact failed — empty summary."));
                     _hostWindow?.Repaint();
                     compactClient.Dispose();
+                    if (_compactApiClient == compactClient) _compactApiClient = null;
                     return;
                 }
 
@@ -1331,6 +1357,7 @@ namespace McpUnity.Chat
                 _autoScroll = true;
                 _hostWindow?.Repaint();
                 compactClient.Dispose();
+                if (_compactApiClient == compactClient) _compactApiClient = null;
             };
 
             compactClient.OnError += (err) =>
@@ -1339,6 +1366,7 @@ namespace McpUnity.Chat
                 _displayEntries.Add(ChatDisplayEntry.SystemMessage($"Compact failed: {err}"));
                 _hostWindow?.Repaint();
                 compactClient.Dispose();
+                if (_compactApiClient == compactClient) _compactApiClient = null;
             };
 
             string compactSystemPrompt = "You are a conversation summarizer. Produce a concise, structured summary of the provided conversation.";

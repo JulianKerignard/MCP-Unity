@@ -165,6 +165,11 @@ namespace McpUnity.Server
                     return McpToolResult.Error($"Texture not found at '{texPath}'.");
                 }
 
+                // SEC-#441: snapshot before any read/write so Undo captures the original
+                // heightmap state. Previously RecordObject ran after GetHeights/modifications,
+                // which "worked" only because we mutate a local copy.
+                Undo.RecordObject(data, $"Import Heightmap '{texPath}'");
+
                 int res = data.heightmapResolution;
                 float[,] heights = data.GetHeights(0, 0, res, res);
 
@@ -193,7 +198,7 @@ namespace McpUnity.Server
                     }
                 }
 
-                Undo.RecordObject(data, $"Import Heightmap '{texPath}'");
+                // Already recorded above (SEC-#441) — apply the modified heights.
                 data.SetHeights(0, 0, heights);
                 terrain.Flush();
                 EditorUtility.SetDirty(data);

@@ -35,7 +35,11 @@ namespace McpUnity.Editor
             {
                 lock (_lock)
                 {
-                    return _entries.AsReadOnly();
+                    // SEC-#425: return an immutable snapshot, not _entries.AsReadOnly() which
+                    // exposes a live wrapper. A caller iterating the wrapper while another thread
+                    // (or the diagnostics tab's Clear button) mutates _entries hits an
+                    // IndexOutOfRangeException or sees half-updated state.
+                    return _entries.ToArray();
                 }
             }
         }

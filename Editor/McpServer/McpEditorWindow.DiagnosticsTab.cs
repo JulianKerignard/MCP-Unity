@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using McpUnity.Server;
 using UnityEditor;
 using UnityEngine;
 
@@ -404,15 +406,15 @@ namespace McpUnity.Editor
                     Directory.CreateDirectory(directory);
                 }
 
-                string newConfig = McpSettings.Instance.GenerateClaudeConfig();
+                string mergedConfig = BuildMergedClaudeConfig(configPath);
 
                 if (File.Exists(configPath))
                 {
                     try
                     {
-                        McpServerLogger.Instance.Warning("Existing Claude config will be backed up and replaced");
                         string backupPath = configPath + ".backup";
                         File.Copy(configPath, backupPath, true);
+                        McpServerLogger.Instance.Info($"Backed up existing Claude config to {backupPath}");
                     }
                     catch (Exception ex)
                     {
@@ -420,7 +422,7 @@ namespace McpUnity.Editor
                     }
                 }
 
-                File.WriteAllText(configPath, newConfig);
+                File.WriteAllText(configPath, mergedConfig);
 
                 McpServerLogger.Instance.Info($"Claude Desktop configured: {configPath}");
 
@@ -436,6 +438,58 @@ namespace McpUnity.Editor
                     $"Failed to configure Claude Desktop:\n{ex.Message}",
                     "OK");
             }
+        }
+
+        /// <summary>
+        /// SEC-#424: build the Claude Desktop config by merging our `mcp-unity` entry into any
+        /// existing config instead of overwriting the whole file. Preserves user-configured
+        /// MCP servers (filesystem, github, etc.) that would otherwise be silently destroyed.
+        /// Falls back to GenerateClaudeConfig() if the existing file is missing or unparseable.
+        /// </summary>
+        private string BuildMergedClaudeConfig(string configPath)
+        {
+            string fresh = McpSettings.Instance.GenerateClaudeConfig();
+            if (!File.Exists(configPath)) return fresh;
+
+            string existingText;
+            try { existingText = File.ReadAllText(configPath); }
+            catch (Exception ex)
+            {
+                McpServerLogger.Instance.Warning($"Could not read existing Claude config; writing fresh ({ex.Message})");
+                return fresh;
+            }
+
+            Dictionary<string, object> existing;
+            Dictionary<string, object> ours;
+            try
+            {
+                existing = new SimpleJsonParser(existingText).ParseObject();
+                ours     = new SimpleJsonParser(fresh).ParseObject();
+            }
+            catch (Exception ex)
+            {
+                McpServerLogger.Instance.Warning($"Existing Claude config is not valid JSON; writing fresh ({ex.Message})");
+                return fresh;
+            }
+
+            if (existing == null || ours == null) return fresh;
+
+            // Pull our generated mcp-unity entry out of `ours`.
+            if (!(ours.TryGetValue("mcpServers", out var ourServersObj) && ourServersObj is Dictionary<string, object> ourServers)
+                || !ourServers.TryGetValue("mcp-unity", out var ourEntry))
+            {
+                return fresh;
+            }
+
+            // Get-or-create existing.mcpServers and merge.
+            if (!(existing.TryGetValue("mcpServers", out var existingServersObj) && existingServersObj is Dictionary<string, object> existingServers))
+            {
+                existingServers = new Dictionary<string, object>();
+                existing["mcpServers"] = existingServers;
+            }
+            existingServers["mcp-unity"] = ourEntry;
+
+            return JsonHelper.ToJson(existing);
         }
 
         private void CopyConfigToClipboard()

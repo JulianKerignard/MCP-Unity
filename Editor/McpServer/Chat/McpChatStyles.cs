@@ -58,6 +58,19 @@ namespace McpUnity.Chat
 
         // Initialization tracking
         private static bool _initialized;
+
+        // SEC-#428: cache the dynamic Font once — Font.CreateDynamicFontFromOSFont creates a
+        // native object that Unity does not GC, so re-creating it on theme change leaks memory.
+        private static Font _cachedMonoFont;
+        private static Font GetMonoFont()
+        {
+            if (_cachedMonoFont == null)
+            {
+                string fontName = Application.platform == RuntimePlatform.OSXEditor ? "Menlo" : "Consolas";
+                _cachedMonoFont = Font.CreateDynamicFontFromOSFont(fontName, 11);
+            }
+            return _cachedMonoFont;
+        }
         private static bool _lastProSkin;
 
         /// <summary>
@@ -115,7 +128,7 @@ namespace McpUnity.Chat
 
             CodeBlock = new GUIStyle(EditorStyles.label)
             {
-                font = Font.CreateDynamicFontFromOSFont(Application.platform == RuntimePlatform.OSXEditor ? "Menlo" : "Consolas", 11),
+                font = GetMonoFont(),
                 richText = true,
                 wordWrap = true,
                 fontSize = 11,

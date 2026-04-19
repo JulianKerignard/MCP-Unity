@@ -279,11 +279,13 @@ namespace McpUnity.Server
                     return comp;
             }
 
-            // Try partial match
+            // SEC-#436: prefix match only — substring match made "Box" hit "BoxCollider",
+            // "SandboxManager", etc., silently picking the wrong component. Prefix matching
+            // requires the user's input to at least start the component type name.
             foreach (var comp in go.GetComponents<Component>())
             {
                 if (comp == null) continue;
-                if (comp.GetType().Name.IndexOf(componentTypeName, StringComparison.OrdinalIgnoreCase) >= 0)
+                if (comp.GetType().Name.StartsWith(componentTypeName, StringComparison.OrdinalIgnoreCase))
                     return comp;
             }
 

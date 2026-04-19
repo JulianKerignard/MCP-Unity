@@ -205,7 +205,7 @@ namespace McpUnity.Server
         /// </summary>
         internal static void QueueMessage(string message, McpBehavior sender)
         {
-            _messageQueue.Enqueue(new QueuedMessage { Message = message, Sender = sender });
+            _messageQueue.Enqueue(new QueuedMessage(message, sender));
         }
 
         /// <summary>

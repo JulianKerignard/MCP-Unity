@@ -42,12 +42,23 @@ namespace McpUnity.Editor
                 var psi = new ProcessStartInfo("node", "--version")
                 {
                     RedirectStandardOutput = true,
+                    RedirectStandardError  = true,
                     UseShellExecute        = false,
                     CreateNoWindow         = true
                 };
                 using var p = Process.Start(psi);
-                p?.WaitForExit();
-                return p?.ExitCode == 0;
+                if (p == null) return false;
+
+                // SEC-#423: drain both pipes asynchronously to prevent OS pipe-buffer deadlock,
+                // and cap WaitForExit at 5s so a hung 'node' invocation cannot freeze the editor.
+                p.BeginOutputReadLine();
+                p.BeginErrorReadLine();
+                if (!p.WaitForExit(5000))
+                {
+                    try { p.Kill(); } catch { /* best-effort */ }
+                    return false;
+                }
+                return p.ExitCode == 0;
             }
             catch (Exception)
             {

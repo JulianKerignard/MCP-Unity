@@ -1,9 +1,7 @@
 {
     "name": "McpUnity.Samples.QuickStart",
     "rootNamespace": "McpUnity.Samples.QuickStart",
-    "references": [
-        "McpUnity.Editor"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],

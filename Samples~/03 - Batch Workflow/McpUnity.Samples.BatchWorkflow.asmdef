@@ -1,9 +1,7 @@
 {
     "name": "McpUnity.Samples.BatchWorkflow",
     "rootNamespace": "McpUnity.Samples.BatchWorkflow",
-    "references": [
-        "McpUnity.Editor"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],
