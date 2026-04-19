@@ -1,9 +1,7 @@
 {
     "name": "McpUnity.Samples.TerrainBuilder",
     "rootNamespace": "McpUnity.Samples.TerrainBuilder",
-    "references": [
-        "McpUnity.Editor"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],

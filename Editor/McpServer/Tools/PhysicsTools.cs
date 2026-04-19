@@ -199,9 +199,11 @@ namespace McpUnity.Server
                     Undo.RecordObject(rb, "MCP Setup Rigidbody");
                 }
 
-                rb.mass = ArgumentParser.GetFloat(args, "mass", isNew ? 1f : rb.mass);
-                rb.linearDamping = ArgumentParser.GetFloat(args, "drag", isNew ? 0f : rb.linearDamping);
-                rb.angularDamping = ArgumentParser.GetFloat(args, "angularDrag", isNew ? 0.05f : rb.angularDamping);
+                // SEC-#436: clamp physics parameters to physically meaningful ranges to avoid
+                // engine instability (negative mass, negative drag).
+                rb.mass = Mathf.Max(0.0001f, ArgumentParser.GetFloat(args, "mass", isNew ? 1f : rb.mass));
+                rb.linearDamping = Mathf.Max(0f, ArgumentParser.GetFloat(args, "drag", isNew ? 0f : rb.linearDamping));
+                rb.angularDamping = Mathf.Max(0f, ArgumentParser.GetFloat(args, "angularDrag", isNew ? 0.05f : rb.angularDamping));
                 rb.useGravity = ArgumentParser.GetBool(args, "useGravity", isNew ? true : rb.useGravity);
                 rb.isKinematic = ArgumentParser.GetBool(args, "isKinematic", isNew ? false : rb.isKinematic);
 

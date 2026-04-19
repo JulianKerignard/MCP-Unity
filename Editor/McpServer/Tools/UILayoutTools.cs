@@ -217,7 +217,11 @@ namespace McpUnity.Server
                 if (ArgumentParser.HasKey(args, "anchorPreset"))
                 {
                     string preset = ArgumentParser.GetString(args, "anchorPreset", "");
-                    ApplyAnchorPreset(rectTransform, preset);
+                    if (!ApplyAnchorPreset(rectTransform, preset))
+                        return McpToolResult.Error(
+                            $"Unknown anchorPreset '{preset}'. Valid: topleft, top(center), topright, " +
+                            "(middle)left, (middle)center, (middle)right, bottomleft, bottom(center), " +
+                            "bottomright, stretchhorizontal, stretchvertical, stretch(all).");
                     modified.Add("anchorPreset");
                 }
 
@@ -348,7 +352,11 @@ namespace McpUnity.Server
                 switch (layoutType.ToLowerInvariant())
                 {
                     case "vertical":
-                        var vLayout = go.GetComponent<VerticalLayoutGroup>() ?? go.AddComponent<VerticalLayoutGroup>();
+                        // SEC-#441: use Undo.AddComponent for newly added components so undo
+                        // properly removes the component; RecordObject only captures state
+                        // changes on a pre-existing object.
+                        var vLayout = go.GetComponent<VerticalLayoutGroup>()
+                                      ?? Undo.AddComponent<VerticalLayoutGroup>(go);
                         Undo.RecordObject(vLayout, "Add Vertical Layout Group");
                         vLayout.spacing = spacing;
                         vLayout.padding = new RectOffset(paddingLeft, paddingRight, paddingTop, paddingBottom);
@@ -362,7 +370,8 @@ namespace McpUnity.Server
                         break;
 
                     case "horizontal":
-                        var hLayout = go.GetComponent<HorizontalLayoutGroup>() ?? go.AddComponent<HorizontalLayoutGroup>();
+                        var hLayout = go.GetComponent<HorizontalLayoutGroup>()
+                                      ?? Undo.AddComponent<HorizontalLayoutGroup>(go);
                         Undo.RecordObject(hLayout, "Add Horizontal Layout Group");
                         hLayout.spacing = spacing;
                         hLayout.padding = new RectOffset(paddingLeft, paddingRight, paddingTop, paddingBottom);
@@ -376,7 +385,8 @@ namespace McpUnity.Server
                         break;
 
                     case "grid":
-                        var gLayout = go.GetComponent<GridLayoutGroup>() ?? go.AddComponent<GridLayoutGroup>();
+                        var gLayout = go.GetComponent<GridLayoutGroup>()
+                                      ?? Undo.AddComponent<GridLayoutGroup>(go);
                         Undo.RecordObject(gLayout, "Add Grid Layout Group");
                         gLayout.spacing = new Vector2(spacing, spacing);
                         gLayout.padding = new RectOffset(paddingLeft, paddingRight, paddingTop, paddingBottom);
@@ -459,6 +469,10 @@ namespace McpUnity.Server
                         case "constantphysicalsize":
                             scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPhysicalSize;
                             break;
+                        default:
+                            // SEC-#436: surface invalid input instead of pretending we modified it.
+                            return McpToolResult.Error(
+                                $"Unknown scaleMode '{mode}'. Valid: constantpixelsize, scalewithscreensize, constantphysicalsize.");
                     }
                     modified.Add("scaleMode");
                 }
@@ -630,55 +644,59 @@ namespace McpUnity.Server
             }
         }
 
-        private static void ApplyAnchorPreset(RectTransform rt, string preset)
+        // SEC-#436: returns false on unknown preset so the caller can surface a clear error
+        // instead of silently succeeding without applying any anchoring.
+        private static bool ApplyAnchorPreset(RectTransform rt, string preset)
         {
             switch (preset.ToLowerInvariant())
             {
                 case "topleft":
                     rt.anchorMin = rt.anchorMax = new Vector2(0, 1);
-                    break;
+                    return true;
                 case "topcenter":
                 case "top":
                     rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1);
-                    break;
+                    return true;
                 case "topright":
                     rt.anchorMin = rt.anchorMax = new Vector2(1, 1);
-                    break;
+                    return true;
                 case "middleleft":
                 case "left":
                     rt.anchorMin = rt.anchorMax = new Vector2(0, 0.5f);
-                    break;
+                    return true;
                 case "middlecenter":
                 case "center":
                     rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
-                    break;
+                    return true;
                 case "middleright":
                 case "right":
                     rt.anchorMin = rt.anchorMax = new Vector2(1, 0.5f);
-                    break;
+                    return true;
                 case "bottomleft":
                     rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
-                    break;
+                    return true;
                 case "bottomcenter":
                 case "bottom":
                     rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
-                    break;
+                    return true;
                 case "bottomright":
                     rt.anchorMin = rt.anchorMax = new Vector2(1, 0);
-                    break;
+                    return true;
                 case "stretchhorizontal":
                     rt.anchorMin = new Vector2(0, 0.5f);
                     rt.anchorMax = new Vector2(1, 0.5f);
-                    break;
+                    return true;
                 case "stretchvertical":
                     rt.anchorMin = new Vector2(0.5f, 0);
                     rt.anchorMax = new Vector2(0.5f, 1);
-                    break;
+                    return true;
                 case "stretchall":
                 case "stretch":
                     rt.anchorMin = Vector2.zero;
                     rt.anchorMax = Vector2.one;
-                    break;
+                    return true;
+                default:
+                    return false;
             }
         }
 

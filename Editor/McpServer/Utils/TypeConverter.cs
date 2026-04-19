@@ -229,10 +229,18 @@ namespace McpUnity.Utils
                 );
             }
 
-            // Enum
+            // Enum — SEC-#436: TryParse so an unknown value doesn't throw.
             if (targetType.IsEnum && jsonValue is string enumStr)
             {
-                return Enum.Parse(targetType, enumStr);
+                try
+                {
+                    return Enum.Parse(targetType, enumStr, ignoreCase: true);
+                }
+                catch (Exception)
+                {
+                    throw new ArgumentException(
+                        $"Invalid value '{enumStr}' for enum {targetType.Name}. Valid values: {string.Join(", ", Enum.GetNames(targetType))}");
+                }
             }
 
             // Standard conversion

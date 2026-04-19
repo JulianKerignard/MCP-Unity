@@ -57,20 +57,25 @@ namespace McpUnity.Samples.QuickStart
         {
             try
             {
-                var process = new System.Diagnostics.Process
+                using var process = new System.Diagnostics.Process
                 {
                     StartInfo = new System.Diagnostics.ProcessStartInfo
                     {
                         FileName = "node",
                         Arguments = "--version",
                         RedirectStandardOutput = true,
+                        RedirectStandardError = true,
                         UseShellExecute = false,
                         CreateNoWindow = true
                     }
                 };
                 process.Start();
                 string version = process.StandardOutput.ReadToEnd().Trim();
-                process.WaitForExit();
+                if (!process.WaitForExit(5000))
+                {
+                    try { process.Kill(); } catch { /* best-effort */ }
+                    return false;
+                }
 
                 if (process.ExitCode == 0)
                 {

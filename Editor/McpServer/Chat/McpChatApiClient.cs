@@ -504,7 +504,13 @@ namespace McpUnity.Chat
         private char[] _charBuffer = new char[2048];
 
         public StreamingState State { get; } = new StreamingState();
-        public string ErrorBody => _errorBuffer.ToString();
+
+        // SEC-#443: ErrorBody is read from the main thread but _errorBuffer is appended to from
+        // Unity's networking thread inside ReceiveData. Snapshot under the lock to avoid a race.
+        public string ErrorBody
+        {
+            get { lock (_lock) { return _errorBuffer.ToString(); } }
+        }
 
         public SseDownloadHandler() : base(new byte[BufferSize]) { }
 
@@ -535,7 +541,8 @@ namespace McpUnity.Chat
 
             if (_isErrorBody)
             {
-                _errorBuffer.Append(_charBuffer, 0, decoded);
+                // SEC-#443: pair with the locked read in ErrorBody.
+                lock (_lock) { _errorBuffer.Append(_charBuffer, 0, decoded); }
                 return true;
             }
 

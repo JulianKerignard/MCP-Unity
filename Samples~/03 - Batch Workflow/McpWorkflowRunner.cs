@@ -95,15 +95,18 @@ namespace McpUnity.Samples.BatchWorkflow
                 );
 
                 var spawnGO = new GameObject($"Spawn_{(i + 1):D2}");
+                // SEC-#441: register the created object FIRST so subsequent parenting,
+                // positioning, tagging, and AddComponent are all captured by the same undo
+                // group. Registering after the fact leaves the intermediate operations
+                // outside the undo history.
+                Undo.RegisterCreatedObjectUndo(spawnGO, $"Create Spawn_{i + 1:D2}");
                 spawnGO.transform.SetParent(root.transform);
                 spawnGO.transform.position = pos;
                 spawnGO.tag = "SpawnPoint";
 
-                var col = spawnGO.AddComponent<SphereCollider>();
+                var col = Undo.AddComponent<SphereCollider>(spawnGO);
                 col.radius = 0.5f;
                 col.isTrigger = true;
-
-                Undo.RegisterCreatedObjectUndo(spawnGO, $"Create Spawn_{i + 1:D2}");
             }
 
             Debug.Log($"[MCP Sample] Created {count} spawn points in a circle of radius {radius}.");

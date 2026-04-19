@@ -602,10 +602,12 @@ namespace McpUnity.Chat
                 {
                     if (block is TextContent tc)
                     {
+                        // SEC-#426: GetText() materializes the streaming textBuilder; tc.text alone
+                        // can be null/incomplete if streaming was interrupted by a domain reload.
                         contentList.Add(new Dictionary<string, object>
                         {
                             ["type"] = "text",
-                            ["text"] = tc.text ?? ""
+                            ["text"] = tc.GetText() ?? ""
                         });
                     }
                     else if (block is ToolUseContent tu)

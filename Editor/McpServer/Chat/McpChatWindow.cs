@@ -127,6 +127,21 @@ namespace McpUnity.Chat
                 _pendingToolResultMessage, _apiClient);
         }
 
+        // SEC-#443: cap in-memory chat history to keep memory bounded across long sessions.
+        // We keep more than McpChatSession persists (50/30) so the visible chat doesn't shrink
+        // mid-session while still preventing unbounded growth.
+        private const int MaxInMemoryConversation = 200;
+        private const int MaxInMemoryDisplayEntries = 200;
+
+        private void TrimChatHistory()
+        {
+            int convExtra = _conversation.Count - MaxInMemoryConversation;
+            if (convExtra > 0) _conversation.RemoveRange(0, convExtra);
+
+            int dispExtra = _displayEntries.Count - MaxInMemoryDisplayEntries;
+            if (dispExtra > 0) _displayEntries.RemoveRange(0, dispExtra);
+        }
+
         private McpChatToolBridge GetToolBridge()
         {
             var registry = McpUnityServer.ToolRegistry;
@@ -899,6 +914,7 @@ namespace McpUnity.Chat
             var assistantEntry = ChatDisplayEntry.AssistantMessage("", true);
             assistantEntry.isWaitingForFirstChunk = true;
             _displayEntries.Add(assistantEntry);
+            TrimChatHistory();
             _autoScroll = true;
 
             string customPrompt = EditorPrefs.GetString(SystemPromptPref, "");
