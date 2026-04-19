@@ -657,7 +657,19 @@ namespace McpUnity.Chat
                             {
                                 string displayUrl = url.Length > 50 ? url.Substring(0, 47) + "..." : url;
                                 if (GUILayout.Button($"\u2197 {displayUrl}", McpChatStyles.LinkButton))
-                                    Application.OpenURL(url);
+                                {
+                                    // SEC: only open http(s) URLs — LLM output may contain
+                                    // file://, javascript:, or platform URI handlers.
+                                    if (System.Uri.TryCreate(url, System.UriKind.Absolute, out var safeUri) &&
+                                        (safeUri.Scheme == System.Uri.UriSchemeHttp || safeUri.Scheme == System.Uri.UriSchemeHttps))
+                                    {
+                                        Application.OpenURL(url);
+                                    }
+                                    else
+                                    {
+                                        UnityEngine.Debug.LogWarning($"[MCP-Unity] Blocked link with unsafe scheme: {url}");
+                                    }
+                                }
                                 EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
                             }
                             GUILayout.FlexibleSpace();

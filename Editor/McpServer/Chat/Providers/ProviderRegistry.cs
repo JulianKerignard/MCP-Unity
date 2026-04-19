@@ -286,10 +286,77 @@ namespace McpUnity.Chat.Providers
             return EditorPrefs.GetString(EndpointPrefPrefix + providerId, "");
         }
 
-        /// <summary>Set custom endpoint for a provider.</summary>
+        /// <summary>Set custom endpoint for a provider. Rejects unsafe schemes/hosts (SSRF).</summary>
         public static void SetCustomEndpoint(string providerId, string endpoint)
         {
+            if (!string.IsNullOrEmpty(endpoint) && !IsEndpointSafe(endpoint, out string reason))
+            {
+                UnityEngine.Debug.LogError($"[MCP-Unity] Rejected unsafe custom endpoint for '{providerId}': {reason}");
+                return;
+            }
             EditorPrefs.SetString(EndpointPrefPrefix + providerId, endpoint);
+        }
+
+        /// <summary>
+        /// Validate that a custom endpoint URL is safe to use.
+        /// Blocks file://, javascript:, ftp://, cloud-metadata IPs, and link-local ranges (SSRF).
+        /// Allows https:// anywhere, and http:// only on loopback.
+        /// </summary>
+        public static bool IsEndpointSafe(string endpoint, out string reason)
+        {
+            reason = null;
+            if (string.IsNullOrEmpty(endpoint)) { reason = "empty endpoint"; return false; }
+
+            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri uri))
+            {
+                reason = "not a well-formed absolute URI";
+                return false;
+            }
+
+            string scheme = uri.Scheme.ToLowerInvariant();
+            if (scheme != "http" && scheme != "https")
+            {
+                reason = $"scheme '{uri.Scheme}' not allowed (only http/https)";
+                return false;
+            }
+
+            string host = uri.Host.ToLowerInvariant();
+            bool isLoopback = host == "localhost" || host == "127.0.0.1" || host == "::1";
+
+            if (scheme == "http" && !isLoopback)
+            {
+                reason = "plain http is only allowed on localhost (use https)";
+                return false;
+            }
+
+            // Block well-known cloud metadata + link-local ranges regardless of scheme.
+            if (host.StartsWith("169.254.") ||                   // AWS / Azure IMDS, link-local IPv4
+                host == "100.100.100.200" ||                     // Alibaba Cloud
+                host == "metadata.google.internal" ||            // GCP
+                host.StartsWith("fe80:") ||                      // IPv6 link-local
+                host.StartsWith("fd") ||                         // IPv6 ULA private
+                host.StartsWith("10.") ||                        // RFC1918 (private)
+                host.StartsWith("192.168.") ||
+                IsPrivate172(host))
+            {
+                if (!isLoopback)
+                {
+                    reason = $"host '{host}' is in a blocked private/metadata range";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool IsPrivate172(string host)
+        {
+            // 172.16.0.0 – 172.31.255.255
+            if (!host.StartsWith("172.")) return false;
+            string[] parts = host.Split('.');
+            if (parts.Length < 2) return false;
+            if (!int.TryParse(parts[1], out int second)) return false;
+            return second >= 16 && second <= 31;
         }
 
         /// <summary>Resolve auth for the active provider using its stored API key.</summary>

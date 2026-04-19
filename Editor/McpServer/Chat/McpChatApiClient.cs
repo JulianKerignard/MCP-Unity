@@ -251,6 +251,12 @@ namespace McpUnity.Chat
 
             // Build the HTTP request
             string url = provider.GetEndpointUrl(model, CustomEndpoint);
+            if (!ProviderRegistry.IsEndpointSafe(url, out string urlReason))
+            {
+                _isProcessing = false;
+                OnError?.Invoke($"Refusing to send request to unsafe endpoint: {urlReason}");
+                return;
+            }
             _activeRequest = new UnityWebRequest(url, "POST");
             _activeRequest.uploadHandler = new UploadHandlerRaw(bodyBytes);
             _activeRequest.uploadHandler.contentType = "application/json";

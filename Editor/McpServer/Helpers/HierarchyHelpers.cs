@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace McpUnity.Helpers
@@ -202,15 +201,49 @@ namespace McpUnity.Helpers
         }
 
         /// <summary>
-        /// Filter objects by name pattern (supports * wildcard)
+        /// Filter objects by name pattern (supports * and ? wildcards).
+        /// SEC-#418: linear glob matcher (no regex) — immune to ReDoS, no per-call allocation.
         /// </summary>
         public static bool MatchesNameFilter(GameObject obj, string pattern)
         {
             if (string.IsNullOrEmpty(pattern)) return true;
+            return GlobMatch(obj.name, pattern);
+        }
 
-            // Convert wildcard pattern to regex
-            string regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-            return Regex.IsMatch(obj.name, regexPattern, RegexOptions.IgnoreCase);
+        /// <summary>
+        /// Case-insensitive glob match supporting '*' (any sequence) and '?' (single char).
+        /// O(n*m) worst case, no backtracking explosion.
+        /// </summary>
+        private static bool GlobMatch(string input, string pattern)
+        {
+            int n = input?.Length ?? 0;
+            int m = pattern.Length;
+            int i = 0, j = 0, star = -1, mark = 0;
+
+            while (i < n)
+            {
+                if (j < m && (pattern[j] == '?' ||
+                              char.ToLowerInvariant(pattern[j]) == char.ToLowerInvariant(input[i])))
+                {
+                    i++; j++;
+                }
+                else if (j < m && pattern[j] == '*')
+                {
+                    star = j++;
+                    mark = i;
+                }
+                else if (star != -1)
+                {
+                    j = star + 1;
+                    i = ++mark;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            while (j < m && pattern[j] == '*') j++;
+            return j == m;
         }
 
         /// <summary>
