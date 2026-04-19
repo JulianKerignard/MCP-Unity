@@ -16,8 +16,12 @@ namespace McpUnity.Server
     /// </summary>
     public partial class McpUnityServer
     {
-        private const string CacheDirectory = "Assets/.mcp-cache";
-        private const string CacheFilePath = "Assets/.mcp-cache/memory.json";
+        // SEC-#404: live under Library/ instead of Assets/ so:
+        //  - Unity doesn't import memory.json as a TextAsset (no .meta files).
+        //  - The cache doesn't clutter the Project window or ship in asset bundles.
+        //  - Library/ is already ignored by git and by Unity's version-control integrations.
+        private const string CacheDirectory = "Library/mcp-cache";
+        private const string CacheFilePath = "Library/mcp-cache/memory.json";
         private const int MaxOperationsHistory = 20;
         private const int CacheMaxAgeMinutes = 5;
 
@@ -131,10 +135,26 @@ namespace McpUnity.Server
             if (!System.IO.Directory.Exists(CacheDirectory))
             {
                 System.IO.Directory.CreateDirectory(CacheDirectory);
+                // SEC-#404: Library/ is already ignored by git and not imported by Unity,
+                // so we no longer need the per-folder .gitignore that lived under Assets/.
 
-                // Create .gitignore
-                var gitignorePath = System.IO.Path.Combine(CacheDirectory, ".gitignore");
-                System.IO.File.WriteAllText(gitignorePath, "# MCP cache files\nmemory.json\n");
+                // Legacy cleanup: remove the old Assets/.mcp-cache/ tree if it still exists
+                // from a previous version. Swallow exceptions — this is best-effort cleanup.
+                try
+                {
+                    const string legacyDir = "Assets/.mcp-cache";
+                    if (System.IO.Directory.Exists(legacyDir))
+                    {
+                        System.IO.Directory.Delete(legacyDir, recursive: true);
+                        if (System.IO.File.Exists(legacyDir + ".meta"))
+                            System.IO.File.Delete(legacyDir + ".meta");
+                        AssetDatabase.Refresh();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    McpDebug.LogWarning($"[MemoryTools] Legacy cache cleanup skipped: {ex.Message}");
+                }
             }
         }
 

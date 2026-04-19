@@ -237,12 +237,17 @@ export class UnityBridge extends EventEmitter {
           this.pendingRequests.delete(response.id);
 
           if (response.error) {
+            // SEC-#408: Unity may return any integer error code — validate against the
+            // known McpErrorCode enum before casting. Unknown codes collapse to ServerError
+            // so downstream `instanceof` / enum-switch logic stays well-typed.
+            const knownCodes = Object.values(McpErrorCode).filter(
+              (v) => typeof v === 'number'
+            ) as number[];
+            const code: McpErrorCode = knownCodes.includes(response.error.code)
+              ? (response.error.code as McpErrorCode)
+              : McpErrorCode.InternalError;
             pending.reject(
-              new McpError(
-                response.error.code as McpErrorCode,
-                response.error.message,
-                response.error.data
-              )
+              new McpError(code, response.error.message, response.error.data)
             );
           } else {
             pending.resolve(response.result);

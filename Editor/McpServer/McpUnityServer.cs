@@ -264,6 +264,14 @@ namespace McpUnity.Server
                 catch (Exception ex)
                 {
                     McpDebug.LogError($"[MCP Unity] Error processing message: {ex.Message}\n{ex.StackTrace}");
+                    // SEC-#407: mirror the IsConnected guard from the success path above — the
+                    // sender may have disconnected between enqueue and the exception, and calling
+                    // SendMessage on a closed socket throws.
+                    if (queued.Sender == null || !queued.Sender.IsConnected)
+                    {
+                        McpDebug.LogWarning("[MCP Unity] Client disconnected before error response could be sent, dropping.");
+                        continue;
+                    }
                     try
                     {
                         queued.Sender.SendMessage(JsonHelper.ToJson(
@@ -937,7 +945,11 @@ namespace McpUnity.Server
             {
                 var query = Context?.QueryString;
                 string clientSecret = query?["secret"];
-                if (clientSecret != settings.SharedSecret)
+                // SEC-#412: constant-time comparison prevents a timing-based side channel
+                // that could otherwise let an attacker recover the secret one character at
+                // a time by measuring response latency (exploitable over the network when
+                // AllowRemoteConnections = true).
+                if (!FixedTimeEquals(clientSecret, settings.SharedSecret))
                 {
                     McpDebug.LogWarning($"[MCP Unity] Client rejected: invalid or missing shared secret");
                     Context.WebSocket.Close(WebSocketSharp.CloseStatusCode.PolicyViolation, "Invalid shared secret");
@@ -946,6 +958,20 @@ namespace McpUnity.Server
             }
 
             McpUnityServer.RegisterClient(ID, this);
+        }
+
+        /// <summary>
+        /// SEC-#412: constant-time string comparison. Returns false immediately only when
+        /// lengths differ (the length itself is not secret); otherwise XORs every char so
+        /// total time is independent of where the first mismatch occurs.
+        /// </summary>
+        private static bool FixedTimeEquals(string a, string b)
+        {
+            if (a == null || b == null) return a == b;
+            if (a.Length != b.Length) return false;
+            int diff = 0;
+            for (int i = 0; i < a.Length; i++) diff |= a[i] ^ b[i];
+            return diff == 0;
         }
 
         protected override void OnClose(CloseEventArgs e)
