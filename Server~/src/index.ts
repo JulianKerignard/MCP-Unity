@@ -33,17 +33,23 @@ import { ServerCache, cacheableTools, cacheInvalidators } from './cache.js';
 // ============================================================================
 
 function getConfig(): BridgeConfig {
+  // SEC-#439: don't duplicate defaults here — let BridgeConfigSchema.parse() fill them in.
+  // Previously index.ts hardcoded reconnectInterval=3000 / requestTimeout=10000 /
+  // maxReconnectAttempts=3 which silently overrode the schema defaults (5000/30000/10)
+  // and drifted over time. Env vars still override.
   return BridgeConfigSchema.parse({
     unityHost: process.env.UNITY_HOST || undefined,
     unityPort: process.env.UNITY_PORT ? parseInt(process.env.UNITY_PORT, 10) : undefined,
     unitySecret: process.env.UNITY_SECRET || undefined,
     reconnectInterval: process.env.RECONNECT_INTERVAL
       ? parseInt(process.env.RECONNECT_INTERVAL, 10)
-      : 3000,
-    requestTimeout: process.env.REQUEST_TIMEOUT ? parseInt(process.env.REQUEST_TIMEOUT, 10) : 10000, // 10 seconds for Unity Editor response
+      : undefined,
+    requestTimeout: process.env.REQUEST_TIMEOUT
+      ? parseInt(process.env.REQUEST_TIMEOUT, 10)
+      : undefined,
     maxReconnectAttempts: process.env.MAX_RECONNECT_ATTEMPTS
       ? parseInt(process.env.MAX_RECONNECT_ATTEMPTS, 10)
-      : 3,
+      : undefined,
     debug: process.env.DEBUG === 'true' || process.env.DEBUG === '1',
   });
 }

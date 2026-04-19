@@ -247,4 +247,46 @@ describe('UnityBridge — extended tests', () => {
       expect(bridge.state).not.toBe(ConnectionState.Connected);
     });
   });
+
+  // ========================================================================
+  // Concurrent request handling (SEC-#439)
+  // ========================================================================
+  describe('concurrent request()', () => {
+    it('should route interleaved responses to the correct pending request', async () => {
+      const connectPromise = bridge.connect();
+      const ws = MockWebSocket._lastInstance!;
+      ws.emit('open');
+      await connectPromise;
+
+      // Kick off two requests before answering either.
+      const pA = bridge.request<{ v: string }>('tools/list');
+      const pB = bridge.request<{ v: string }>('resources/list');
+
+      // Two distinct IDs should be in flight.
+      expect(ws.send).toHaveBeenCalledTimes(2);
+      const sentA = JSON.parse((ws.send as any).mock.calls[0][0]);
+      const sentB = JSON.parse((ws.send as any).mock.calls[1][0]);
+      expect(sentA.id).not.toBe(sentB.id);
+
+      // Answer B first, then A — responses must route correctly.
+      ws.emit('message', JSON.stringify({ jsonrpc: '2.0', id: sentB.id, result: { v: 'B' } }));
+      ws.emit('message', JSON.stringify({ jsonrpc: '2.0', id: sentA.id, result: { v: 'A' } }));
+
+      await expect(pA).resolves.toEqual({ v: 'A' });
+      await expect(pB).resolves.toEqual({ v: 'B' });
+    });
+
+    it('should reject request() when WebSocket is no longer OPEN', async () => {
+      const connectPromise = bridge.connect();
+      const ws = MockWebSocket._lastInstance!;
+      ws.emit('open');
+      await connectPromise;
+
+      // Simulate the socket transitioning to CLOSED between isConnected check and send.
+      // bridge.request() re-checks readyState === OPEN before calling ws.send (SEC-#422).
+      ws.readyState = (MockWebSocket as any).CLOSED;
+
+      await expect(bridge.request('tools/list')).rejects.toThrow(/WebSocket not open|Not connected/);
+    });
+  });
 });

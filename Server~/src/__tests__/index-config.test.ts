@@ -11,15 +11,17 @@ import { BridgeConfigSchema } from '../types.js';
  * This mirrors the exact env var parsing used in production.
  */
 function getConfig(env: Record<string, string | undefined> = {}) {
+  // SEC-#439: mirror the production getConfig() in index.ts — no hardcoded defaults here,
+  // let BridgeConfigSchema.parse() fill them in so the test can't drift.
   return BridgeConfigSchema.parse({
     unityHost: env.UNITY_HOST || undefined,
     unityPort: env.UNITY_PORT ? parseInt(env.UNITY_PORT, 10) : undefined,
     unitySecret: env.UNITY_SECRET || undefined,
-    reconnectInterval: env.RECONNECT_INTERVAL ? parseInt(env.RECONNECT_INTERVAL, 10) : 3000,
-    requestTimeout: env.REQUEST_TIMEOUT ? parseInt(env.REQUEST_TIMEOUT, 10) : 10000,
+    reconnectInterval: env.RECONNECT_INTERVAL ? parseInt(env.RECONNECT_INTERVAL, 10) : undefined,
+    requestTimeout: env.REQUEST_TIMEOUT ? parseInt(env.REQUEST_TIMEOUT, 10) : undefined,
     maxReconnectAttempts: env.MAX_RECONNECT_ATTEMPTS
       ? parseInt(env.MAX_RECONNECT_ATTEMPTS, 10)
-      : 3,
+      : undefined,
     debug: env.DEBUG === 'true' || env.DEBUG === '1',
   });
 }
@@ -27,11 +29,12 @@ function getConfig(env: Record<string, string | undefined> = {}) {
 describe('getConfig() env var parsing', () => {
   it('should use runtime defaults when no env vars set', () => {
     const config = getConfig({});
+    // SEC-#439: defaults come from BridgeConfigSchema so the test stays in sync.
     expect(config.unityHost).toBe('localhost');
     expect(config.unityPort).toBe(8090);
-    expect(config.reconnectInterval).toBe(3000);
-    expect(config.requestTimeout).toBe(10000);
-    expect(config.maxReconnectAttempts).toBe(3);
+    expect(config.reconnectInterval).toBe(5000);
+    expect(config.requestTimeout).toBe(30000);
+    expect(config.maxReconnectAttempts).toBe(10);
     expect(config.debug).toBe(false);
     expect(config.unitySecret).toBe('');
   });
@@ -62,7 +65,7 @@ describe('getConfig() env var parsing', () => {
     });
     expect(config.unityHost).toBe('localhost'); // default
     expect(config.unityPort).toBe(7777); // override
-    expect(config.reconnectInterval).toBe(3000); // default
+    expect(config.reconnectInterval).toBe(5000); // default (from BridgeConfigSchema)
     expect(config.debug).toBe(true); // override via "1"
   });
 

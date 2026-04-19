@@ -229,13 +229,7 @@ namespace McpUnity.Server
             var parser = new SimpleJsonParser(json);
             return parser.ParseObject();
         }
-
-        // Legacy wrapper kept for any external callers
-        private static string EscapeString(string s)
-        {
-            var esb = new System.Text.StringBuilder(s.Length + 8);
-            AppendEscaped(esb, s);
-            return esb.ToString();
-        }
+        // SEC-#444: removed dead `EscapeString` (private + unused) — callers go through
+        // AppendEscaped directly.
     }
 }

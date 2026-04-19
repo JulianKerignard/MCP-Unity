@@ -111,10 +111,11 @@ describe('ToolResultSchema', () => {
     expect(result.content).toHaveLength(2);
   });
 
-  it('should reject empty content array', () => {
-    // content requires at least one item based on MCP spec
+  it('should accept empty content array (no minItems constraint)', () => {
+    // SEC-#439: the test previously claimed to "reject" empty arrays but asserted success.
+    // Zod z.array() has no minItems constraint here, so empty is valid; name updated to
+    // match what the test actually verifies.
     const result = ToolResultSchema.safeParse({ content: [] });
-    // Empty array is technically valid per Zod z.array() — just has 0 items
     expect(result.success).toBe(true);
   });
 
