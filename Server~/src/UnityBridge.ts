@@ -76,6 +76,15 @@ export class UnityBridge extends EventEmitter {
   }
 
   /**
+   * Truncate a payload string for safe debug logging.
+   * Avoids leaking large or sensitive message contents into log output.
+   */
+  private truncateForLog(payload: string, max: number = 500): string {
+    if (payload.length <= max) return payload;
+    return `${payload.substring(0, max)}... [truncated, total ${payload.length} bytes]`;
+  }
+
+  /**
    * Update connection state and emit event
    */
   private setState(state: ConnectionState): void {
@@ -101,7 +110,9 @@ export class UnityBridge extends EventEmitter {
 
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(this.wsUrl);
+        // SEC: cap incoming payload at 10 MB to prevent OOM from a malicious
+        // or buggy Unity server. Default in `ws` is 100 MB.
+        this.ws = new WebSocket(this.wsUrl, { maxPayload: 10 * 1024 * 1024 });
 
         const connectionTimeout = setTimeout(() => {
           if (this._state === ConnectionState.Connecting) {
@@ -162,7 +173,7 @@ export class UnityBridge extends EventEmitter {
   private handleMessage(data: WebSocket.Data): void {
     try {
       const message = data.toString();
-      this.log(`Received:`, message);
+      this.log(`Received:`, this.truncateForLog(message));
 
       const json = JSON.parse(message);
 
@@ -327,7 +338,7 @@ export class UnityBridge extends EventEmitter {
       });
 
       const message = JSON.stringify(request);
-      this.log(`Sending:`, message);
+      this.log(`Sending:`, this.truncateForLog(message));
 
       if (!this.ws) {
         clearTimeout(timeout);

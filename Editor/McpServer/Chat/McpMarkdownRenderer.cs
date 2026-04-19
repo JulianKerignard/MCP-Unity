@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -39,13 +40,16 @@ namespace McpUnity.Chat
         // Regex patterns (compiled once)
         // ====================================================================
 
-        private static readonly Regex BoldItalicPattern = new Regex(@"\*\*\*(.+?)\*\*\*", RegexOptions.Compiled);
-        private static readonly Regex BoldPattern = new Regex(@"\*\*(.+?)\*\*", RegexOptions.Compiled);
-        private static readonly Regex ItalicPattern = new Regex(@"(?<!\w)\*(.+?)\*(?!\w)", RegexOptions.Compiled);
-        private static readonly Regex StrikethroughPattern = new Regex(@"~~(.+?)~~", RegexOptions.Compiled);
-        private static readonly Regex InlineCodePattern = new Regex(@"`([^`]+)`", RegexOptions.Compiled);
-        private static readonly Regex LinkPattern = new Regex(@"\[([^\]]+)\]\(([^)]+)\)", RegexOptions.Compiled);
-        private static readonly Regex HorizontalRulePattern = new Regex(@"^(\s*[-*_]){3,}\s*$", RegexOptions.Compiled);
+        // SEC-#418: 100ms timeout on every regex to prevent ReDoS via crafted LLM output.
+        private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(100);
+
+        private static readonly Regex BoldItalicPattern = new Regex(@"\*\*\*(.+?)\*\*\*", RegexOptions.Compiled, RegexTimeout);
+        private static readonly Regex BoldPattern = new Regex(@"\*\*(.+?)\*\*", RegexOptions.Compiled, RegexTimeout);
+        private static readonly Regex ItalicPattern = new Regex(@"(?<!\w)\*(.+?)\*(?!\w)", RegexOptions.Compiled, RegexTimeout);
+        private static readonly Regex StrikethroughPattern = new Regex(@"~~(.+?)~~", RegexOptions.Compiled, RegexTimeout);
+        private static readonly Regex InlineCodePattern = new Regex(@"`([^`]+)`", RegexOptions.Compiled, RegexTimeout);
+        private static readonly Regex LinkPattern = new Regex(@"\[([^\]]+)\]\(([^)]+)\)", RegexOptions.Compiled, RegexTimeout);
+        private static readonly Regex HorizontalRulePattern = new Regex(@"^(\s*[-*_]){3,}\s*$", RegexOptions.Compiled, RegexTimeout);
 
         // ====================================================================
         // Public API
@@ -328,7 +332,7 @@ namespace McpUnity.Chat
             return text;
         }
 
-        private static readonly Regex NumberedListPattern = new Regex(@"^(\d+)\.\s+(.+)$", RegexOptions.Compiled);
+        private static readonly Regex NumberedListPattern = new Regex(@"^(\d+)\.\s+(.+)$", RegexOptions.Compiled, RegexTimeout);
 
         private static string ConvertListBullets(string text)
         {
@@ -409,10 +413,10 @@ namespace McpUnity.Chat
             "undefined","var","void","volatile","while","with","yield","async","from","type"
         };
 
-        private static readonly Regex HighlightWordBoundary = new Regex(@"\b([a-zA-Z_]\w*)\b", RegexOptions.Compiled);
-        private static readonly Regex HighlightString = new Regex(@"(""(?:[^""\\]|\\.)*""|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)", RegexOptions.Compiled);
-        private static readonly Regex HighlightNumber = new Regex(@"\b(\d+\.?\d*[fFdDmMlL]?)\b", RegexOptions.Compiled);
-        private static readonly Regex HighlightComment = new Regex(@"(\/\/[^\n]*|\/\*[\s\S]*?\*\/)", RegexOptions.Compiled);
+        private static readonly Regex HighlightWordBoundary = new Regex(@"\b([a-zA-Z_]\w*)\b", RegexOptions.Compiled, RegexTimeout);
+        private static readonly Regex HighlightString = new Regex(@"(""(?:[^""\\]|\\.)*""|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)", RegexOptions.Compiled, RegexTimeout);
+        private static readonly Regex HighlightNumber = new Regex(@"\b(\d+\.?\d*[fFdDmMlL]?)\b", RegexOptions.Compiled, RegexTimeout);
+        private static readonly Regex HighlightComment = new Regex(@"(\/\/[^\n]*|\/\*[\s\S]*?\*\/)", RegexOptions.Compiled, RegexTimeout);
 
         // Colors (One Dark inspired, harmonized with existing palette)
         private const string KeywordColor = "#c678dd";  // purple

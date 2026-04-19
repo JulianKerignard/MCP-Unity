@@ -141,7 +141,7 @@ namespace McpUnity.Chat
 
             LastAuthorizationUrl = url;
             Application.OpenURL(url);
-            McpDebug.Log($"[Chat OAuth] Browser opened.\nURL: {url}");
+            McpDebug.Log($"[Chat OAuth] Browser opened (host={host}, mode={mode}). Auth params redacted.");
         }
 
         #endregion
