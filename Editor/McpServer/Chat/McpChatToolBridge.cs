@@ -592,8 +592,8 @@ namespace McpUnity.Chat
                 }
             }
 
+            // SEC-#444: removed dead `lastWasAssistant` — assigned but never read.
             var messages = new List<object>();
-            bool lastWasAssistant = false;
 
             foreach (var msg in conversation)
             {
@@ -655,7 +655,6 @@ namespace McpUnity.Chat
                     ["role"] = role,
                     ["content"] = contentList
                 });
-                lastWasAssistant = role == "assistant";
             }
 
             return messages;

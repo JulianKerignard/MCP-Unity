@@ -735,13 +735,27 @@ namespace McpUnity.Server
 
             try
             {
-                _wss = new WebSocketServer($"ws://127.0.0.1:{Port}");
+                // SEC-#421: honor the Host setting so AllowRemoteConnections actually works.
+                // "localhost"/"127.0.0.1"/"::1" bind loopback; "0.0.0.0"/"*" bind all interfaces.
+                // websocket-sharp interprets "0.0.0.0" as any-interface when passed via IPAddress.
+                string configuredHost = McpSettings.Instance.Host ?? "localhost";
+                string bindHost = NormalizeBindHost(configuredHost);
+                bool isRemote = !(bindHost == "127.0.0.1" || bindHost == "::1" || bindHost == "localhost");
+
+                _wss = new WebSocketServer($"ws://{bindHost}:{Port}");
                 _wss.AddWebSocketService<McpBehavior>("/");
                 _wss.Start();
                 _isRunning = true;
                 StartBackgroundTick();
 
-                McpDebug.Log($"[MCP Unity] Server started on ws://127.0.0.1:{Port}");
+                McpDebug.Log($"[MCP Unity] Server started on ws://{bindHost}:{Port}");
+                if (isRemote)
+                {
+                    McpDebug.LogWarning(
+                        "[MCP Unity] Server is bound to a non-loopback interface " +
+                        $"('{configuredHost}'). Traffic is UNENCRYPTED (ws://). Ensure a shared secret " +
+                        "is configured and that only trusted networks can reach this port.");
+                }
                 OnServerStarted?.Invoke();
             }
             catch (Exception ex)
@@ -749,6 +763,19 @@ namespace McpUnity.Server
                 McpDebug.LogError($"[MCP Unity] Failed to start server on port {Port}: {ex.Message}");
                 _isRunning = false;
             }
+        }
+
+        /// <summary>
+        /// SEC-#421: translate user-friendly host strings into a value websocket-sharp accepts
+        /// in its URL. "localhost" stays as-is (resolves to loopback). "0.0.0.0" / "*" / "any"
+        /// bind every interface. An empty/whitespace value falls back to loopback.
+        /// </summary>
+        private static string NormalizeBindHost(string host)
+        {
+            if (string.IsNullOrWhiteSpace(host)) return "127.0.0.1";
+            string h = host.Trim();
+            if (h == "*" || h.Equals("any", StringComparison.OrdinalIgnoreCase)) return "0.0.0.0";
+            return h;
         }
 
         /// <summary>

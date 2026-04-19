@@ -70,9 +70,9 @@ namespace McpUnity.Helpers
             // Process children if not at max depth
             if (depth < maxDepth)
             {
+                // SEC-#444: removed dead `visibleChildIndex` — incremented but never read.
                 string childPrefix = prefix + (isLast ? "   " : "│  ");
                 int childCount = obj.transform.childCount;
-                int visibleChildIndex = 0;
 
                 for (int i = 0; i < childCount; i++)
                 {
@@ -89,7 +89,6 @@ namespace McpUnity.Helpers
 
                     bool childIsLast = (remainingVisible == 0);
                     FormatGameObjectAsTree(sb, child, childPrefix, childIsLast, depth + 1, maxDepth, includeInactive);
-                    visibleChildIndex++;
                 }
             }
             else if (obj.transform.childCount > 0)
