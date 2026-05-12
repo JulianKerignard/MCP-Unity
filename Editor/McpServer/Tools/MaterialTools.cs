@@ -39,18 +39,19 @@ namespace McpUnity.Server
             _toolRegistry.RegisterTool(new McpToolDefinition
             {
                 name = "unity_set_material",
-                description = "Modify material properties (shader, colors, textures, values). Supports automatic property mapping for URP/HDRP.",
+                description = "Modify material properties OR assign a material asset to a renderer. Assignment mode: pass gameObjectPath + materialPath (and no properties/shader/renderQueue). Modify mode: pass materialPath OR gameObjectPath with properties/shader/renderQueue.",
                 inputSchema = new McpInputSchema
                 {
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["materialPath"] = new McpPropertySchema { type = "string", description = "Path to the material asset" },
-                        ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Path to a GameObject to modify its material" },
-                        ["materialIndex"] = new McpPropertySchema { type = "integer", description = "Material index on the renderer" },
+                        ["materialPath"] = new McpPropertySchema { type = "string", description = "Material asset path" },
+                        ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "GameObject path" },
+                        ["materialIndex"] = new McpPropertySchema { type = "integer", description = "Material slot index on the renderer" },
                         ["shader"] = new McpPropertySchema { type = "string", description = "New shader name (auto-converts 'Standard' for URP/HDRP)" },
                         ["renderQueue"] = new McpPropertySchema { type = "integer", description = "Render queue value" },
-                        ["properties"] = new McpPropertySchema { type = "object", description = "Properties to set: {_Color: {r,g,b,a}, _MainTex: 'path', _Metallic: 0.5, etc.}" }
+                        ["properties"] = new McpPropertySchema { type = "object", description = "Properties to set: {_Color: {r,g,b,a}, _MainTex: 'path', _Metallic: 0.5, etc.}" },
+                        ["assign"] = new McpPropertySchema { type = "boolean", description = "Force assignment mode (materialPath asset → gameObjectPath renderer slot)" }
                     },
                     required = new List<string>()
                 }
@@ -134,6 +135,17 @@ namespace McpUnity.Server
                 return McpToolResult.Error("Either materialPath or gameObjectPath is required");
             }
 
+            // Assignment mode: assign a material asset to a GameObject renderer slot.
+            // Triggered when both paths are provided and no modify-args (properties/shader/renderQueue)
+            // are present, or when explicit `assign: true`.
+            bool hasModifyArgs = args.ContainsKey("properties") || args.ContainsKey("shader") || args.ContainsKey("renderQueue");
+            bool explicitAssign = ArgumentParser.GetBool(args, "assign", false);
+            bool implicitAssign = !string.IsNullOrEmpty(materialPath) && !string.IsNullOrEmpty(gameObjectPath) && !hasModifyArgs;
+            if (explicitAssign || implicitAssign)
+            {
+                return AssignMaterialToRenderer(materialPath, gameObjectPath, materialIndex);
+            }
+
             var material = MaterialHelpers.FindMaterial(materialPath, gameObjectPath, materialIndex);
             if (material == null)
             {
@@ -210,6 +222,49 @@ namespace McpUnity.Server
                 ["material"] = material.name,
                 ["modifiedProperties"] = modifiedProperties,
                 ["message"] = $"Modified {modifiedProperties.Count} properties on {material.name}"
+            });
+        }
+
+        /// <summary>
+        /// Assign a material asset to a renderer's material slot.
+        /// </summary>
+        private static McpToolResult AssignMaterialToRenderer(string materialPath, string gameObjectPath, int materialIndex)
+        {
+            if (string.IsNullOrEmpty(materialPath))
+                return McpToolResult.Error("Assignment mode requires materialPath");
+            if (string.IsNullOrEmpty(gameObjectPath))
+                return McpToolResult.Error("Assignment mode requires gameObjectPath");
+
+            var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            if (material == null)
+                return McpToolResult.Error($"Material asset not found at path: {materialPath}");
+
+            var go = GameObjectHelpers.FindGameObject(gameObjectPath);
+            if (go == null)
+                return McpToolResult.Error($"GameObject not found: {gameObjectPath}");
+
+            var renderer = go.GetComponent<Renderer>();
+            if (renderer == null)
+                return McpToolResult.Error($"GameObject '{gameObjectPath}' has no Renderer component");
+
+            var mats = renderer.sharedMaterials;
+            if (materialIndex < 0 || materialIndex >= mats.Length)
+                return McpToolResult.Error($"materialIndex {materialIndex} out of range (renderer has {mats.Length} slot(s))");
+
+            Undo.RecordObject(renderer, "MCP Assign Material");
+            mats[materialIndex] = material;
+            renderer.sharedMaterials = mats;
+            EditorUtility.SetDirty(renderer);
+
+            return McpResponse.Success(new Dictionary<string, object>
+            {
+                ["success"] = true,
+                ["mode"] = "assign",
+                ["gameObject"] = gameObjectPath,
+                ["material"] = material.name,
+                ["materialPath"] = materialPath,
+                ["materialIndex"] = materialIndex,
+                ["message"] = $"Assigned '{material.name}' to {gameObjectPath} (slot {materialIndex})"
             });
         }
 
