@@ -151,7 +151,9 @@ namespace McpUnity.Server
                 {
                     assetPath = savePath,
                     typeName = soType.FullName,
+#pragma warning disable CS0618 // GetInstanceID: kept for Unity < 6 compat
                     instanceId = createdAsset?.GetInstanceID()
+#pragma warning restore CS0618
                 });
             }
             catch (Exception ex)

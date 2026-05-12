@@ -839,7 +839,7 @@ namespace McpUnity.Server
                 if (componentType == null)
                     return McpToolResult.Error($"Component type not found: '{componentTypeName}'. Use unity_list_project_scripts to find available scripts.");
 
-                var foundObjects = UnityEngine.Object.FindObjectsByType(componentType, FindObjectsSortMode.None);
+                var foundObjects = UnityEngine.Object.FindObjectsByType(componentType, FindObjectsInactive.Exclude);
 
                 var results = new List<object>();
                 foreach (var obj in foundObjects)
@@ -884,7 +884,7 @@ namespace McpUnity.Server
                 {
                     // Last resort: brute-force search including inactive objects by name
                     var allObjects = UnityEngine.Object.FindObjectsByType<GameObject>(
-                        FindObjectsInactive.Include, FindObjectsSortMode.None);
+                        FindObjectsInactive.Include);
                     foreach (var obj in allObjects)
                     {
                         if (obj.name == path || GameObjectHelpers.GetGameObjectPath(obj) == path)

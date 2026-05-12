@@ -296,7 +296,7 @@ namespace McpUnity.Server
             }
             catch (Exception ex)
             {
-                McpDebug.LogWarning($"[TerrainCoreTools.CreateTerrain] {ex}");
+                McpUnity.Editor.McpDebug.LogWarning($"[TerrainCoreTools.CreateTerrain] {ex}");
                 return McpToolResult.Error($"Failed to create terrain: {ex.Message}");
             }
         }
@@ -319,7 +319,7 @@ namespace McpUnity.Server
             }
             catch (Exception ex)
             {
-                McpDebug.LogWarning($"[TerrainCoreTools.GetTerrainInfo] {ex}");
+                McpUnity.Editor.McpDebug.LogWarning($"[TerrainCoreTools.GetTerrainInfo] {ex}");
                 return McpToolResult.Error($"Failed to get terrain info: {ex.Message}");
             }
         }
@@ -413,7 +413,7 @@ namespace McpUnity.Server
             }
             catch (Exception ex)
             {
-                McpDebug.LogWarning($"[TerrainCoreTools.ModifyTerrain] {ex}");
+                McpUnity.Editor.McpDebug.LogWarning($"[TerrainCoreTools.ModifyTerrain] {ex}");
                 return McpToolResult.Error($"Failed to modify terrain: {ex.Message}");
             }
         }

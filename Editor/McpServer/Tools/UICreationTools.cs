@@ -456,7 +456,7 @@ namespace McpUnity.Server
 
                 var canvases = targetCanvas != null
                     ? new Canvas[] { targetCanvas }
-                    : UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+                    : UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Exclude);
 
                 var result = new List<object>();
                 foreach (var canvas in canvases)

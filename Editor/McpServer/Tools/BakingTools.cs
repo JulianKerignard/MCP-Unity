@@ -576,7 +576,7 @@ namespace McpUnity.Server
                 var timeSlice = ArgumentParser.GetEnum(args, "timeSlice", ReflectionProbeTimeSlicingMode.AllFacesAtOnce);
 
                 // M-12: FindObjectsOfType is deprecated in Unity 6 — use FindObjectsByType instead
-                var probes = UnityEngine.Object.FindObjectsByType<ReflectionProbe>(FindObjectsSortMode.None);
+                var probes = UnityEngine.Object.FindObjectsByType<ReflectionProbe>(FindObjectsInactive.Exclude);
 
                 if (probes.Length == 0)
                 {

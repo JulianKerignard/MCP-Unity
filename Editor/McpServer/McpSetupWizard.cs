@@ -287,46 +287,14 @@ namespace McpUnity.Editor
 
         private void RunNpmBuild(string bridgePath)
         {
-            if (!Directory.Exists(bridgePath))
-            {
-                _buildOutput  = $"Bridge directory not found:\n{bridgePath}";
-                _buildSuccess = false;
-                _buildDone    = true;
-                return;
-            }
-
             _buildRunning = true;
             _buildDone    = false;
             _buildOutput  = "";
             Repaint();
 
-            // Run npm install + npm run build synchronously (Editor-safe, blocks briefly)
-            try
-            {
-                string shell     = Application.platform == RuntimePlatform.WindowsEditor ? "cmd.exe" : "/bin/sh";
-                string shellArgs = Application.platform == RuntimePlatform.WindowsEditor
-                    ? $"/c cd /d \"{bridgePath}\" && npm install && npm run build"
-                    : $"-c \"cd '{bridgePath}' && npm install && npm run build\"";
-
-                var psi = new ProcessStartInfo(shell, shellArgs)
-                {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError  = true,
-                    UseShellExecute        = false,
-                    CreateNoWindow         = true
-                };
-
-                using var p = Process.Start(psi);
-                _buildOutput  = p.StandardOutput.ReadToEnd() + p.StandardError.ReadToEnd();
-                p.WaitForExit();
-                _buildSuccess = p.ExitCode == 0 && File.Exists(Path.Combine(bridgePath, "build", "index.js"));
-            }
-            catch (Exception ex)
-            {
-                _buildOutput  = $"Exception: {ex.Message}";
-                _buildSuccess = false;
-            }
-
+            var result = McpBridgeBuilder.BuildBridgeWithProgress();
+            _buildOutput  = result.Output;
+            _buildSuccess = result.Success;
             _buildRunning = false;
             _buildDone    = true;
             Repaint();

@@ -54,13 +54,37 @@ namespace McpUnity.Editor
             if (!serverBuilt)
             {
                 EditorGUILayout.HelpBox(
-                    "The Node.js bridge is not built yet.\n" +
-                    "Open a terminal in the Server~/ folder and run:\n\n" +
-                    "    npm install && npm run build",
+                    "The Node.js bridge is not built yet. Click 'Build Bridge Now' to run " +
+                    "npm install && npm run build automatically.",
                     MessageType.Warning);
+
+                EditorGUILayout.Space(4);
+                GUI.backgroundColor = new Color(0.3f, 0.7f, 0.4f);
+                if (GUILayout.Button("Build Bridge Now", GUILayout.Height(28)))
+                {
+                    BuildBridgeFromSetupTab();
+                }
+                GUI.backgroundColor = Color.white;
             }
 
             EditorGUILayout.EndVertical();
+        }
+
+        private void BuildBridgeFromSetupTab()
+        {
+            var result = McpBridgeBuilder.BuildBridgeWithProgress();
+            if (result.Success)
+            {
+                if (McpSettings.Instance.ShowNotifications)
+                    ShowNotification(new GUIContent("Bridge built successfully"));
+                AssetDatabase.Refresh();
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Build failed",
+                    "Failed to build the Node.js bridge.\n\nOutput:\n" + result.Output,
+                    "OK");
+            }
         }
 
         private void DrawSetupEditorSection()
@@ -177,6 +201,25 @@ namespace McpUnity.Editor
 
         private void WriteEditorConfig(string configPath, string serverPath, string editorLabel)
         {
+            // Bridge must be built — otherwise the AI client will fail to connect.
+            if (!McpBridgeBuilder.IsBuilt())
+            {
+                bool doBuild = EditorUtility.DisplayDialog("Bridge not built",
+                    "The Node.js bridge is not built yet. Build it now?\n\n" +
+                    "(Runs npm install && npm run build in Server~/)",
+                    "Build now", "Cancel");
+                if (!doBuild) return;
+
+                var build = McpBridgeBuilder.BuildBridgeWithProgress();
+                if (!build.Success)
+                {
+                    EditorUtility.DisplayDialog("Bridge build failed",
+                        "Output:\n" + build.Output, "OK");
+                    return;
+                }
+                AssetDatabase.Refresh();
+            }
+
             // VS Code uses "servers" root key, others use "mcpServers"
             bool isVSCode = configPath.Contains(".vscode");
             string content = isVSCode
@@ -203,6 +246,21 @@ namespace McpUnity.Editor
 
         private void SetupAllEditors((string label, string path)[] editors, string serverPath)
         {
+            // Build the bridge first if missing — config files alone are useless without it.
+            if (!McpBridgeBuilder.IsBuilt())
+            {
+                var build = McpBridgeBuilder.BuildBridgeWithProgress();
+                if (!build.Success)
+                {
+                    EditorUtility.DisplayDialog("Bridge build failed",
+                        "Cannot create config files because the Node.js bridge build failed.\n\n" +
+                        "Output:\n" + build.Output,
+                        "OK");
+                    return;
+                }
+                AssetDatabase.Refresh();
+            }
+
             int created = 0;
             var errors = new StringBuilder();
 

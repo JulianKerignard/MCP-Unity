@@ -450,7 +450,7 @@ namespace McpUnity.Server
                 // for auditability even if the caller already set overwrite=true.
                 if (fileExists && overwrite && IsSensitiveScriptPath(filePath))
                 {
-                    McpDebug.LogWarning(
+                    McpUnity.Editor.McpDebug.LogWarning(
                         $"[MCP Unity] Overwriting script in sensitive folder: {filePath}. " +
                         "This file will compile and run at the next domain reload.");
                 }
@@ -531,7 +531,7 @@ namespace McpUnity.Server
                 // Assets/Plugins/** — these paths compile and can hook editor callbacks.
                 if (IsSensitiveScriptPath(filePath))
                 {
-                    McpDebug.LogWarning(
+                    McpUnity.Editor.McpDebug.LogWarning(
                         $"[MCP Unity] Updating script in sensitive folder: {filePath}. " +
                         "This file will compile and run at the next domain reload.");
                 }

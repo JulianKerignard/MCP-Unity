@@ -447,8 +447,7 @@ namespace McpUnity.Server
             bool includeInactive = ArgumentParser.GetBool(args, "includeInactive", true);
 
             var allObjects = UnityEngine.Object.FindObjectsByType<GameObject>(
-                includeInactive ? FindObjectsInactive.Include : FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None);
+                includeInactive ? FindObjectsInactive.Include : FindObjectsInactive.Exclude);
 
             var missing = new List<object>();
 
@@ -475,9 +474,11 @@ namespace McpUnity.Server
                             var prop = so.GetIterator();
                             while (prop.NextVisible(true))
                             {
+#pragma warning disable CS0618 // objectReferenceInstanceIDValue: kept for Unity < 6 compat
                                 if (prop.propertyType == UnityEditor.SerializedPropertyType.ObjectReference
                                     && prop.objectReferenceValue == null
                                     && prop.objectReferenceInstanceIDValue != 0)
+#pragma warning restore CS0618
                                 {
                                     missing.Add(new
                                     {
