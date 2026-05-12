@@ -41,7 +41,7 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["includeEmpty"] = new McpPropertySchema { type = "boolean", description = "Include empty layer slots (default: false)" }
+                        ["includeEmpty"] = new McpPropertySchema { type = "boolean", description = "Include empty layer slots" }
                     },
                     required = new List<string>()
                 }
@@ -58,7 +58,7 @@ namespace McpUnity.Server
                     {
                         ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Path to the GameObject in the hierarchy" },
                         ["tag"] = new McpPropertySchema { type = "string", description = "Tag name to set (must exist in project)" },
-                        ["recursive"] = new McpPropertySchema { type = "boolean", description = "Apply to all children (default: false)" }
+                        ["recursive"] = new McpPropertySchema { type = "boolean", description = "Apply to all children" }
                     },
                     required = new List<string> { "gameObjectPath", "tag" }
                 }
@@ -75,7 +75,7 @@ namespace McpUnity.Server
                     {
                         ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Path to the GameObject in the hierarchy" },
                         ["layer"] = new McpPropertySchema { type = "string", description = "Layer name to set (must exist in project)" },
-                        ["recursive"] = new McpPropertySchema { type = "boolean", description = "Apply to all children (default: false)" }
+                        ["recursive"] = new McpPropertySchema { type = "boolean", description = "Apply to all children" }
                     },
                     required = new List<string> { "gameObjectPath", "layer" }
                 }

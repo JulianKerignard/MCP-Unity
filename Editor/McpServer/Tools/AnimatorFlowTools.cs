@@ -23,10 +23,10 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
-                        ["fromState"] = new McpPropertySchema { type = "string", description = "Starting state name (default: 'Entry' for default state)" },
-                        ["maxDepth"] = new McpPropertySchema { type = "integer", description = "Maximum path depth to trace (default: 10)" },
-                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" }
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
+                        ["fromState"] = new McpPropertySchema { type = "string", description = "Starting state name ('Entry' = default state)" },
+                        ["maxDepth"] = new McpPropertySchema { type = "integer", description = "Maximum path depth to trace" },
+                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index" }
                     },
                     required = new List<string> { "controllerPath" }
                 }

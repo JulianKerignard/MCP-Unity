@@ -30,7 +30,7 @@ namespace McpUnity.Server
                         ["includeBuiltIn"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Include built-in Unity packages (default: false)"
+                            description = "Include built-in Unity packages"
                         }
                     }
                 }

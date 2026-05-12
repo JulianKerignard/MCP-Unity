@@ -307,6 +307,9 @@ namespace McpUnity.Server
             RegisterDefaultTools();
             RegisterDefaultResources();
 
+            // Apply persisted per-category enable/disable state from the Settings tab
+            McpUnity.Editor.McpServerCategorySettings.ApplyPersistedState(_toolRegistry);
+
             // Initialize JSON-RPC handler
             McpJsonRpc.Initialize(_toolRegistry, _resourceRegistry);
         }

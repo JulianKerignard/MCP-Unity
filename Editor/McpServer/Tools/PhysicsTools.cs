@@ -31,9 +31,9 @@ namespace McpUnity.Server
                     {
                         ["origin"] = new McpPropertySchema { type = "object", description = "Ray origin {x, y, z}" },
                         ["direction"] = new McpPropertySchema { type = "object", description = "Ray direction {x, y, z}" },
-                        ["maxDistance"] = new McpPropertySchema { type = "number", description = "Maximum ray distance (default: 1000)" },
-                        ["layerNames"] = new McpPropertySchema { type = "array", description = "Layer names to include (default: all layers)" },
-                        ["maxHits"] = new McpPropertySchema { type = "integer", description = "Maximum number of hits to return (default: 10)" }
+                        ["maxDistance"] = new McpPropertySchema { type = "number", description = "Maximum ray distance" },
+                        ["layerNames"] = new McpPropertySchema { type = "array", description = "Layer names to include (all layers if omitted)" },
+                        ["maxHits"] = new McpPropertySchema { type = "integer", description = "Maximum hits to return" }
                     },
                     required = new List<string> { "origin", "direction" }
                 }
@@ -49,11 +49,11 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Path to the GameObject" },
-                        ["mass"] = new McpPropertySchema { type = "number", description = "Mass (default: 1)" },
-                        ["drag"] = new McpPropertySchema { type = "number", description = "Drag (default: 0)" },
-                        ["angularDrag"] = new McpPropertySchema { type = "number", description = "Angular drag (default: 0.05)" },
-                        ["useGravity"] = new McpPropertySchema { type = "boolean", description = "Use gravity (default: true)" },
-                        ["isKinematic"] = new McpPropertySchema { type = "boolean", description = "Is kinematic (default: false)" },
+                        ["mass"] = new McpPropertySchema { type = "number", description = "Mass" },
+                        ["drag"] = new McpPropertySchema { type = "number", description = "Drag" },
+                        ["angularDrag"] = new McpPropertySchema { type = "number", description = "Angular drag" },
+                        ["useGravity"] = new McpPropertySchema { type = "boolean", description = "Use gravity" },
+                        ["isKinematic"] = new McpPropertySchema { type = "boolean", description = "Is kinematic" },
                         ["interpolation"] = new McpPropertySchema { type = "string", description = "Interpolation: None, Interpolate, Extrapolate" },
                         ["constraints"] = new McpPropertySchema { type = "array", description = "Constraints: FreezePositionX/Y/Z, FreezeRotationX/Y/Z, FreezePosition, FreezeRotation, FreezeAll" }
                     },
@@ -71,8 +71,8 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Path to the GameObject" },
-                        ["colliderType"] = new McpPropertySchema { type = "string", description = "Type: Box, Sphere, Capsule, Mesh, auto (default: auto)" },
-                        ["isTrigger"] = new McpPropertySchema { type = "boolean", description = "Is trigger (default: false)" },
+                        ["colliderType"] = new McpPropertySchema { type = "string", description = "Type: Box, Sphere, Capsule, Mesh, auto" },
+                        ["isTrigger"] = new McpPropertySchema { type = "boolean", description = "Is trigger" },
                         ["center"] = new McpPropertySchema { type = "object", description = "Center offset {x, y, z}" },
                         ["size"] = new McpPropertySchema { type = "object", description = "Size for BoxCollider {x, y, z}" },
                         ["radius"] = new McpPropertySchema { type = "number", description = "Radius for Sphere/Capsule" },
@@ -93,12 +93,12 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Path to the GameObject with a Collider" },
-                        ["dynamicFriction"] = new McpPropertySchema { type = "number", description = "Dynamic friction (default: 0.6)" },
-                        ["staticFriction"] = new McpPropertySchema { type = "number", description = "Static friction (default: 0.6)" },
-                        ["bounciness"] = new McpPropertySchema { type = "number", description = "Bounciness (default: 0)" },
+                        ["dynamicFriction"] = new McpPropertySchema { type = "number", description = "Dynamic friction" },
+                        ["staticFriction"] = new McpPropertySchema { type = "number", description = "Static friction" },
+                        ["bounciness"] = new McpPropertySchema { type = "number", description = "Bounciness" },
                         ["frictionCombine"] = new McpPropertySchema { type = "string", description = "Friction combine: Average, Minimum, Maximum, Multiply" },
                         ["bounceCombine"] = new McpPropertySchema { type = "string", description = "Bounce combine: Average, Minimum, Maximum, Multiply" },
-                        ["savePath"] = new McpPropertySchema { type = "string", description = "Optional asset path to save the material (e.g., 'Assets/Physics/Bouncy.physicMaterial')" }
+                        ["savePath"] = new McpPropertySchema { type = "string", description = "Asset path to save the material" }
                     },
                     required = new List<string> { "gameObjectPath" }
                 }

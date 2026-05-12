@@ -26,10 +26,10 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string",  description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string",  description = "AnimatorController asset path" },
                         ["gameObjectPath"] = new McpPropertySchema { type = "string",  description = "Path to a GameObject with Animator (alternative to controllerPath)" },
-                        ["layerIndex"]     = new McpPropertySchema { type = "integer", description = "Only return this layer (-1 = all layers, default: -1)" },
-                        ["compact"]        = new McpPropertySchema { type = "boolean", description = "Omit transitions from output to save tokens (default: false)" }
+                        ["layerIndex"]     = new McpPropertySchema { type = "integer", description = "Only return this layer (-1 = all layers)" },
+                        ["compact"]        = new McpPropertySchema { type = "boolean", description = "Omit transitions from output to save tokens" }
                     }
                 }
             }, GetAnimatorController);
@@ -61,7 +61,7 @@ namespace McpUnity.Server
                         ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Path to the GameObject with Animator component" },
                         ["parameterName"] = new McpPropertySchema { type = "string", description = "Name of the parameter to set" },
                         ["value"] = new McpPropertySchema { description = "Value to set (type depends on parameter type)" },
-                        ["parameterType"] = new McpPropertySchema { type = "string", description = "Parameter type: Float, Int, Bool, or Trigger (optional, auto-detected)" }
+                        ["parameterType"] = new McpPropertySchema { type = "string", description = "Parameter type: Float, Int, Bool, or Trigger (auto-detected)" }
                     },
                     required = new List<string> { "gameObjectPath", "parameterName" }
                 }
@@ -91,7 +91,7 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["parameterName"]  = new McpPropertySchema { type = "string", description = "Name of the parameter to remove" }
                     },
                     required = new List<string> { "controllerPath", "parameterName" }
@@ -107,10 +107,10 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"]  = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"]  = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["layerName"]       = new McpPropertySchema { type = "string", description = "Name for the new layer" },
-                        ["defaultWeight"]   = new McpPropertySchema { type = "number",  description = "Layer weight 0-1 (default: 1.0)" },
-                        ["avatarMaskPath"]  = new McpPropertySchema { type = "string", description = "Optional: path to AvatarMask asset" }
+                        ["defaultWeight"]   = new McpPropertySchema { type = "number",  description = "Layer weight 0-1" },
+                        ["avatarMaskPath"]  = new McpPropertySchema { type = "string", description = "AvatarMask asset path" }
                     },
                     required = new List<string> { "controllerPath", "layerName" }
                 }
@@ -125,10 +125,10 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["parameterName"] = new McpPropertySchema { type = "string", description = "Name of the new parameter" },
                         ["parameterType"] = new McpPropertySchema { type = "string", description = "Type: Float, Int, Bool, or Trigger" },
-                        ["defaultValue"] = new McpPropertySchema { description = "Default value for the parameter (optional)" }
+                        ["defaultValue"] = new McpPropertySchema { description = "Default value for the parameter" }
                     },
                     required = new List<string> { "controllerPath", "parameterName", "parameterType" }
                 }
@@ -293,7 +293,6 @@ namespace McpUnity.Server
                 var stateInfo = new Dictionary<string, object>
                 {
                     ["name"]      = state.name,
-                    ["position"]  = new Dictionary<string, object> { ["x"] = childState.position.x, ["y"] = childState.position.y },
                     ["isDefault"] = state.name == defaultStateName,
                     ["speed"]     = state.speed,
                     ["motion"]    = state.motion?.name
@@ -530,7 +529,7 @@ namespace McpUnity.Server
                 return McpToolResult.Error($"AnimatorController not found. Path: '{controllerPath}', GameObject: '{gameObjectPath}'");
 
             int  targetLayer = ArgumentParser.GetInt(args,  "layerIndex", -1);
-            bool compact     = ArgumentParser.GetBool(args, "compact",    false);
+            bool compact     = ArgumentParser.GetBool(args, "compact",    true);
 
             var serialized = SerializeAnimatorController(controller, targetLayer, compact);
 

@@ -38,7 +38,7 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["includeAssets"] = new McpPropertySchema { type = "boolean", description = "Include selected assets (default: false)" }
+                        ["includeAssets"] = new McpPropertySchema { type = "boolean", description = "Include selected assets" }
                     },
                     required = new List<string>()
                 }
@@ -70,9 +70,9 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["logType"] = new McpPropertySchema { type = "string", description = "Filter: All, Error, Warning, Log, Exception, Assert (default: All)" },
-                        ["count"] = new McpPropertySchema { type = "integer", description = "Number of logs to retrieve (default: 50)" },
-                        ["includeStackTrace"] = new McpPropertySchema { type = "boolean", description = "Include stack traces (default: false)" }
+                        ["logType"] = new McpPropertySchema { type = "string", description = "Filter: All, Error, Warning, Log, Exception, Assert" },
+                        ["count"] = new McpPropertySchema { type = "integer", description = "Number of logs to retrieve" },
+                        ["includeStackTrace"] = new McpPropertySchema { type = "boolean", description = "Include stack traces" }
                     },
                     required = new List<string>()
                 }

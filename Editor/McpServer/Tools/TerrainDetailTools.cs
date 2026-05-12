@@ -31,13 +31,13 @@ namespace McpUnity.Server
                         ["renderMode"]     = new McpPropertySchema { type = "string", description = "GrassBillboard | Grass | VertexLit (mesh)", @enum = new List<string> { "GrassBillboard", "Grass", "VertexLit" } },
                         ["texturePath"]    = new McpPropertySchema { type = "string", description = "Texture asset path (GrassBillboard / Grass modes)" },
                         ["meshPath"]       = new McpPropertySchema { type = "string", description = "Mesh prefab asset path (VertexLit mode)" },
-                        ["minWidth"]       = new McpPropertySchema { type = "number", description = "Min width in world units (default: 1)" },
-                        ["maxWidth"]       = new McpPropertySchema { type = "number", description = "Max width in world units (default: 2)" },
-                        ["minHeight"]      = new McpPropertySchema { type = "number", description = "Min height in world units (default: 1)" },
-                        ["maxHeight"]      = new McpPropertySchema { type = "number", description = "Max height in world units (default: 2)" },
-                        ["noiseSpread"]    = new McpPropertySchema { type = "number", description = "Noise spread factor (default: 0.1)" },
-                        ["healthyColor"]   = new McpPropertySchema { type = "string", description = "Healthy color hex (default: #67C13B)" },
-                        ["dryColor"]       = new McpPropertySchema { type = "string", description = "Dry color hex (default: #AFA35F)" },
+                        ["minWidth"]       = new McpPropertySchema { type = "number", description = "Min width in world units" },
+                        ["maxWidth"]       = new McpPropertySchema { type = "number", description = "Max width in world units" },
+                        ["minHeight"]      = new McpPropertySchema { type = "number", description = "Min height in world units" },
+                        ["maxHeight"]      = new McpPropertySchema { type = "number", description = "Max height in world units" },
+                        ["noiseSpread"]    = new McpPropertySchema { type = "number", description = "Noise spread factor" },
+                        ["healthyColor"]   = new McpPropertySchema { type = "string", description = "Healthy color hex" },
+                        ["dryColor"]       = new McpPropertySchema { type = "string", description = "Dry color hex" },
                     },
                     required = new List<string> { "renderMode" }
                 }
@@ -57,9 +57,9 @@ namespace McpUnity.Server
                     {
                         ["gameObjectPath"]  = new McpPropertySchema { type = "string", description = "Terrain GameObject path (omit = first active terrain)" },
                         ["prototypeIndex"]  = new McpPropertySchema { type = "integer", description = "Detail prototype index (from add_terrain_detail)" },
-                        ["density"]         = new McpPropertySchema { type = "integer", description = "Target density 0–16 (default: 8)" },
-                        ["region"]          = new McpPropertySchema { type = "object", description = "Normalized region {x,y,width,height} 0-1 (default: full terrain)" },
-                        ["brush"]           = new McpPropertySchema { type = "string", description = "set | add | subtract (default: set)", @enum = new List<string> { "set", "add", "subtract" } },
+                        ["density"]         = new McpPropertySchema { type = "integer", description = "Target density 0-16" },
+                        ["region"]          = new McpPropertySchema { type = "object", description = "Normalized region {x,y,width,height} 0-1" },
+                        ["brush"]           = new McpPropertySchema { type = "string", description = "set | add | subtract", @enum = new List<string> { "set", "add", "subtract" } },
                     },
                     required = new List<string> { "prototypeIndex" }
                 }

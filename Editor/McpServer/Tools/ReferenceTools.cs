@@ -52,7 +52,7 @@ namespace McpUnity.Server
                         ["targetComponentType"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Optional: If the field expects a specific component type (e.g., 'Transform', 'Text'), specify it here to get that component from the target GameObject"
+                            description = "Component type to get from the target GameObject (e.g., 'Transform', 'Text')"
                         }
                     },
                     required = new List<string> { "gameObjectPath", "componentType", "fieldName", "targetPath" }
@@ -91,7 +91,7 @@ namespace McpUnity.Server
                         ["targetComponentType"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Optional: Component type to get from each target GameObject (e.g., 'Transform')"
+                            description = "Component type to get from each target GameObject (e.g., 'Transform')"
                         }
                     },
                     required = new List<string> { "gameObjectPath", "componentType", "fieldName", "targetPaths" }

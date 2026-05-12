@@ -13,6 +13,9 @@ export type CacheCategory = 'hierarchy' | 'editorState' | 'components' | 'assets
 export class ServerCache {
   private cache = new Map<string, CacheEntry>();
   private static readonly MAX_ENTRIES = 500;
+  private _hits = 0;
+  private _misses = 0;
+  private _evictions = 0;
   // unref() ensures this timer does not keep the Node.js event loop alive.
   // If destroy() is never called (e.g. unhandled exception), the process can still exit.
   private cleanupTimer = (() => {
@@ -34,18 +37,29 @@ export class ServerCache {
     const entry = this.cache.get(key);
     if (!entry || Date.now() > entry.expiry) {
       if (entry) this.cache.delete(key);
+      this._misses++;
       return null;
     }
+    // LRU: move entry to end of insertion order so it's evicted last
+    this.cache.delete(key);
+    this.cache.set(key, entry);
+    this._hits++;
     return entry.data;
   }
 
   set(key: string, data: unknown, category: CacheCategory = 'components'): void {
     if (this.cache.size >= ServerCache.MAX_ENTRIES) {
+      const sizeBefore = this.cache.size;
       this.cleanup();
       if (this.cache.size >= ServerCache.MAX_ENTRIES) {
         const firstKey = this.cache.keys().next().value;
-        if (firstKey !== undefined) this.cache.delete(firstKey);
+        if (firstKey !== undefined) {
+          this.cache.delete(firstKey);
+          this._evictions++;
+        }
       }
+      // Count entries removed by cleanup as evictions
+      this._evictions += sizeBefore - this.cache.size;
     }
     const ttl = ServerCache.TTL[category] || 60000;
     this.cache.set(key, { data, expiry: Date.now() + ttl, category });
@@ -65,7 +79,10 @@ export class ServerCache {
   private cleanup(): void {
     const now = Date.now();
     for (const [key, entry] of this.cache) {
-      if (now > entry.expiry) this.cache.delete(key);
+      if (now > entry.expiry) {
+        this.cache.delete(key);
+        this._evictions++;
+      }
     }
   }
 
@@ -76,8 +93,16 @@ export class ServerCache {
     this.cache.clear();
   }
 
-  stats(): { size: number; keys: string[] } {
-    return { size: this.cache.size, keys: Array.from(this.cache.keys()) };
+  stats(): { size: number; keys: string[]; hits: number; misses: number; evictions: number; hitRate: number } {
+    const total = this._hits + this._misses;
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys()),
+      hits: this._hits,
+      misses: this._misses,
+      evictions: this._evictions,
+      hitRate: total > 0 ? this._hits / total : 0,
+    };
   }
 }
 
@@ -102,6 +127,27 @@ export const cacheableTools: Record<string, CacheCategory> = {
   unity_get_script_info: 'components',
   unity_get_build_settings: 'scenes',
   unity_get_render_pipeline_info: 'scenes',
+  // Animator tools
+  unity_list_animation_clips: 'assets',
+  unity_get_animator_controller: 'components',
+  unity_get_animator_parameters: 'components',
+  unity_get_animator_flow: 'components',
+  unity_get_clip_info: 'components',
+  // Terrain tools
+  unity_list_terrain_brushes: 'assets',
+  unity_get_terrain_info: 'hierarchy',
+  // Build/Package tools
+  unity_list_packages: 'scenes',
+  // Settings tools
+  unity_list_tags: 'scenes',
+  unity_list_layers: 'scenes',
+  unity_get_project_settings: 'scenes',
+  unity_get_navmesh_settings: 'scenes',
+  unity_get_lightmap_settings: 'scenes',
+  // Advanced tools
+  unity_list_scriptable_object_types: 'assets',
+  // Editor state
+  unity_get_selection: 'editorState',
 };
 
 // Tools that invalidate cache
@@ -122,7 +168,7 @@ export const cacheInvalidators: Record<string, CacheCategory[]> = {
   unity_remove_component: ['hierarchy', 'components'],
   unity_set_component_enabled: ['components', 'hierarchy'],
   // Scene tools
-  unity_load_scene: ['hierarchy', 'scenes'],
+  unity_load_scene: ['hierarchy', 'scenes', 'editorState'],
   unity_save_scene: ['scenes'],
   unity_create_scene: ['hierarchy', 'scenes'],
   // Prefab tools
@@ -142,7 +188,7 @@ export const cacheInvalidators: Record<string, CacheCategory[]> = {
   unity_move_asset: ['assets'],
   unity_copy_asset: ['assets'],
   // Material tools
-  unity_create_material: ['assets'],
+  unity_create_material: ['assets', 'components'],
   unity_set_material: ['assets', 'components'],
   // UI tools
   unity_create_canvas: ['hierarchy'],
@@ -195,12 +241,13 @@ export const cacheInvalidators: Record<string, CacheCategory[]> = {
   // Camera/Rendering tools
   unity_configure_camera: ['components'],
   unity_render_camera_to_file: ['assets'],
+  unity_take_screenshot: ['assets'],
   // Baking tools
-  unity_bake_navmesh: ['assets'],
+  unity_bake_navmesh: ['assets', 'scenes'],
   unity_clear_navmesh: ['assets'],
   unity_set_navigation_static: ['hierarchy'],
-  unity_bake_lighting: ['assets'],
-  unity_bake_lighting_async: ['assets'],
+  unity_bake_lighting: ['assets', 'scenes'],
+  unity_bake_lighting_async: ['assets', 'scenes'],
   unity_clear_baked_data: ['assets'],
   unity_set_lightmap_settings: ['assets'],
   unity_bake_reflection_probes: ['assets'],

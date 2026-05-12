@@ -30,7 +30,7 @@ namespace McpUnity.Server
                         ["gameObjectPath"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Path to terrain GameObject. If omitted, uses the first active Terrain."
+                            description = "Terrain path (default: first active)"
                         },
                         ["diffuseTexturePath"] = new McpPropertySchema
                         {
@@ -40,32 +40,32 @@ namespace McpUnity.Server
                         ["normalMapPath"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Asset path to normal map texture (optional)"
+                            description = "Normal map asset path"
                         },
                         ["terrainLayerPath"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Asset path to an existing TerrainLayer asset. If provided, diffuseTexturePath is ignored."
+                            description = "Existing TerrainLayer asset path (overrides diffuseTexturePath)"
                         },
                         ["tileSize"] = new McpPropertySchema
                         {
                             type = "object",
-                            description = "Texture tile size {x, y}. Default: {15, 15}"
+                            description = "Texture tile size {x, y}"
                         },
                         ["tileOffset"] = new McpPropertySchema
                         {
                             type = "object",
-                            description = "Texture tile offset {x, y}. Default: {0, 0}"
+                            description = "Texture tile offset {x, y}"
                         },
                         ["metallic"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Metallic value 0-1. Default: 0"
+                            description = "Metallic value 0-1"
                         },
                         ["smoothness"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Smoothness value 0-1. Default: 0.5"
+                            description = "Smoothness value 0-1"
                         }
                     },
                     required = new List<string>()
@@ -87,12 +87,12 @@ namespace McpUnity.Server
                         ["gameObjectPath"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Path to terrain GameObject. If omitted, uses the first active Terrain."
+                            description = "Terrain path (default: first active)"
                         },
                         ["strokes"] = new McpPropertySchema
                         {
                             type = "array",
-                            description = "Array of stroke objects. Each stroke: { layerIndex (required), brushCenter {x,z}, brushSize, opacity, brushShape, brushFalloff, brushRotation, brushName, region }"
+                            description = "Array of strokes (see docs)"
                         }
                     },
                     required = new List<string> { "strokes" }
@@ -114,37 +114,37 @@ namespace McpUnity.Server
                         ["gameObjectPath"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Path to terrain GameObject. If omitted, uses the first active Terrain."
+                            description = "Terrain path (default: first active)"
                         },
                         ["layerIndex"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Index of the terrain layer to paint (0-based). Use get_terrain_info to see available layers."
+                            description = "Terrain layer index (0-based)"
                         },
                         ["waypoints"] = new McpPropertySchema
                         {
                             type = "array",
-                            description = "Array of {x, z} world-space positions defining the path. Minimum 2 waypoints. Coordinates are in world space (not normalized)."
+                            description = "Array of {x, z} world-space positions (min 2)"
                         },
                         ["width"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Path width in world units (default: 4.0)"
+                            description = "Path width in world units"
                         },
                         ["falloff"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Edge falloff 0-1. 0 = hard edges, 1 = fully soft edges (default: 0.3)"
+                            description = "Edge falloff 0-1 (0 = hard, 1 = soft)"
                         },
                         ["opacity"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Paint opacity 0-1 (default: 1.0)"
+                            description = "Paint opacity 0-1"
                         },
                         ["spacing"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Distance between auto-generated strokes in world units (default: half of width). Smaller = smoother but slower."
+                            description = "Stroke spacing in world units (smaller = smoother)"
                         }
                     },
                     required = new List<string> { "layerIndex", "waypoints" }
@@ -186,22 +186,22 @@ namespace McpUnity.Server
                         ["minScale"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Minimum tree scale. Default: 0.8"
+                            description = "Minimum tree scale"
                         },
                         ["maxScale"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Maximum tree scale. Default: 1.2"
+                            description = "Maximum tree scale"
                         },
                         ["seed"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Random seed for scatter placement. Default: 42"
+                            description = "Random seed for scatter placement"
                         },
                         ["clearExisting"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Clear all existing trees before placing new ones. Default: false"
+                            description = "Clear all existing trees before placing new ones"
                         }
                     },
                     required = new List<string> { "prefabPath" }

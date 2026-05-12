@@ -41,7 +41,7 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["scenePath"] = new McpPropertySchema { type = "string", description = "Path to the scene file (must end with .unity)" },
-                        ["mode"] = new McpPropertySchema { type = "string", description = "Load mode: 'Single' (default) or 'Additive'" }
+                        ["mode"] = new McpPropertySchema { type = "string", description = "Load mode: 'Single' or 'Additive'" }
                     },
                     required = new List<string> { "scenePath" }
                 }
@@ -72,7 +72,7 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["searchFolder"] = new McpPropertySchema { type = "string", description = "Limit search to a folder (default: entire Assets/)" }
+                        ["searchFolder"] = new McpPropertySchema { type = "string", description = "Limit search to a folder" }
                     },
                     required = new List<string>()
                 }

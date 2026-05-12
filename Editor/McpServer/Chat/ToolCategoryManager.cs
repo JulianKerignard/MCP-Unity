@@ -28,6 +28,21 @@ namespace McpUnity.Chat
             "gameobject", "scene", "assets", "editor", "scripts", "terrain"
         };
 
+        // Preset definitions: preset name → set of category ids to enable (core always added)
+        private static readonly Dictionary<string, HashSet<string>> PresetCategoryIds =
+            new Dictionary<string, HashSet<string>>
+            {
+                {
+                    "scene-only", new HashSet<string> { "gameobject", "scene", "editor" }
+                },
+                {
+                    "animation-only", new HashSet<string> { "animator-read" }
+                },
+                {
+                    "level-design", new HashSet<string> { "gameobject", "scene", "terrain", "assets" }
+                },
+            };
+
         // Lookup: tool name → category id (built once at static init)
         private static readonly Dictionary<string, string> ToolToCategoryMap;
 
@@ -104,16 +119,29 @@ namespace McpUnity.Chat
                 }
             },
             // ----------------------------------------------------------------
-            // Animator (16 tools)
+            // Animator — Read (4 tools, read-only inspection)
             // ----------------------------------------------------------------
             new ToolCategory
             {
-                id = "animator",
-                displayName = "Animator",
+                id = "animator-read",
+                displayName = "Animator (Read)",
                 toolNames = new[]
                 {
                     "unity_get_animator_controller",
                     "unity_get_animator_parameters",
+                    "unity_list_animation_clips",
+                    "unity_get_animator_flow",
+                }
+            },
+            // ----------------------------------------------------------------
+            // Animator — Edit (12 tools, mutations)
+            // ----------------------------------------------------------------
+            new ToolCategory
+            {
+                id = "animator-edit",
+                displayName = "Animator (Edit)",
+                toolNames = new[]
+                {
                     "unity_set_animator_parameter",
                     "unity_add_animator_parameter",
                     "unity_add_animator_state",
@@ -124,10 +152,8 @@ namespace McpUnity.Chat
                     "unity_add_animator_transition",
                     "unity_delete_animator_transition",
                     "unity_modify_transition",
-                    "unity_list_animation_clips",
                     "unity_get_clip_info",
                     "unity_validate_animator",
-                    "unity_get_animator_flow",
                 }
             },
             // ----------------------------------------------------------------
@@ -263,36 +289,61 @@ namespace McpUnity.Chat
                 }
             },
             // ----------------------------------------------------------------
-            // Project Config (20 tools)
+            // Tags & Layers (6 tools)
             // ----------------------------------------------------------------
             new ToolCategory
             {
-                id = "config",
-                displayName = "Project Config",
+                id = "tags-layers",
+                displayName = "Tags & Layers",
                 toolNames = new[]
                 {
-                    // Tags & Layers (6)
                     "unity_list_tags",
                     "unity_list_layers",
                     "unity_set_tag",
                     "unity_set_layer",
                     "unity_create_tag",
                     "unity_create_layer",
-                    // Project Settings (5)
+                }
+            },
+            // ----------------------------------------------------------------
+            // Project Settings (5 tools)
+            // ----------------------------------------------------------------
+            new ToolCategory
+            {
+                id = "project-settings",
+                displayName = "Project Settings",
+                toolNames = new[]
+                {
                     "unity_get_project_settings",
                     "unity_set_project_settings",
                     "unity_set_quality_level",
                     "unity_get_physics_layer_collision",
                     "unity_set_physics_layer_collision",
-                    // Memory (3)
-                    "unity_memory_get",
-                    "unity_memory_refresh",
-                    "unity_memory_clear",
-                    // Build (3)
+                }
+            },
+            // ----------------------------------------------------------------
+            // Build (3 tools)
+            // ----------------------------------------------------------------
+            new ToolCategory
+            {
+                id = "build",
+                displayName = "Build",
+                toolNames = new[]
+                {
                     "unity_get_build_settings",
                     "unity_manage_build_scenes",
                     "unity_switch_platform",
-                    // Audio (3)
+                }
+            },
+            // ----------------------------------------------------------------
+            // Audio (3 tools)
+            // ----------------------------------------------------------------
+            new ToolCategory
+            {
+                id = "audio",
+                displayName = "Audio",
+                toolNames = new[]
+                {
                     "unity_setup_audio_source",
                     "unity_create_audio_mixer",
                     "unity_get_audio_mixer",
@@ -359,6 +410,28 @@ namespace McpUnity.Chat
             }
             _totalToolCount = total;
 
+            // Migration v2: split animator and config categories
+            if (!EditorPrefs.GetBool("McpUnity_ToolCatMigration_v2", false))
+            {
+                if (EditorPrefs.HasKey("McpUnity_ToolCat_animator"))
+                {
+                    bool oldVal = EditorPrefs.GetBool("McpUnity_ToolCat_animator", false);
+                    EditorPrefs.SetBool("McpUnity_ToolCat_animator-read", oldVal);
+                    EditorPrefs.SetBool("McpUnity_ToolCat_animator-edit", oldVal);
+                    EditorPrefs.DeleteKey("McpUnity_ToolCat_animator");
+                }
+                if (EditorPrefs.HasKey("McpUnity_ToolCat_config"))
+                {
+                    bool oldVal = EditorPrefs.GetBool("McpUnity_ToolCat_config", false);
+                    EditorPrefs.SetBool("McpUnity_ToolCat_tags-layers", oldVal);
+                    EditorPrefs.SetBool("McpUnity_ToolCat_project-settings", oldVal);
+                    EditorPrefs.SetBool("McpUnity_ToolCat_build", oldVal);
+                    EditorPrefs.SetBool("McpUnity_ToolCat_audio", oldVal);
+                    EditorPrefs.DeleteKey("McpUnity_ToolCat_config");
+                }
+                EditorPrefs.SetBool("McpUnity_ToolCatMigration_v2", true);
+            }
+
             // First-run: apply "core" preset defaults
             if (!EditorPrefs.GetBool(InitializedPref, false))
             {
@@ -424,6 +497,15 @@ namespace McpUnity.Chat
 
         private static void ApplyPresetValues(string preset)
         {
+            // Resolve the explicit enable set for named presets
+            HashSet<string> enabledIds = null;
+            if (PresetCategoryIds.TryGetValue(preset, out var presetSet))
+            {
+                // Named preset: union of preset-specific ids + always-on core ids
+                enabledIds = new HashSet<string>(presetSet);
+                enabledIds.UnionWith(CoreCategoryIds);
+            }
+
             for (int i = 0; i < _allCategories.Length; i++)
             {
                 var id = _allCategories[i].id;
@@ -432,7 +514,8 @@ namespace McpUnity.Chat
                 {
                     case "all":  enabled = true; break;
                     case "none": enabled = false; break;
-                    default:     enabled = CoreCategoryIds.Contains(id); break; // "core"
+                    case "core": enabled = CoreCategoryIds.Contains(id); break;
+                    default:     enabled = enabledIds != null && enabledIds.Contains(id); break;
                 }
                 EditorPrefs.SetBool(PrefPrefix + id, enabled);
             }

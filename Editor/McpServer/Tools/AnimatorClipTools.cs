@@ -23,7 +23,7 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["searchPath"] = new McpPropertySchema { type = "string", description = "Folder to search in (default: 'Assets')" },
+                        ["searchPath"] = new McpPropertySchema { type = "string", description = "Folder to search in" },
                         ["nameFilter"] = new McpPropertySchema { type = "string", description = "Filter clips by name (case-insensitive)" },
                         ["avatarFilter"] = new McpPropertySchema { type = "string", description = "Filter by type: 'humanoid', 'generic', 'legacy'" }
                     }
@@ -40,9 +40,9 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["savePath"]  = new McpPropertySchema { type = "string",  description = "Asset path for the clip (e.g. 'Assets/Animations/Idle.anim')" },
-                        ["frameRate"] = new McpPropertySchema { type = "number",  description = "Frame rate (default: 30)" },
-                        ["isLooping"] = new McpPropertySchema { type = "boolean", description = "Enable loop time (default: false)" },
-                        ["wrapMode"]  = new McpPropertySchema { type = "string",  description = "Wrap mode: Default, Once, Loop, PingPong, ClampForever (default: Default)" }
+                        ["frameRate"] = new McpPropertySchema { type = "number",  description = "Frame rate" },
+                        ["isLooping"] = new McpPropertySchema { type = "boolean", description = "Enable loop time" },
+                        ["wrapMode"]  = new McpPropertySchema { type = "string",  description = "Wrap mode: Default, Once, Loop, PingPong, ClampForever" }
                     },
                     required = new List<string> { "savePath" }
                 }

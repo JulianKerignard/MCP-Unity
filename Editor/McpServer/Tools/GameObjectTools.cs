@@ -34,23 +34,23 @@ namespace McpUnity.Server
                         ["outputMode"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Output format: 'tree' (compact ASCII), 'names' (just names), 'summary' (names+components), 'full' (all details). Default: 'summary'",
+                            description = "Output format",
                             @enum = new List<string> { "names", "tree", "summary", "full" }
                         },
                         ["maxDepth"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Maximum hierarchy depth (default: 3)"
+                            description = "Maximum hierarchy depth"
                         },
                         ["includeInactive"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Include inactive GameObjects (default: false)"
+                            description = "Include inactive GameObjects"
                         },
                         ["rootOnly"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Only return root objects, no children (default: false)"
+                            description = "Only return root objects, no children"
                         },
                         ["nameFilter"] = new McpPropertySchema
                         {
@@ -70,12 +70,12 @@ namespace McpUnity.Server
                         ["includeTransform"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Include position/rotation/scale in 'full' mode (default: false)"
+                            description = "Include transform in 'full' mode"
                         },
                         ["sceneName"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Target a specific loaded scene by name (default: active scene)"
+                            description = "Target a specific loaded scene by name"
                         }
                     }
                 }
@@ -91,11 +91,11 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["name"]          = new McpPropertySchema { type = "string", description = "Name of the GameObject" },
-                        ["primitiveType"] = new McpPropertySchema { type = "string", description = "Mesh type (default: Empty)", @enum = new List<string> { "Empty", "Cube", "Sphere", "Capsule", "Cylinder", "Plane", "Quad" } },
-                        ["parentPath"]    = new McpPropertySchema { type = "string", description = "Parent GameObject path (optional)" },
+                        ["primitiveType"] = new McpPropertySchema { type = "string", description = "Mesh type", @enum = new List<string> { "Empty", "Cube", "Sphere", "Capsule", "Cylinder", "Plane", "Quad" } },
+                        ["parentPath"]    = new McpPropertySchema { type = "string", description = "Parent GameObject path" },
                         ["position"]      = new McpPropertySchema { type = "object", description = "World position {x, y, z}" },
                         ["rotation"]      = new McpPropertySchema { type = "object", description = "Rotation in euler angles {x, y, z}" },
-                        ["scale"]         = new McpPropertySchema { type = "object", description = "Local scale {x, y, z} (default: {1,1,1})" },
+                        ["scale"]         = new McpPropertySchema { type = "object", description = "Local scale {x, y, z}" },
                         ["components"]    = new McpPropertySchema { type = "array", description = "Components to add at creation: [{ type, properties? }] e.g. [{ \"type\": \"Rigidbody\" }, { \"type\": \"BoxCollider\" }]" }
                     },
                     required = new List<string> { "name" }
@@ -111,8 +111,8 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["objects"]     = new McpPropertySchema { type = "array", description = "Array of objects: { name (required), primitiveType, parentPath, position {x,y,z}, rotation {x,y,z}, scale {x,y,z}, components [{type, properties?}] }" },
-                        ["stopOnError"] = new McpPropertySchema { type = "boolean", description = "Stop on first error (default: false)" }
+                        ["objects"]     = new McpPropertySchema { type = "array", description = "Array of GameObject specs (see unity_create_gameobject)" },
+                        ["stopOnError"] = new McpPropertySchema { type = "boolean", description = "Stop on first error" }
                     },
                     required = new List<string> { "objects" }
                 }
@@ -183,7 +183,7 @@ namespace McpUnity.Server
                         ["worldPositionStays"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Keep world position when reparenting (default: true)"
+                            description = "Keep world position when reparenting"
                         }
                     },
                     required = new List<string> { "gameObjectPath" }
@@ -207,7 +207,7 @@ namespace McpUnity.Server
                         ["newName"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Optional name for the duplicate (defaults to original name)"
+                            description = "Name for the duplicate"
                         }
                     },
                     required = new List<string> { "path" }
@@ -255,7 +255,7 @@ namespace McpUnity.Server
                         ["includeInactive"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Include inactive GameObjects (default: false)"
+                            description = "Include inactive GameObjects"
                         }
                     },
                     required = new List<string> { "componentType" }
@@ -296,8 +296,8 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["path"] = new McpPropertySchema { type = "string", description = "Path or name of the GameObject (finds inactive objects too)" },
-                        ["includeProperties"] = new McpPropertySchema { type = "boolean", description = "Include component properties via reflection (default: true)" },
-                        ["includeChildren"] = new McpPropertySchema { type = "boolean", description = "Include direct children list (default: true)" }
+                        ["includeProperties"] = new McpPropertySchema { type = "boolean", description = "Include component properties via reflection" },
+                        ["includeChildren"] = new McpPropertySchema { type = "boolean", description = "Include direct children list" }
                     },
                     required = new List<string> { "path" }
                 }
@@ -333,7 +333,7 @@ namespace McpUnity.Server
         private static McpToolResult ListGameObjects(Dictionary<string, object> args)
         {
             // Parse parameters with optimized defaults
-            string outputMode = ArgumentParser.GetString(args, "outputMode", "summary").ToLower();
+            string outputMode = ArgumentParser.GetString(args, "outputMode", "tree").ToLower();
             int maxDepth = ArgumentParser.GetIntClamped(args, "maxDepth", 3, 1, 50);
             bool includeInactive = ArgumentParser.GetBool(args, "includeInactive", false);
             bool rootOnly = ArgumentParser.GetBool(args, "rootOnly", false);
@@ -923,7 +923,7 @@ namespace McpUnity.Server
             var (go, path, goErr) = RequireGameObject(args, "path");
             if (goErr != null) return goErr;
 
-            bool includeProperties = ArgumentParser.GetBool(args, "includeProperties", true);
+            bool includeProperties = ArgumentParser.GetBool(args, "includeProperties", false);
             bool includeChildren   = ArgumentParser.GetBool(args, "includeChildren", true);
 
             var t = go.transform;
@@ -959,26 +959,29 @@ namespace McpUnity.Server
                 }
             }
 
-            return McpResponse.Success(new
+            bool isRoot = t.parent == null;
+            var result = new Dictionary<string, object>
             {
-                name              = go.name,
-                path              = GameObjectHelpers.GetGameObjectPath(go),
-                active            = go.activeSelf,
-                activeInHierarchy = go.activeInHierarchy,
-                tag               = go.tag,
-                layer             = go.layer,
-                layerName         = LayerMask.LayerToName(go.layer),
-                isStatic          = go.isStatic,
-                worldPosition     = new { x = t.position.x,      y = t.position.y,      z = t.position.z },
-                worldRotation     = new { x = t.eulerAngles.x,   y = t.eulerAngles.y,   z = t.eulerAngles.z },
-                localPosition     = new { x = t.localPosition.x, y = t.localPosition.y, z = t.localPosition.z },
-                localRotation     = new { x = t.localEulerAngles.x, y = t.localEulerAngles.y, z = t.localEulerAngles.z },
-                localScale        = new { x = t.localScale.x,    y = t.localScale.y,    z = t.localScale.z },
-                componentCount    = components.Count,
-                components        = components,
-                childCount        = t.childCount,
-                children          = children
-            });
+                ["name"]              = go.name,
+                ["path"]              = GameObjectHelpers.GetGameObjectPath(go),
+                ["active"]            = go.activeSelf,
+                ["activeInHierarchy"] = go.activeInHierarchy,
+                ["tag"]               = go.tag,
+                ["layer"]             = go.layer,
+                ["isStatic"]          = go.isStatic,
+                ["worldPosition"]     = new { x = t.position.x,         y = t.position.y,         z = t.position.z },
+                ["localPosition"]     = new { x = t.localPosition.x,    y = t.localPosition.y,    z = t.localPosition.z },
+                ["localRotation"]     = new { x = t.localEulerAngles.x, y = t.localEulerAngles.y, z = t.localEulerAngles.z },
+                ["localScale"]        = new { x = t.localScale.x,       y = t.localScale.y,       z = t.localScale.z },
+                ["componentCount"]    = components.Count,
+                ["components"]        = components,
+                ["childCount"]        = t.childCount,
+                ["children"]          = children
+            };
+            // worldRotation is redundant for root objects (equals localRotation when no parent)
+            if (!isRoot)
+                result["worldRotation"] = new { x = t.eulerAngles.x, y = t.eulerAngles.y, z = t.eulerAngles.z };
+            return McpResponse.Success(result);
         }
 
         private static McpToolResult SetTransform(Dictionary<string, object> args)

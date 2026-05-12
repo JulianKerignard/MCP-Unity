@@ -154,7 +154,7 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["modifications"] = new McpPropertySchema { type = "array", description = "Array of modifications: { gameObjectPath (required), componentType (required), properties (required, object) }" },
-                        ["stopOnError"]   = new McpPropertySchema { type = "boolean", description = "Stop on first error (default: false)" }
+                        ["stopOnError"]   = new McpPropertySchema { type = "boolean", description = "Stop on first error" }
                     },
                     required = new List<string> { "modifications" }
                 }
@@ -177,7 +177,12 @@ namespace McpUnity.Server
                         ["includeNamespace"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Include namespace in results (default: false)"
+                            description = "Include namespace in results"
+                        },
+                        ["maxResults"] = new McpPropertySchema
+                        {
+                            type = "integer",
+                            description = "Max scripts to return (1-500)"
                         }
                     },
                     required = new List<string>()
@@ -211,7 +216,7 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["gameObjectPath"]      = new McpPropertySchema { type = "string", description = "Path or name of the GameObject" },
-                        ["includeProperties"]   = new McpPropertySchema { type = "boolean", description = "Include serialized properties for each component (default: false)" }
+                        ["includeProperties"]   = new McpPropertySchema { type = "boolean", description = "Include serialized properties for each component" }
                     },
                     required = new List<string> { "gameObjectPath" }
                 }
@@ -447,15 +452,16 @@ namespace McpUnity.Server
             {
                 var nameFilter = args.GetValueOrDefault("nameFilter") as string;
                 var includeNamespace = args.GetValueOrDefault("includeNamespace") is bool b && b;
+                int maxResults = ArgumentParser.GetIntClamped(args, "maxResults", 100, 1, 500);
 
-                // Force refresh to get latest scripts
-                _projectScriptsCache = null;
                 var projectScripts = GetProjectScripts();
 
                 var scripts = new List<object>();
 
                 foreach (var kvp in projectScripts.OrderBy(x => x.Key))
                 {
+                    if (scripts.Count >= maxResults) break;
+
                     var scriptName = kvp.Key;
                     var scriptType = kvp.Value;
 

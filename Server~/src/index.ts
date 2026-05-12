@@ -74,9 +74,27 @@ async function main(): Promise<void> {
   // Create Unity bridge
   const bridge = new UnityBridge(config);
 
+  // Track whether we've served the fallback list while Unity was unreachable.
+  // If we did, we must tell the client to refetch once Unity is online so it sees
+  // the real (potentially larger) tool list instead of the 47-tool fallback.
+  let servedFallbackList = false;
+
+  const refreshClientTools = (reason: string) => {
+    if (!servedFallbackList) return;
+    servedFallbackList = false;
+    log(`Pushing tools/list_changed to client (${reason})`);
+    serverCache.clear();
+    try {
+      server.notification({ method: 'notifications/tools/list_changed' });
+    } catch (err) {
+      log('Failed to push tools/list_changed:', err);
+    }
+  };
+
   // Setup bridge event handlers
   bridge.on('connected', () => {
     log('Connected to Unity');
+    refreshClientTools('initial connection');
   });
 
   bridge.on('disconnected', () => {
@@ -85,6 +103,7 @@ async function main(): Promise<void> {
 
   bridge.on('reconnected', () => {
     log('Reconnected to Unity');
+    refreshClientTools('reconnected');
   });
 
   bridge.on('reconnectFailed', () => {
@@ -113,6 +132,13 @@ async function main(): Promise<void> {
   // ============================================================================
 
   const serverCache = new ServerCache();
+
+  // Log cache statistics every 5 minutes
+  const statsTimer = setInterval(() => {
+    const s = serverCache.stats();
+    log(`Cache stats — size: ${s.size}, hits: ${s.hits}, misses: ${s.misses}, evictions: ${s.evictions}, hitRate: ${(s.hitRate * 100).toFixed(1)}%`);
+  }, 300_000);
+  if (typeof statsTimer.unref === 'function') statsTimer.unref();
 
   // Server instructions for Claude - Dynamic tool loading
   const serverInstructions = `Unity MCP (164 tools, dynamic loading). 47 core tools (incl. 2 meta-tools) always loaded.
@@ -157,11 +183,20 @@ RESOURCES: Read workflows://[category] for detailed guides (core, animator, mate
   // ============================================================================
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
-    // Return default tools immediately - don't block waiting for Unity
+    // Give Unity a short window to connect before falling back. Most MCP clients
+    // (incl. Claude Code) cache tools/list aggressively, so getting the right
+    // answer on the first call is far more reliable than relying on a follow-up
+    // tools/list_changed notification.
     if (!bridge.isConnected) {
-      // Try to connect in background, don't wait
       bridge.connect().catch(() => {});
-      return { tools: defaultTools };
+      try {
+        await bridge.waitForConnection(2000);
+      } catch {
+        // Unity unreachable — serve fallback and let the notification path
+        // upgrade the list when Unity eventually comes online.
+        servedFallbackList = true;
+        return { tools: defaultTools };
+      }
     }
 
     try {
@@ -169,6 +204,7 @@ RESOURCES: Read workflows://[category] for detailed guides (core, animator, mate
       return { tools: result.tools || defaultTools };
     } catch (error) {
       log('Error listing tools:', error);
+      servedFallbackList = true;
       return { tools: defaultTools };
     }
   });

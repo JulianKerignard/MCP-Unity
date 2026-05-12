@@ -26,13 +26,13 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["view"] = new McpPropertySchema { type = "string", description = "'Scene' (default) or 'Game' (requires Play Mode)" },
-                        ["format"] = new McpPropertySchema { type = "string", description = "'jpg' (default, smaller) or 'png'" },
-                        ["width"] = new McpPropertySchema { type = "integer", description = "Width in pixels (default: 640)" },
-                        ["height"] = new McpPropertySchema { type = "integer", description = "Height in pixels (default: 360)" },
-                        ["jpgQuality"] = new McpPropertySchema { type = "integer", description = "JPG quality 1-100 (default: 75)" },
-                        ["savePath"] = new McpPropertySchema { type = "string", description = "Custom save path (default: Assets/Screenshots/)" },
-                        ["returnBase64"] = new McpPropertySchema { type = "boolean", description = "If true, include base64 data in response (default: false)" }
+                        ["view"] = new McpPropertySchema { type = "string", description = "'Scene' or 'Game' (requires Play Mode)" },
+                        ["format"] = new McpPropertySchema { type = "string", description = "'jpg' (smaller) or 'png'" },
+                        ["width"] = new McpPropertySchema { type = "integer", description = "Width in pixels" },
+                        ["height"] = new McpPropertySchema { type = "integer", description = "Height in pixels" },
+                        ["jpgQuality"] = new McpPropertySchema { type = "integer", description = "JPG quality 1-100" },
+                        ["savePath"] = new McpPropertySchema { type = "string", description = "Custom save path" },
+                        ["returnBase64"] = new McpPropertySchema { type = "boolean", description = "Include base64 data in response" }
                     },
                     required = new List<string>()
                 }

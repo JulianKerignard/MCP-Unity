@@ -22,7 +22,7 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" }
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" }
                     },
                     required = new List<string> { "controllerPath" }
                 }

@@ -31,7 +31,7 @@ namespace McpUnity.Server
                         ["agentTypeId"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Optional: Agent type ID to bake for (default: 0 = Humanoid). Use unity_get_navmesh_settings to see available agent types."
+                            description = "Agent type ID to bake for (0 = Humanoid). Use unity_get_navmesh_settings for available types."
                         }
                     },
                     required = new List<string>()
@@ -84,7 +84,7 @@ namespace McpUnity.Server
                         ["includeChildren"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Also apply to all children (default: true)"
+                            description = "Also apply to all children"
                         }
                     },
                     required = new List<string> { "gameObjectPath", "isStatic" }

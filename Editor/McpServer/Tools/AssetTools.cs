@@ -29,7 +29,7 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["filter"] = new McpPropertySchema { type = "string", description = "Search filter (e.g., 't:Texture', 'l:MyLabel', 'name')" },
-                        ["maxResults"] = new McpPropertySchema { type = "integer", description = "Maximum results to return (default: 50, max: 200)" },
+                        ["maxResults"] = new McpPropertySchema { type = "integer", description = "Maximum results to return (max: 200)" },
                         ["searchFolders"] = new McpPropertySchema { type = "array", description = "Specific folders to search in" }
                     },
                     required = new List<string>()
@@ -46,9 +46,9 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["assetPath"] = new McpPropertySchema { type = "string", description = "Path to the asset" },
-                        ["includeDependencies"] = new McpPropertySchema { type = "boolean", description = "Include asset dependencies (default: false)" },
+                        ["includeDependencies"] = new McpPropertySchema { type = "boolean", description = "Include asset dependencies" },
                         ["includeReferences"] = new McpPropertySchema { type = "boolean", description = "Include references to this asset (can be slow)" },
-                        ["maxReferences"] = new McpPropertySchema { type = "integer", description = "Max referencedBy results (default: 20, max: 200)" }
+                        ["maxReferences"] = new McpPropertySchema { type = "integer", description = "Max referencedBy results (max: 200)" }
                     },
                     required = new List<string> { "assetPath" }
                 }
@@ -63,9 +63,9 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["parentPath"] = new McpPropertySchema { type = "string", description = "Parent folder path (default: 'Assets')" },
-                        ["recursive"] = new McpPropertySchema { type = "boolean", description = "Include subfolders recursively (default: true)" },
-                        ["maxDepth"] = new McpPropertySchema { type = "integer", description = "Maximum recursion depth (default: 5, max: 20)" }
+                        ["parentPath"] = new McpPropertySchema { type = "string", description = "Parent folder path" },
+                        ["recursive"] = new McpPropertySchema { type = "boolean", description = "Include subfolders recursively" },
+                        ["maxDepth"] = new McpPropertySchema { type = "integer", description = "Maximum recursion depth (max: 20)" }
                     },
                     required = new List<string>()
                 }
@@ -82,7 +82,9 @@ namespace McpUnity.Server
                     {
                         ["folderPath"] = new McpPropertySchema { type = "string", description = "Path to the folder" },
                         ["typeFilter"] = new McpPropertySchema { type = "string", description = "Filter by asset type (e.g., 'Texture2D', 'Material')" },
-                        ["includeSubfolders"] = new McpPropertySchema { type = "boolean", description = "Include assets from subfolders (default: false)" }
+                        ["includeSubfolders"] = new McpPropertySchema { type = "boolean", description = "Include assets from subfolders" },
+                        ["maxResults"] = new McpPropertySchema { type = "integer", description = "Max assets to return (1-500)" },
+                        ["verbose"] = new McpPropertySchema { type = "boolean", description = "Include name, extension and guid in addition to path and type" }
                     },
                     required = new List<string> { "folderPath" }
                 }
@@ -98,11 +100,11 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["assetPath"] = new McpPropertySchema { type = "string", description = "Path to the asset" },
-                        ["size"] = new McpPropertySchema { type = "string", description = "Preview size: tiny(32), small(64), medium(128), large(256). Default: small" },
-                        ["format"] = new McpPropertySchema { type = "string", description = "Image format: png or jpg. Default: jpg" },
-                        ["jpgQuality"] = new McpPropertySchema { type = "integer", description = "JPG quality 1-100 (default: 75)" },
-                        ["returnBase64"] = new McpPropertySchema { type = "boolean", description = "Return image as base64 data URI in the response (default: false)" },
-                        ["savePath"] = new McpPropertySchema { type = "string", description = "Custom path to save the preview image (default: Assets/Screenshots/preview_{name}_{timestamp}.jpg)" }
+                        ["size"] = new McpPropertySchema { type = "string", description = "Preview size: tiny(32), small(64), medium(128), large(256)" },
+                        ["format"] = new McpPropertySchema { type = "string", description = "Image format: png or jpg" },
+                        ["jpgQuality"] = new McpPropertySchema { type = "integer", description = "JPG quality 1-100" },
+                        ["returnBase64"] = new McpPropertySchema { type = "boolean", description = "Return image as base64 data URI" },
+                        ["savePath"] = new McpPropertySchema { type = "string", description = "Custom save path for the preview image" }
                     },
                     required = new List<string> { "assetPath" }
                 }
@@ -134,7 +136,7 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["assetPath"]    = new McpPropertySchema { type = "string", description = "Path to the asset to delete (e.g. 'Assets/Materials/Old.mat')" },
-                        ["moveToTrash"] = new McpPropertySchema { type = "boolean", description = "Move to OS trash instead of permanent delete (default: true)" }
+                        ["moveToTrash"] = new McpPropertySchema { type = "boolean", description = "Move to OS trash instead of permanent delete" }
                     },
                     required = new List<string> { "assetPath" }
                 }
@@ -447,6 +449,8 @@ namespace McpUnity.Server
             string typeFilter = string.IsNullOrEmpty(typeFilterStr) ? "" : "t:" + typeFilterStr;
 
             bool includeSubfolders = ArgumentParser.GetBool(args, "includeSubfolders", false);
+            int maxResults = ArgumentParser.GetIntClamped(args, "maxResults", 100, 1, 500);
+            bool verbose = ArgumentParser.GetBool(args, "verbose", false);
 
             string[] guids;
             if (includeSubfolders)
@@ -468,20 +472,33 @@ namespace McpUnity.Server
             var assets = new List<object>();
             foreach (var guid in guids)
             {
+                if (assets.Count >= maxResults) break;
+
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 var type = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
 
                 // Skip folders
                 if (AssetDatabase.IsValidFolder(assetPath)) continue;
 
-                assets.Add(new
+                if (verbose)
                 {
-                    path = assetPath,
-                    name = System.IO.Path.GetFileNameWithoutExtension(assetPath),
-                    extension = System.IO.Path.GetExtension(assetPath),
-                    type = type?.Name ?? "Unknown",
-                    guid = guid
-                });
+                    assets.Add(new
+                    {
+                        path = assetPath,
+                        name = System.IO.Path.GetFileNameWithoutExtension(assetPath),
+                        extension = System.IO.Path.GetExtension(assetPath),
+                        type = type?.Name ?? "Unknown",
+                        guid = guid
+                    });
+                }
+                else
+                {
+                    assets.Add(new
+                    {
+                        path = assetPath,
+                        type = type?.Name ?? "Unknown"
+                    });
+                }
             }
 
             // Also list subfolders

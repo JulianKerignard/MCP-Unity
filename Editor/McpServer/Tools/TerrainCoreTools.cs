@@ -35,37 +35,37 @@ namespace McpUnity.Server
                         ["width"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Terrain width in world units (X axis). Default: 1000"
+                            description = "Terrain width (X axis, world units)"
                         },
                         ["height"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Terrain max height in world units (Y axis). Default: 600"
+                            description = "Terrain max height (Y axis, world units)"
                         },
                         ["length"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Terrain length in world units (Z axis). Default: 1000"
+                            description = "Terrain length (Z axis, world units)"
                         },
                         ["heightmapResolution"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Heightmap resolution. Valid: 33, 65, 129, 257, 513, 1025, 2049, 4097. Default: 513"
+                            description = "Heightmap resolution: 33, 65, 129, 257, 513, 1025, 2049, 4097"
                         },
                         ["alphamapResolution"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Alphamap (splatmap) resolution, power of 2. Default: 512"
+                            description = "Alphamap (splatmap) resolution, power of 2"
                         },
                         ["position"] = new McpPropertySchema
                         {
                             type = "object",
-                            description = "World position {x, y, z}. Default: {0, 0, 0}"
+                            description = "World position {x, y, z}"
                         },
                         ["parentPath"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Optional parent GameObject path"
+                            description = "Parent GameObject path"
                         }
                     },
                     required = new List<string> { "name" }
@@ -87,7 +87,7 @@ namespace McpUnity.Server
                         ["gameObjectPath"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Path to terrain GameObject. If omitted, uses the first active Terrain."
+                            description = "Terrain path (default: first active)"
                         }
                     },
                     required = new List<string>()
@@ -109,7 +109,7 @@ namespace McpUnity.Server
                         ["gameObjectPath"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Path to terrain GameObject. If omitted, uses the first active Terrain."
+                            description = "Terrain path (default: first active)"
                         },
                         ["size"] = new McpPropertySchema
                         {
@@ -119,17 +119,17 @@ namespace McpUnity.Server
                         ["heightmapPixelError"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "LOD pixel error threshold (1-200). Lower = higher quality."
+                            description = "LOD pixel error 1-200 (lower = better quality)"
                         },
                         ["detailObjectDistance"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Max distance to render detail objects (grass, etc.)"
+                            description = "Detail objects render distance"
                         },
                         ["treeDistance"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Max distance to render trees"
+                            description = "Tree render distance"
                         },
                         ["treeBillboardDistance"] = new McpPropertySchema
                         {
@@ -139,22 +139,22 @@ namespace McpUnity.Server
                         ["basemapDistance"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Distance beyond which low-res basemap is used"
+                            description = "Distance at which low-res basemap kicks in"
                         },
                         ["drawHeightmap"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Enable/disable terrain mesh rendering"
+                            description = "Render terrain mesh"
                         },
                         ["drawTreesAndFoliage"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Enable/disable trees and detail rendering"
+                            description = "Render trees and details"
                         },
                         ["drawInstanced"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Enable GPU instanced rendering"
+                            description = "GPU instanced rendering"
                         },
                         ["allowAutoConnect"] = new McpPropertySchema
                         {
@@ -182,7 +182,7 @@ namespace McpUnity.Server
                         ["strokes"]        = new McpPropertySchema
                         {
                             type = "array",
-                            description = "Array of stroke objects. Each stroke: { operation (required: flatten|raise|lower|set|noise|smooth), value, opacity, brushCenter {x,z}, brushSize, brushShape, brushFalloff, brushRotation, brushName, region, intensity, seed }"
+                            description = "Array of strokes (see docs)"
                         }
                     },
                     required = new List<string> { "strokes" }

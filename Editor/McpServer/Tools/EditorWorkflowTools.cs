@@ -106,7 +106,7 @@ namespace McpUnity.Server
                         ["testMode"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Test mode: 'EditMode' or 'PlayMode' (default: 'EditMode')",
+                            description = "Test mode",
                             @enum = new List<string> { "EditMode", "PlayMode" }
                         },
                         ["filter"] = new McpPropertySchema
@@ -117,7 +117,7 @@ namespace McpUnity.Server
                         ["timeoutSeconds"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Timeout in seconds to wait for test results (default: 30)"
+                            description = "Timeout in seconds to wait for test results"
                         }
                     },
                     required = new List<string>()
@@ -133,7 +133,7 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["steps"] = new McpPropertySchema { type = "integer", description = "Number of steps to undo/redo (default: 1)" },
+                        ["steps"] = new McpPropertySchema { type = "integer", description = "Number of steps to undo/redo" },
                         ["redo"] = new McpPropertySchema { type = "boolean", description = "If true, perform redo instead of undo" }
                     },
                     required = new List<string>()
@@ -152,12 +152,12 @@ namespace McpUnity.Server
                         ["recompile"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Request script recompilation (default: true). Set false to only refresh assets."
+                            description = "Request script recompilation (false = only refresh assets)"
                         },
                         ["cleanBuild"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Force a clean rebuild clearing build cache (default: false). Only used when recompile is true."
+                            description = "Force a clean rebuild clearing build cache (only used when recompile is true)"
                         }
                     },
                     required = new List<string>()
@@ -193,7 +193,7 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["includeInactive"] = new McpPropertySchema { type = "boolean", description = "Include inactive GameObjects (default: true)" }
+                        ["includeInactive"] = new McpPropertySchema { type = "boolean", description = "Include inactive GameObjects" }
                     },
                     required = new List<string>()
                 }

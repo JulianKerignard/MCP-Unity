@@ -25,11 +25,11 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["stateName"] = new McpPropertySchema { type = "string", description = "Name of the new state" },
-                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" },
-                        ["position"] = new McpPropertySchema { type = "object", description = "Position {x, y} in the Animator window (optional)" },
-                        ["motionClip"] = new McpPropertySchema { type = "string", description = "Path to an AnimationClip to assign (optional)" }
+                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index" },
+                        ["position"] = new McpPropertySchema { type = "object", description = "Position {x, y} in the Animator window" },
+                        ["motionClip"] = new McpPropertySchema { type = "string", description = "AnimationClip path to assign" }
                     },
                     required = new List<string> { "controllerPath", "stateName" }
                 }
@@ -44,9 +44,9 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["stateName"] = new McpPropertySchema { type = "string", description = "Name of the state to delete" },
-                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" }
+                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index" }
                     },
                     required = new List<string> { "controllerPath", "stateName" }
                 }
@@ -61,17 +61,17 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["stateName"] = new McpPropertySchema { type = "string", description = "Name of the state to modify" },
-                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" },
-                        ["newName"] = new McpPropertySchema { type = "string", description = "New name for the state (optional)" },
-                        ["motion"] = new McpPropertySchema { type = "string", description = "Path to AnimationClip to assign (optional)" },
-                        ["speed"] = new McpPropertySchema { type = "number", description = "Playback speed (optional)" },
-                        ["speedParameter"] = new McpPropertySchema { type = "string", description = "Parameter to control speed (optional)" },
-                        ["cycleOffset"] = new McpPropertySchema { type = "number", description = "Cycle offset (optional)" },
-                        ["mirror"] = new McpPropertySchema { type = "boolean", description = "Mirror animation (optional)" },
-                        ["writeDefaultValues"] = new McpPropertySchema { type = "boolean", description = "Write default values (optional)" },
-                        ["setAsDefault"] = new McpPropertySchema { type = "boolean", description = "Set this state as the default (Entry) state for the layer (optional)" }
+                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index" },
+                        ["newName"] = new McpPropertySchema { type = "string", description = "New name for the state" },
+                        ["motion"] = new McpPropertySchema { type = "string", description = "AnimationClip asset path to assign" },
+                        ["speed"] = new McpPropertySchema { type = "number", description = "Playback speed" },
+                        ["speedParameter"] = new McpPropertySchema { type = "string", description = "Parameter to control speed" },
+                        ["cycleOffset"] = new McpPropertySchema { type = "number", description = "Cycle offset" },
+                        ["mirror"] = new McpPropertySchema { type = "boolean", description = "Mirror animation" },
+                        ["writeDefaultValues"] = new McpPropertySchema { type = "boolean", description = "Write default values" },
+                        ["setAsDefault"] = new McpPropertySchema { type = "boolean", description = "Set as default (Entry) state for the layer" }
                     },
                     required = new List<string> { "controllerPath", "stateName" }
                 }
@@ -86,9 +86,9 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["stateName"]      = new McpPropertySchema { type = "string", description = "Name of the state to set as default" },
-                        ["layerIndex"]     = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" }
+                        ["layerIndex"]     = new McpPropertySchema { type = "integer", description = "Layer index" }
                     },
                     required = new List<string> { "controllerPath", "stateName" }
                 }
@@ -103,12 +103,12 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["stateName"] = new McpPropertySchema { type = "string", description = "Name for the BlendTree state" },
-                        ["blendType"] = new McpPropertySchema { type = "string", description = "Blend type: 1D, 2DSimpleDirectional, 2DFreeformDirectional, 2DFreeformCartesian, Direct (default: 1D)" },
+                        ["blendType"] = new McpPropertySchema { type = "string", description = "Blend type: 1D, 2DSimpleDirectional, 2DFreeformDirectional, 2DFreeformCartesian, Direct" },
                         ["blendParameter"] = new McpPropertySchema { type = "string", description = "Parameter name for blending (X-axis for 2D)" },
                         ["blendParameterY"] = new McpPropertySchema { type = "string", description = "Second parameter for 2D blend trees" },
-                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" }
+                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index" }
                     },
                     required = new List<string> { "controllerPath", "stateName" }
                 }
@@ -123,10 +123,10 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["blendTreeState"] = new McpPropertySchema { type = "string", description = "Name of the BlendTree state" },
                         ["motionPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimationClip" },
-                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" },
+                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index" },
                         ["threshold"] = new McpPropertySchema { type = "number", description = "Threshold value for 1D blend trees" },
                         ["positionX"] = new McpPropertySchema { type = "number", description = "X position for 2D blend trees" },
                         ["positionY"] = new McpPropertySchema { type = "number", description = "Y position for 2D blend trees" }

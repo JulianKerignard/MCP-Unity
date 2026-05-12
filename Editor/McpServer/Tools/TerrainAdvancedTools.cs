@@ -31,10 +31,10 @@ namespace McpUnity.Server
                     {
                         ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Terrain GameObject path (omit = first active terrain)" },
                         ["texturePath"]    = new McpPropertySchema { type = "string", description = "Asset path to the heightmap texture (PNG or EXR, grayscale)" },
-                        ["mode"]           = new McpPropertySchema { type = "string", description = "replace | add | multiply (default: replace)", @enum = new List<string> { "replace", "add", "multiply" } },
-                        ["scale"]          = new McpPropertySchema { type = "number", description = "Height scale multiplier 0-1 (default: 1.0)" },
-                        ["flipX"]          = new McpPropertySchema { type = "boolean", description = "Flip horizontally (default: false)" },
-                        ["flipY"]          = new McpPropertySchema { type = "boolean", description = "Flip vertically (default: false)" },
+                        ["mode"]           = new McpPropertySchema { type = "string", description = "replace | add | multiply", @enum = new List<string> { "replace", "add", "multiply" } },
+                        ["scale"]          = new McpPropertySchema { type = "number", description = "Height scale multiplier 0-1" },
+                        ["flipX"]          = new McpPropertySchema { type = "boolean", description = "Flip horizontally" },
+                        ["flipY"]          = new McpPropertySchema { type = "boolean", description = "Flip vertically" },
                     },
                     required = new List<string> { "texturePath" }
                 }

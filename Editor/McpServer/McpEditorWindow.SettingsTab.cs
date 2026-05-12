@@ -17,9 +17,103 @@ namespace McpUnity.Editor
         {
             DrawSettingsServerSection();
             EditorGUILayout.Space(4);
+            DrawSettingsServerToolsSection();
+            EditorGUILayout.Space(4);
             DrawSettingsProviderSection();
             EditorGUILayout.Space(4);
             DrawSettingsAdvancedSection();
+        }
+
+        // ----------------------------------------------------------------
+        // Section: MCP Server Tools (controls what AI clients see)
+        // ----------------------------------------------------------------
+
+        private const string FoldoutServerTools = "McpUnity_Foldout_ServerTools";
+
+        private void DrawSettingsServerToolsSection()
+        {
+            bool open = SessionState.GetBool(FoldoutServerTools, true);
+            bool newOpen = EditorGUILayout.BeginFoldoutHeaderGroup(open, "MCP Tools (visible to AI clients)");
+            if (newOpen != open) SessionState.SetBool(FoldoutServerTools, newOpen);
+
+            if (newOpen)
+            {
+                EditorGUILayout.BeginVertical(_boxStyle);
+
+                var registry = McpUnityServer.ToolRegistry;
+                if (registry == null)
+                {
+                    EditorGUILayout.HelpBox(
+                        "Server not initialized. Start the server (above) to manage tool categories.",
+                        MessageType.Info);
+                    EditorGUILayout.EndVertical();
+                    EditorGUILayout.EndFoldoutHeaderGroup();
+                    return;
+                }
+
+                var categories = registry.GetCategoryInfo();
+
+                int total = 0;
+                int visible = 0;
+                foreach (var c in categories)
+                {
+                    total += c.toolCount;
+                    if (McpServerCategorySettings.IsCategoryEnabled(c.name))
+                        visible += c.toolCount;
+                }
+
+                // Top row: presets + count
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("All", EditorStyles.miniButton, GUILayout.Width(40)))
+                    McpServerCategorySettings.SetAll(true);
+                if (GUILayout.Button("None", EditorStyles.miniButton, GUILayout.Width(48)))
+                    McpServerCategorySettings.SetAll(false);
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.LabelField(
+                    $"Visible: {visible}/{total}",
+                    EditorStyles.miniLabel, GUILayout.Width(110));
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.Space(4);
+
+                EditorGUILayout.HelpBox(
+                    "Toggling a category updates tools/list. Connected AI clients are notified automatically.",
+                    MessageType.None);
+
+                EditorGUILayout.Space(4);
+
+                // 2-column grid of categories
+                float colWidth = position.width / 2f - 24f;
+                for (int i = 0; i < categories.Count; i += 2)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    DrawServerCategoryToggle(categories[i], colWidth);
+                    if (i + 1 < categories.Count)
+                        DrawServerCategoryToggle(categories[i + 1], colWidth);
+                    EditorGUILayout.EndHorizontal();
+                }
+
+                EditorGUILayout.EndVertical();
+            }
+
+            EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+
+        private static void DrawServerCategoryToggle(CategoryInfo cat, float width)
+        {
+            bool alwaysOn = McpServerCategorySettings.IsAlwaysOn(cat.name);
+            bool enabled  = McpServerCategorySettings.IsCategoryEnabled(cat.name);
+
+            using (new EditorGUI.DisabledScope(alwaysOn))
+            {
+                string label = alwaysOn
+                    ? $"{cat.name} ({cat.toolCount}) — always on"
+                    : $"{cat.name} ({cat.toolCount})";
+
+                bool newEnabled = EditorGUILayout.ToggleLeft(label, enabled, GUILayout.Width(width));
+                if (!alwaysOn && newEnabled != enabled)
+                    McpServerCategorySettings.SetCategoryEnabled(cat.name, newEnabled);
+            }
         }
 
         // ----------------------------------------------------------------

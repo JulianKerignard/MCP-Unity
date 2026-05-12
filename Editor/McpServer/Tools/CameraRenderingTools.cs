@@ -34,18 +34,18 @@ namespace McpUnity.Server
                         ["clearFlags"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Camera clear flags",
+                            description = "Clear flags",
                             @enum = new List<string> { "Skybox", "SolidColor", "Depth", "Nothing" }
                         },
-                        ["backgroundColor"] = new McpPropertySchema { type = "string", description = "Background color (hex '#RRGGBB' or named: red, blue, etc.)" },
-                        ["fieldOfView"] = new McpPropertySchema { type = "number", description = "Field of view in degrees (default: 60)" },
-                        ["nearClipPlane"] = new McpPropertySchema { type = "number", description = "Near clipping plane distance" },
-                        ["farClipPlane"] = new McpPropertySchema { type = "number", description = "Far clipping plane distance" },
+                        ["backgroundColor"] = new McpPropertySchema { type = "string", description = "Background color (hex '#RRGGBB' or name)" },
+                        ["fieldOfView"] = new McpPropertySchema { type = "number", description = "FOV degrees (perspective)" },
+                        ["nearClipPlane"] = new McpPropertySchema { type = "number", description = "Near clip distance" },
+                        ["farClipPlane"] = new McpPropertySchema { type = "number", description = "Far clip distance" },
                         ["orthographic"] = new McpPropertySchema { type = "boolean", description = "Use orthographic projection" },
-                        ["orthographicSize"] = new McpPropertySchema { type = "number", description = "Orthographic camera size" },
-                        ["cullingMask"] = new McpPropertySchema { type = "array", description = "Array of layer names for culling mask" },
+                        ["orthographicSize"] = new McpPropertySchema { type = "number", description = "Orthographic size" },
+                        ["cullingMask"] = new McpPropertySchema { type = "array", description = "Layer names for culling mask" },
                         ["allowHDR"] = new McpPropertySchema { type = "boolean", description = "Allow HDR rendering" },
-                        ["depth"] = new McpPropertySchema { type = "number", description = "Camera render order (depth value)" }
+                        ["depth"] = new McpPropertySchema { type = "number", description = "Camera render order depth" }
                     },
                     required = new List<string> { "gameObjectPath" }
                 }
@@ -62,15 +62,15 @@ namespace McpUnity.Server
                     {
                         ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Path to the GameObject with a Camera component" },
                         ["savePath"] = new McpPropertySchema { type = "string", description = "Output file path (e.g. 'Assets/Screenshots/render.png')" },
-                        ["width"] = new McpPropertySchema { type = "integer", description = "Image width in pixels (default: 1920)" },
-                        ["height"] = new McpPropertySchema { type = "integer", description = "Image height in pixels (default: 1080)" },
+                        ["width"] = new McpPropertySchema { type = "integer", description = "Image width in pixels" },
+                        ["height"] = new McpPropertySchema { type = "integer", description = "Image height in pixels" },
                         ["format"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Image format: 'png' or 'jpg' (default: 'png')",
+                            description = "Image format",
                             @enum = new List<string> { "png", "jpg" }
                         },
-                        ["jpgQuality"] = new McpPropertySchema { type = "integer", description = "JPG quality 1-100 (default: 75)" }
+                        ["jpgQuality"] = new McpPropertySchema { type = "integer", description = "JPG quality 1-100" }
                     },
                     required = new List<string> { "gameObjectPath", "savePath" }
                 }

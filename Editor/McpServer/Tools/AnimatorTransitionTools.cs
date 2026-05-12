@@ -25,13 +25,13 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["fromState"] = new McpPropertySchema { type = "string", description = "Source state name (use 'Any' for AnyState)" },
                         ["toState"] = new McpPropertySchema { type = "string", description = "Destination state name" },
-                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" },
-                        ["hasExitTime"] = new McpPropertySchema { type = "boolean", description = "Whether transition has exit time (default: true)" },
-                        ["exitTime"] = new McpPropertySchema { type = "number", description = "Exit time (default: 1.0)" },
-                        ["transitionDuration"] = new McpPropertySchema { type = "number", description = "Transition duration (default: 0.25)" },
+                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index" },
+                        ["hasExitTime"] = new McpPropertySchema { type = "boolean", description = "Transition has exit time" },
+                        ["exitTime"] = new McpPropertySchema { type = "number", description = "Exit time" },
+                        ["transitionDuration"] = new McpPropertySchema { type = "number", description = "Transition duration" },
                         ["conditions"] = new McpPropertySchema { type = "array", description = "Array of conditions: [{parameter, mode, threshold}]" }
                     },
                     required = new List<string> { "controllerPath", "fromState", "toState" }
@@ -47,11 +47,11 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["fromState"] = new McpPropertySchema { type = "string", description = "Source state name (use 'Any' for AnyState)" },
                         ["toState"] = new McpPropertySchema { type = "string", description = "Destination state name" },
-                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" },
-                        ["transitionIndex"] = new McpPropertySchema { type = "integer", description = "If multiple transitions exist, specify which one (default: 0)" }
+                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index" },
+                        ["transitionIndex"] = new McpPropertySchema { type = "integer", description = "Index if multiple transitions exist" }
                     },
                     required = new List<string> { "controllerPath", "fromState", "toState" }
                 }
@@ -66,14 +66,14 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"]  = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"]  = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["fromState"]       = new McpPropertySchema { type = "string", description = "Source state name (or 'Any')" },
                         ["toState"]         = new McpPropertySchema { type = "string", description = "Destination state name" },
-                        ["layerIndex"]      = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" },
-                        ["transitionIndex"] = new McpPropertySchema { type = "integer", description = "Index if multiple transitions (default: 0)" },
+                        ["layerIndex"]      = new McpPropertySchema { type = "integer", description = "Layer index" },
+                        ["transitionIndex"] = new McpPropertySchema { type = "integer", description = "Index if multiple transitions" },
                         ["parameter"]       = new McpPropertySchema { type = "string",  description = "Parameter name" },
-                        ["mode"]            = new McpPropertySchema { type = "string",  description = "Condition mode: Greater, Less, Equals, NotEqual, If, IfNot (default: If)" },
-                        ["threshold"]       = new McpPropertySchema { type = "number",  description = "Threshold value for numeric conditions (default: 0)" }
+                        ["mode"]            = new McpPropertySchema { type = "string",  description = "Condition mode: Greater, Less, Equals, NotEqual, If, IfNot" },
+                        ["threshold"]       = new McpPropertySchema { type = "number",  description = "Threshold value for numeric conditions" }
                     },
                     required = new List<string> { "controllerPath", "fromState", "toState", "parameter" }
                 }
@@ -88,12 +88,12 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"]    = new McpPropertySchema { type = "string",  description = "Path to the AnimatorController asset" },
+                        ["controllerPath"]    = new McpPropertySchema { type = "string",  description = "AnimatorController asset path" },
                         ["fromState"]         = new McpPropertySchema { type = "string",  description = "Source state name (or 'Any')" },
                         ["toState"]           = new McpPropertySchema { type = "string",  description = "Destination state name" },
-                        ["layerIndex"]        = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" },
-                        ["transitionIndex"]   = new McpPropertySchema { type = "integer", description = "Index if multiple transitions (default: 0)" },
-                        ["conditionIndex"]    = new McpPropertySchema { type = "integer", description = "Index of the condition to remove (default: 0)" }
+                        ["layerIndex"]        = new McpPropertySchema { type = "integer", description = "Layer index" },
+                        ["transitionIndex"]   = new McpPropertySchema { type = "integer", description = "Index if multiple transitions" },
+                        ["conditionIndex"]    = new McpPropertySchema { type = "integer", description = "Index of the condition to remove" }
                     },
                     required = new List<string> { "controllerPath", "fromState", "toState" }
                 }
@@ -108,12 +108,12 @@ namespace McpUnity.Server
                     type = "object",
                     properties = new Dictionary<string, McpPropertySchema>
                     {
-                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "Path to the AnimatorController asset" },
+                        ["controllerPath"] = new McpPropertySchema { type = "string", description = "AnimatorController asset path" },
                         ["fromState"] = new McpPropertySchema { type = "string", description = "Source state name (use 'Any' for AnyState)" },
                         ["toState"] = new McpPropertySchema { type = "string", description = "Destination state name" },
-                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index (default: 0)" },
-                        ["transitionIndex"] = new McpPropertySchema { type = "integer", description = "If multiple transitions exist, specify which one (default: 0)" },
-                        ["hasExitTime"] = new McpPropertySchema { type = "boolean", description = "Whether transition has exit time" },
+                        ["layerIndex"] = new McpPropertySchema { type = "integer", description = "Layer index" },
+                        ["transitionIndex"] = new McpPropertySchema { type = "integer", description = "Index if multiple transitions exist" },
+                        ["hasExitTime"] = new McpPropertySchema { type = "boolean", description = "Transition has exit time" },
                         ["exitTime"] = new McpPropertySchema { type = "number", description = "Exit time" },
                         ["duration"] = new McpPropertySchema { type = "number", description = "Transition duration" },
                         ["offset"] = new McpPropertySchema { type = "number", description = "Transition offset" },

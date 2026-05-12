@@ -32,7 +32,7 @@ namespace McpUnity.Server
                         ["clearFirst"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Clear existing baked data before baking (default: false)"
+                            description = "Clear existing baked data before baking"
                         }
                     },
                     required = new List<string>()
@@ -51,7 +51,7 @@ namespace McpUnity.Server
                         ["clearFirst"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Clear existing baked data before baking (default: false)"
+                            description = "Clear existing baked data before baking"
                         }
                     },
                     required = new List<string>()
@@ -94,7 +94,7 @@ namespace McpUnity.Server
                         ["clearDiskCache"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Also clear the GI cache on disk (default: false)"
+                            description = "Also clear the GI cache on disk"
                         }
                     },
                     required = new List<string>()
@@ -125,52 +125,52 @@ namespace McpUnity.Server
                         ["lightmapper"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Lightmapper to use: 'Progressive' (GPU, default), 'ProgressiveCPU', 'Enlighten'"
+                            description = "Lightmapper: 'Progressive' (GPU), 'ProgressiveCPU', 'Enlighten'"
                         },
                         ["directSamples"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Number of direct light samples (default: 32)"
+                            description = "Direct light sample count"
                         },
                         ["indirectSamples"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Number of indirect light samples (default: 512)"
+                            description = "Indirect light sample count"
                         },
                         ["bounces"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Number of light bounces (default: 2)"
+                            description = "Light bounce count"
                         },
                         ["lightmapResolution"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Texels per unit (default: 40)"
+                            description = "Texels per unit"
                         },
                         ["lightmapPadding"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Padding between lightmap charts in texels (default: 2)"
+                            description = "Padding between lightmap charts (texels)"
                         },
                         ["lightmapMaxSize"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Maximum lightmap size: 32, 64, 128, 256, 512, 1024, 2048, 4096 (default: 1024)"
+                            description = "Max lightmap size: 32, 64, 128, 256, 512, 1024, 2048, 4096"
                         },
                         ["compressLightmaps"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Compress lightmap textures (default: true)"
+                            description = "Compress lightmap textures"
                         },
                         ["ambientOcclusion"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Enable ambient occlusion (default: false)"
+                            description = "Enable ambient occlusion"
                         },
                         ["aoMaxDistance"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "AO max distance (default: 1)"
+                            description = "AO max distance"
                         }
                     },
                     required = new List<string>()
@@ -189,17 +189,17 @@ namespace McpUnity.Server
                         ["smallestOccluder"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Smallest occluder size (default: 5)"
+                            description = "Smallest occluder size"
                         },
                         ["smallestHole"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Smallest hole size (default: 0.25)"
+                            description = "Smallest hole size"
                         },
                         ["backfaceThreshold"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Backface threshold 0-100 (default: 100)"
+                            description = "Backface threshold 0-100"
                         }
                     },
                     required = new List<string>()
@@ -230,7 +230,7 @@ namespace McpUnity.Server
                         ["timeSlice"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Time slicing mode: NoTimeSlicing, AllFacesAtOnce, IndividualFaces (default: AllFacesAtOnce)"
+                            description = "Time slicing mode: NoTimeSlicing, AllFacesAtOnce, IndividualFaces"
                         }
                     },
                     required = new List<string>()

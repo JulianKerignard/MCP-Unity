@@ -122,9 +122,9 @@ namespace McpUnity.Server
                     {
                         ["filePath"] = new McpPropertySchema { type = "string", description = "Destination path (must be within Assets/, must end with .cs)" },
                         ["content"] = new McpPropertySchema { type = "string", description = "Full C# script content to write" },
-                        ["overwrite"] = new McpPropertySchema { type = "boolean", description = "Allow overwriting existing file (default: false)", @default = false },
-                        ["dryRun"] = new McpPropertySchema { type = "boolean", description = "If true, validate only without writing (default: false)", @default = false },
-                        ["createBackup"] = new McpPropertySchema { type = "boolean", description = "Create .bak backup before overwriting (default: true)", @default = true }
+                        ["overwrite"] = new McpPropertySchema { type = "boolean", description = "Allow overwriting existing file", @default = false },
+                        ["dryRun"] = new McpPropertySchema { type = "boolean", description = "Validate only without writing", @default = false },
+                        ["createBackup"] = new McpPropertySchema { type = "boolean", description = "Create .bak backup before overwriting", @default = true }
                     },
                     required = new List<string> { "filePath", "content" }
                 }
@@ -142,8 +142,8 @@ namespace McpUnity.Server
                         ["filePath"] = new McpPropertySchema { type = "string", description = "Path to existing .cs file (must be within Assets/)" },
                         ["oldContent"] = new McpPropertySchema { type = "string", description = "Exact text to find in the file (must match exactly once)" },
                         ["newContent"] = new McpPropertySchema { type = "string", description = "Replacement text" },
-                        ["dryRun"] = new McpPropertySchema { type = "boolean", description = "If true, validate match without writing (default: false)", @default = false },
-                        ["createBackup"] = new McpPropertySchema { type = "boolean", description = "Create .bak backup before modifying (default: true)", @default = true }
+                        ["dryRun"] = new McpPropertySchema { type = "boolean", description = "Validate match without writing", @default = false },
+                        ["createBackup"] = new McpPropertySchema { type = "boolean", description = "Create .bak backup before modifying", @default = true }
                     },
                     required = new List<string> { "filePath", "oldContent", "newContent" }
                 }

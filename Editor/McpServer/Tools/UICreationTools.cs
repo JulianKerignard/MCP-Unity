@@ -32,37 +32,37 @@ namespace McpUnity.Server
                         ["name"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Canvas name (default: 'Canvas')"
+                            description = "Canvas name"
                         },
                         ["renderMode"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Render mode: 'ScreenSpaceOverlay' (default), 'ScreenSpaceCamera', or 'WorldSpace'"
+                            description = "Render mode: 'ScreenSpaceOverlay', 'ScreenSpaceCamera', or 'WorldSpace'"
                         },
                         ["createEventSystem"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Create EventSystem if none exists (default: true)"
+                            description = "Create EventSystem if none exists"
                         },
                         ["scaleMode"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "CanvasScaler mode: 'ConstantPixelSize' (default), 'ScaleWithScreenSize', 'ConstantPhysicalSize'"
+                            description = "CanvasScaler mode: 'ConstantPixelSize', 'ScaleWithScreenSize', 'ConstantPhysicalSize'"
                         },
                         ["referenceResolutionX"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Reference resolution width for ScaleWithScreenSize (default: 1920)"
+                            description = "Reference resolution width for ScaleWithScreenSize"
                         },
                         ["referenceResolutionY"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Reference resolution height for ScaleWithScreenSize (default: 1080)"
+                            description = "Reference resolution height for ScaleWithScreenSize"
                         },
                         ["matchWidthOrHeight"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Match width (0) or height (1) for ScaleWithScreenSize (default: 0.5)"
+                            description = "Match width (0) or height (1) for ScaleWithScreenSize"
                         }
                     },
                     required = new List<string>()
@@ -86,7 +86,7 @@ namespace McpUnity.Server
                         ["name"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Element name (default: same as elementType)"
+                            description = "Element name"
                         },
                         ["parent"] = new McpPropertySchema
                         {
@@ -131,7 +131,7 @@ namespace McpUnity.Server
                         ["fontSize"] = new McpPropertySchema
                         {
                             type = "integer",
-                            description = "Font size for Text, Button, InputField elements (default: 14)"
+                            description = "Font size for Text, Button, InputField elements"
                         }
                     },
                     required = new List<string> { "elementType" }
@@ -150,7 +150,7 @@ namespace McpUnity.Server
                         ["canvasPath"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Optional: specific Canvas path to inspect (default: all canvases)"
+                            description = "Canvas path to inspect (default: all canvases)"
                         }
                     },
                     required = new List<string>()

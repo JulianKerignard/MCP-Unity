@@ -30,7 +30,7 @@ namespace McpUnity.Server
                     {
                         ["materialPath"] = new McpPropertySchema { type = "string", description = "Path to the material asset (e.g., 'Assets/Materials/MyMaterial.mat')" },
                         ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Path to a GameObject to get its material" },
-                        ["materialIndex"] = new McpPropertySchema { type = "integer", description = "Index of the material on the renderer (default: 0)" }
+                        ["materialIndex"] = new McpPropertySchema { type = "integer", description = "Material index on the renderer" }
                     },
                     required = new List<string>()
                 }
@@ -47,7 +47,7 @@ namespace McpUnity.Server
                     {
                         ["materialPath"] = new McpPropertySchema { type = "string", description = "Path to the material asset" },
                         ["gameObjectPath"] = new McpPropertySchema { type = "string", description = "Path to a GameObject to modify its material" },
-                        ["materialIndex"] = new McpPropertySchema { type = "integer", description = "Index of the material on the renderer (default: 0)" },
+                        ["materialIndex"] = new McpPropertySchema { type = "integer", description = "Material index on the renderer" },
                         ["shader"] = new McpPropertySchema { type = "string", description = "New shader name (auto-converts 'Standard' for URP/HDRP)" },
                         ["renderQueue"] = new McpPropertySchema { type = "integer", description = "Render queue value" },
                         ["properties"] = new McpPropertySchema { type = "object", description = "Properties to set: {_Color: {r,g,b,a}, _MainTex: 'path', _Metallic: 0.5, etc.}" }
@@ -67,7 +67,7 @@ namespace McpUnity.Server
                     {
                         ["name"] = new McpPropertySchema { type = "string", description = "Name for the new material" },
                         ["savePath"] = new McpPropertySchema { type = "string", description = "Path to save the material (e.g., 'Assets/Materials/NewMat.mat')" },
-                        ["shader"] = new McpPropertySchema { type = "string", description = "Shader name (default: pipeline-appropriate standard shader)" },
+                        ["shader"] = new McpPropertySchema { type = "string", description = "Shader name (auto-detects pipeline if omitted)" },
                         ["properties"] = new McpPropertySchema { type = "object", description = "Initial properties to set" }
                     },
                     required = new List<string> { "name", "savePath" }

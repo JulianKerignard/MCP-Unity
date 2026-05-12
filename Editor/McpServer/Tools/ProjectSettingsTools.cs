@@ -28,7 +28,7 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["category"] = new McpPropertySchema { type = "string", description = "Settings category: quality, graphics, physics, physics2d, time, audio, render, player" },
-                        ["detailed"] = new McpPropertySchema { type = "boolean", description = "Include extended info (default: false)" }
+                        ["detailed"] = new McpPropertySchema { type = "boolean", description = "Include extended info" }
                     },
                     required = new List<string> { "category" }
                 }
@@ -63,7 +63,7 @@ namespace McpUnity.Server
                     {
                         ["level"] = new McpPropertySchema { type = "integer", description = "Quality level index (0-based)" },
                         ["levelName"] = new McpPropertySchema { type = "string", description = "Or quality level name" },
-                        ["applyExpensiveChanges"] = new McpPropertySchema { type = "boolean", description = "Apply AA changes (default: true)" }
+                        ["applyExpensiveChanges"] = new McpPropertySchema { type = "boolean", description = "Apply AA changes" }
                     },
                     required = new List<string>()
                 }
@@ -80,7 +80,7 @@ namespace McpUnity.Server
                     properties = new Dictionary<string, McpPropertySchema>
                     {
                         ["layer1"] = new McpPropertySchema { type = "string", description = "First layer name (optional, returns full matrix if omitted)" },
-                        ["layer2"] = new McpPropertySchema { type = "string", description = "Second layer name (optional)" }
+                        ["layer2"] = new McpPropertySchema { type = "string", description = "Second layer name" }
                     },
                     required = new List<string>()
                 }

@@ -53,7 +53,7 @@ namespace McpUnity.Server
                         ["assetPath"]     = new McpPropertySchema { type = "string", description = "Path to the .inputactions asset" },
                         ["actionMapName"] = new McpPropertySchema { type = "string", description = "Action map name" },
                         ["actionName"]    = new McpPropertySchema { type = "string", description = "New action name" },
-                        ["actionType"]    = new McpPropertySchema { type = "string", description = "Button | Value | PassThrough (default: Button)", @enum = new List<string> { "Button", "Value", "PassThrough" } }
+                        ["actionType"]    = new McpPropertySchema { type = "string", description = "Action type", @enum = new List<string> { "Button", "Value", "PassThrough" } }
                     },
                     required = new List<string> { "assetPath", "actionMapName", "actionName" }
                 }

@@ -42,7 +42,7 @@ namespace McpUnity.Server
                         ["properties"] = new McpPropertySchema
                         {
                             type = "object",
-                            description = "Optional: Initial property values to set (e.g., { damage: 25, fireRate: 0.5 })"
+                            description = "Initial property values to set"
                         }
                     },
                     required = new List<string> { "typeName", "savePath" }
@@ -61,12 +61,12 @@ namespace McpUnity.Server
                         ["nameFilter"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Optional: filter types by name (supports * wildcard)"
+                            description = "Filter types by name (supports * wildcard)"
                         },
                         ["includeUnity"] = new McpPropertySchema
                         {
                             type = "boolean",
-                            description = "Include Unity built-in ScriptableObject types (default: false)"
+                            description = "Include Unity built-in ScriptableObject types"
                         }
                     },
                     required = new List<string>()

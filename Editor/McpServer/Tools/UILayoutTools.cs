@@ -80,7 +80,7 @@ namespace McpUnity.Server
                         ["spacing"] = new McpPropertySchema
                         {
                             type = "number",
-                            description = "Spacing between elements (default: 0)"
+                            description = "Spacing between elements"
                         },
                         ["paddingLeft"] = new McpPropertySchema { type = "integer", description = "Left padding" },
                         ["paddingRight"] = new McpPropertySchema { type = "integer", description = "Right padding" },
@@ -99,10 +99,10 @@ namespace McpUnity.Server
                             description = "Grid constraint: 'Flexible', 'FixedColumnCount', 'FixedRowCount' (Grid only)"
                         },
                         ["constraintCount"] = new McpPropertySchema { type = "integer", description = "Number of columns/rows for constraint (Grid only)" },
-                        ["controlChildWidth"] = new McpPropertySchema { type = "boolean", description = "Control child width (default: false)" },
-                        ["controlChildHeight"] = new McpPropertySchema { type = "boolean", description = "Control child height (default: false)" },
-                        ["childForceExpandWidth"] = new McpPropertySchema { type = "boolean", description = "Force expand width (default: false)" },
-                        ["childForceExpandHeight"] = new McpPropertySchema { type = "boolean", description = "Force expand height (default: false)" }
+                        ["controlChildWidth"] = new McpPropertySchema { type = "boolean", description = "Control child width" },
+                        ["controlChildHeight"] = new McpPropertySchema { type = "boolean", description = "Control child height" },
+                        ["childForceExpandWidth"] = new McpPropertySchema { type = "boolean", description = "Force expand width" },
+                        ["childForceExpandHeight"] = new McpPropertySchema { type = "boolean", description = "Force expand height" }
                     },
                     required = new List<string> { "gameObjectPath", "layoutType" }
                 }
@@ -125,12 +125,12 @@ namespace McpUnity.Server
                         ["horizontalFit"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Horizontal fit mode: 'Unconstrained' (default), 'MinSize', 'PreferredSize'"
+                            description = "Horizontal fit mode: 'Unconstrained', 'MinSize', 'PreferredSize'"
                         },
                         ["verticalFit"] = new McpPropertySchema
                         {
                             type = "string",
-                            description = "Vertical fit mode: 'Unconstrained' (default), 'MinSize', 'PreferredSize'"
+                            description = "Vertical fit mode: 'Unconstrained', 'MinSize', 'PreferredSize'"
                         }
                     },
                     required = new List<string> { "gameObjectPath" }
@@ -157,7 +157,7 @@ namespace McpUnity.Server
                         ["preferredHeight"] = new McpPropertySchema { type = "number", description = "Preferred height (-1 to disable)" },
                         ["flexibleWidth"] = new McpPropertySchema { type = "number", description = "Flexible width (-1 to disable, 0+ to enable)" },
                         ["flexibleHeight"] = new McpPropertySchema { type = "number", description = "Flexible height (-1 to disable, 0+ to enable)" },
-                        ["ignoreLayout"] = new McpPropertySchema { type = "boolean", description = "Ignore layout (default: false)" }
+                        ["ignoreLayout"] = new McpPropertySchema { type = "boolean", description = "Ignore layout" }
                     },
                     required = new List<string> { "gameObjectPath" }
                 }
@@ -186,7 +186,7 @@ namespace McpUnity.Server
                         ["referenceResolutionY"] = new McpPropertySchema { type = "number", description = "Reference height (for ScaleWithScreenSize)" },
                         ["matchWidthOrHeight"] = new McpPropertySchema { type = "number", description = "Match width (0) or height (1), 0-1 range" },
                         ["scaleFactor"] = new McpPropertySchema { type = "number", description = "Scale factor (for ConstantPixelSize)" },
-                        ["referencePixelsPerUnit"] = new McpPropertySchema { type = "number", description = "Reference pixels per unit (default: 100)" }
+                        ["referencePixelsPerUnit"] = new McpPropertySchema { type = "number", description = "Reference pixels per unit" }
                     },
                     required = new List<string> { "canvasPath" }
                 }
