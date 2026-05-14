@@ -792,12 +792,17 @@ namespace McpUnity.Server
 
             try
             {
+                // FIX-#75: Stop() alone leaves the WebSocketServer holding its listener socket
+                // and worker threads around until GC. Explicitly null the field after stopping
+                // so a subsequent Start() builds a fresh server instead of restarting a stale one,
+                // and the old instance becomes immediately eligible for collection.
                 _wss?.Stop();
             }
             catch (Exception ex)
             {
                 McpDebug.LogWarning($"[MCP Unity] Error stopping server: {ex.Message}");
             }
+            _wss = null;
 
             _connectedClients.Clear();
             _isRunning = false;
