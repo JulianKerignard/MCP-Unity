@@ -124,6 +124,9 @@ namespace McpUnity.Server
                 if (component == null)
                     return McpToolResult.Error($"Component '{componentType}' not found on '{gameObjectPath}'. Available: {GetComponentList(sourceGO)}");
 
+                // Normalize common shortcuts (e.g. "materials[0]" -> "m_Materials.Array.data[0]")
+                fieldName = NormalizeFieldName(fieldName);
+
                 // Create SerializedObject
                 var serializedObject = new SerializedObject(component);
                 var property = serializedObject.FindProperty(fieldName);
@@ -193,6 +196,12 @@ namespace McpUnity.Server
                 var component = FindComponentOnGameObject(sourceGO, componentType);
                 if (component == null)
                     return McpToolResult.Error($"Component '{componentType}' not found on '{gameObjectPath}'. Available: {GetComponentList(sourceGO)}");
+
+                // For array form, "materials" maps to "m_Materials" (the array itself, not an element).
+                if (fieldName == "materials" || fieldName == "sharedMaterials")
+                    fieldName = "m_Materials";
+                else
+                    fieldName = NormalizeFieldName(fieldName);
 
                 // Create SerializedObject
                 var serializedObject = new SerializedObject(component);
@@ -366,6 +375,30 @@ namespace McpUnity.Server
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Translate user-friendly shortcuts to Unity's internal SerializedProperty paths.
+        /// Examples:
+        ///   "material" / "sharedMaterial" / "materials"     -> "m_Materials.Array.data[0]"
+        ///   "materials[3]" / "sharedMaterials[3]"           -> "m_Materials.Array.data[3]"
+        ///   anything else (incl. raw paths)                 -> returned unchanged
+        /// </summary>
+        private static string NormalizeFieldName(string fieldName)
+        {
+            if (string.IsNullOrEmpty(fieldName)) return fieldName;
+
+            // Renderer.materials / sharedMaterial(s) family
+            if (fieldName == "material" || fieldName == "sharedMaterial" ||
+                fieldName == "materials" || fieldName == "sharedMaterials")
+                return "m_Materials.Array.data[0]";
+
+            var match = System.Text.RegularExpressions.Regex.Match(
+                fieldName, @"^(?:shared)?[Mm]aterials\[(\d+)\]$");
+            if (match.Success)
+                return $"m_Materials.Array.data[{match.Groups[1].Value}]";
+
+            return fieldName;
         }
 
         /// <summary>

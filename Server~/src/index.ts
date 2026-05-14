@@ -210,6 +210,31 @@ RESOURCES: Read workflows://[category] for detailed guides (core, animator, mate
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args } = request.params;
+
+    // Bridge-local tool: doesn't reach Unity. Returns cache + connection stats
+    // so the client can verify the bridge is healthy and the cache is working.
+    if (name === 'unity_bridge_stats') {
+      const s = serverCache.stats();
+      const body = {
+        bridge: {
+          unityConnected: bridge.isConnected,
+          unityEndpoint: `ws://${config.unityHost}:${config.unityPort}`,
+        },
+        cache: {
+          size: s.size,
+          hits: s.hits,
+          misses: s.misses,
+          evictions: s.evictions,
+          hitRate: Math.round((s.hitRate || 0) * 1000) / 10, // percent, 1 decimal
+        },
+      };
+      return {
+        content: [{ type: 'text', text: JSON.stringify(body, null, 2) }],
+        isError: false,
+      };
+    }
+
     if (!bridge.isConnected) {
       try {
         await bridge.connect();
@@ -220,8 +245,6 @@ RESOURCES: Read workflows://[category] for detailed guides (core, animator, mate
         );
       }
     }
-
-    const { name, arguments: args } = request.params;
 
     // Check cache for read operations
     const cacheCategory = cacheableTools[name];

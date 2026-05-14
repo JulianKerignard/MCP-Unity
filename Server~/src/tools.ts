@@ -24,6 +24,11 @@ const metaTools: ToolDefinition[] = [
       required: ['category'],
     },
   },
+  {
+    name: 'unity_bridge_stats',
+    description: 'Bridge-local diagnostics: returns Unity connection state and bridge cache stats (hits, misses, hit rate). Useful to verify the MCP bridge is healthy.',
+    inputSchema: { type: 'object', properties: {} },
+  },
 ];
 
 // === CORE TOOLS (always loaded) ===

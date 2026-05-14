@@ -162,6 +162,11 @@ namespace McpUnity.Server
         {
             if (cache[section] == null) return true;
 
+            // Event-driven invalidation: if a Unity Editor event flagged this
+            // section (hierarchyChanged, sceneOpened, asset import...) treat it
+            // as stale regardless of age. Consumes the flag.
+            if (MemoryAutoInvalidator.TryConsume(section)) return true;
+
             var sectionData = cache[section] as Dictionary<string, object>;
             if (sectionData == null || !sectionData.ContainsKey("lastFetch")) return true;
 
