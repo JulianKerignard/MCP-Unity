@@ -127,6 +127,25 @@ namespace McpUnity.Server
                                 if (int.TryParse(hex, System.Globalization.NumberStyles.HexNumber,
                                     System.Globalization.CultureInfo.InvariantCulture, out int codePoint))
                                 {
+                                    // FIX-#386: handle UTF-16 surrogate pairs. A high surrogate
+                                    // (0xD800-0xDBFF) followed by \uXXXX low surrogate (0xDC00-0xDFFF)
+                                    // must be combined into a single codepoint or emitted as the
+                                    // pair so the resulting string round-trips through .NET strings.
+                                    if (codePoint >= 0xD800 && codePoint <= 0xDBFF
+                                        && _pos + 10 < _json.Length
+                                        && _json[_pos + 5] == '\\' && _json[_pos + 6] == 'u')
+                                    {
+                                        var lowHex = _json.Substring(_pos + 7, 4);
+                                        if (int.TryParse(lowHex, System.Globalization.NumberStyles.HexNumber,
+                                            System.Globalization.CultureInfo.InvariantCulture, out int lowCp)
+                                            && lowCp >= 0xDC00 && lowCp <= 0xDFFF)
+                                        {
+                                            _sb.Append((char)codePoint);
+                                            _sb.Append((char)lowCp);
+                                            _pos += 10; // 4 hex + \u + 4 hex
+                                            break;
+                                        }
+                                    }
                                     _sb.Append((char)codePoint);
                                     _pos += 4;
                                 }
