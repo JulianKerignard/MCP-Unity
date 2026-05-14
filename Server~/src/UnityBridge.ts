@@ -307,17 +307,26 @@ export class UnityBridge extends EventEmitter {
   }
 
   /**
-   * Schedule a reconnection attempt
+   * Schedule a reconnection attempt with exponential backoff capped at
+   * the configured reconnectInterval. The first attempt fires in ~200 ms
+   * so a brief Unity recompile drop is recovered before the user notices.
    */
   private scheduleReconnect(): void {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
     }
 
+    // Backoff: 200, 500, 1000, then full reconnectInterval (default 5000).
+    const backoffSteps = [200, 500, 1000];
+    const delay =
+      this.reconnectAttempts < backoffSteps.length
+        ? backoffSteps[this.reconnectAttempts]
+        : this.config.reconnectInterval;
+
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectAttempts++;
       this.log(
-        `Reconnection attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts}`
+        `Reconnection attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts} (delay ${delay}ms)`
       );
 
       try {
@@ -331,7 +340,7 @@ export class UnityBridge extends EventEmitter {
           this.emit('reconnectFailed');
         }
       }
-    }, this.config.reconnectInterval);
+    }, delay);
   }
 
   /**
