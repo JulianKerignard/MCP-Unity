@@ -1030,10 +1030,15 @@ namespace McpUnity.Server
             {
                 var message = e.Data;
 
-                // S3: Reject oversized messages to prevent OOM from malicious/accidental huge payloads
+                // S3 / FIX-#131: Reject oversized messages with a JSON-RPC error response instead
+                // of dropping silently, so the client knows why its request never returned.
                 if (message.Length > MaxMessageSize)
                 {
                     McpDebug.LogWarning($"[MCP Unity] Rejected oversized message: {message.Length} bytes (max {MaxMessageSize})");
+                    // Send a generic protocol error. We cannot parse the message to recover id/method,
+                    // so use id=null (JSON-RPC permits null for parse/server errors).
+                    string err = $@"{{""jsonrpc"":""2.0"",""id"":null,""error"":{{""code"":-32600,""message"":""Message exceeds max size ({MaxMessageSize} bytes)""}}}}";
+                    try { Send(err); } catch { /* socket may already be torn down */ }
                     return;
                 }
 

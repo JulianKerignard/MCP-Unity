@@ -14,6 +14,20 @@ namespace McpUnity.Server
         // Each ToJson call uses this single builder from start to finish.
         [ThreadStatic] private static System.Text.StringBuilder _sharedSb;
 
+        // PERF-#20: cache reflection results per type. GetProperties/GetFields enumerate
+        // metadata every call; for a serializer on the hot path this is a measurable cost.
+        // ConcurrentDictionary because JsonHelper is callable from worker threads.
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.PropertyInfo[]> _propsCache
+            = new System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.PropertyInfo[]>();
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.FieldInfo[]> _fieldsCache
+            = new System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.FieldInfo[]>();
+
+        private static System.Reflection.PropertyInfo[] GetCachedProperties(Type type)
+            => _propsCache.GetOrAdd(type, t => t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance));
+
+        private static System.Reflection.FieldInfo[] GetCachedFields(Type type)
+            => _fieldsCache.GetOrAdd(type, t => t.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance));
+
         public static string ToJson(object obj)
         {
             if (_sharedSb == null) _sharedSb = new System.Text.StringBuilder(4096);
@@ -113,7 +127,7 @@ namespace McpUnity.Server
             var serializedNames = new HashSet<string>();
 
             // 1. Properties first (anonymous types, modern classes)
-            var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var properties = GetCachedProperties(type);
             foreach (var prop in properties)
             {
                 if (!prop.CanRead || prop.GetIndexParameters().Length > 0) continue;
@@ -133,7 +147,7 @@ namespace McpUnity.Server
             }
 
             // 2. Fields (Unity [Serializable] classes)
-            var fields = type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var fields = GetCachedFields(type);
             foreach (var field in fields)
             {
                 var value = field.GetValue(obj);

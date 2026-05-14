@@ -508,7 +508,20 @@ namespace McpUnity.Editor
                 }
 
                 string json = JsonUtility.ToJson(this, true);
-                File.WriteAllText(SettingsPath, json);
+
+                // FIX-#151: atomic write — write to .tmp then move into place so a crash
+                // mid-write cannot corrupt the settings file. The OS-level rename is atomic
+                // on the same filesystem.
+                string tmpPath = SettingsPath + ".tmp";
+                File.WriteAllText(tmpPath, json);
+                if (File.Exists(SettingsPath))
+                {
+                    File.Replace(tmpPath, SettingsPath, null);
+                }
+                else
+                {
+                    File.Move(tmpPath, SettingsPath);
+                }
             }
             catch (Exception e)
             {

@@ -46,8 +46,23 @@ namespace McpUnity.Server
 
         private const int MaxScriptSizeBytes = 100 * 1024; // 100 KB limit
 
+        // FIX-#157: C# reserved keywords (and contextual keywords commonly used as identifiers
+        // would cause compile errors). Compared part-by-part for dotted namespaces.
+        private static readonly HashSet<string> _csharpReservedKeywords = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "abstract","as","base","bool","break","byte","case","catch","char","checked","class",
+            "const","continue","decimal","default","delegate","do","double","else","enum","event",
+            "explicit","extern","false","finally","fixed","float","for","foreach","goto","if",
+            "implicit","in","int","interface","internal","is","lock","long","namespace","new",
+            "null","object","operator","out","override","params","private","protected","public",
+            "readonly","ref","return","sbyte","sealed","short","sizeof","stackalloc","static",
+            "string","struct","switch","this","throw","true","try","typeof","uint","ulong",
+            "unchecked","unsafe","ushort","using","virtual","void","volatile","while"
+        };
+
         /// <summary>
-        /// Validate a C# identifier (class name, namespace) against injection attacks.
+        /// Validate a C# identifier (class name, namespace) against injection attacks
+        /// and reserved keywords (FIX-#157).
         /// </summary>
         private static string ValidateIdentifier(string value, string paramName)
         {
@@ -57,6 +72,13 @@ namespace McpUnity.Server
                 return $"{paramName} '{value}' is not a valid C# identifier (letters, digits, underscores, dots for namespaces only)";
             if (value.Length > 256)
                 return $"{paramName} is too long (max 256 characters)";
+
+            // FIX-#157: reject reserved keywords (each dot-separated segment).
+            foreach (var segment in value.Split('.'))
+            {
+                if (_csharpReservedKeywords.Contains(segment))
+                    return $"{paramName} '{value}' uses C# reserved keyword '{segment}'. Use '@{segment}' or rename.";
+            }
             return null; // valid
         }
 
