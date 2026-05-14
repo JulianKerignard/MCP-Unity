@@ -132,7 +132,13 @@ namespace McpUnity.Server
                 var property = serializedObject.FindProperty(fieldName);
 
                 if (property == null)
-                    return McpToolResult.Error($"Field '{fieldName}' not found on component '{componentType}'. Check spelling and ensure it's a serialized field.");
+                {
+                    var available = ListSerializedObjectReferenceFields(serializedObject);
+                    string hint = available.Count > 0
+                        ? $" Available reference fields: {string.Join(", ", available)}"
+                        : "";
+                    return McpToolResult.Error($"Field '{fieldName}' not found on component '{componentType}'.{hint}");
+                }
 
                 if (property.propertyType != SerializedPropertyType.ObjectReference)
                     return McpToolResult.Error($"Field '{fieldName}' is not an object reference field (type: {property.propertyType})");
@@ -375,6 +381,25 @@ namespace McpUnity.Server
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Enumerate all ObjectReference serialized fields on a component, returning
+        /// their property names. Used to surface available fields when the user
+        /// passes an unknown fieldName.
+        /// </summary>
+        private static List<string> ListSerializedObjectReferenceFields(SerializedObject so)
+        {
+            var fields = new List<string>();
+            var iterator = so.GetIterator();
+            bool enterChildren = true;
+            while (iterator.NextVisible(enterChildren))
+            {
+                enterChildren = false;
+                if (iterator.propertyType == SerializedPropertyType.ObjectReference)
+                    fields.Add(iterator.name);
+            }
+            return fields;
         }
 
         /// <summary>

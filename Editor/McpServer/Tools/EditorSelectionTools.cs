@@ -366,6 +366,25 @@ namespace McpUnity.Server
 
             var activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
 
+            // Health roll-up — surfaces compile errors / pending compilation in
+            // the same call so callers don't have to fetch console logs separately.
+            int errors = 0, warnings = 0;
+            foreach (var entry in _consoleLogs)
+            {
+                if (entry.Type == "Error" || entry.Type == "Exception" || entry.Type == "Assert")
+                    errors++;
+                else if (entry.Type == "Warning")
+                    warnings++;
+            }
+            var health = new
+            {
+                isCompiling    = EditorApplication.isCompiling,
+                isPlaying      = EditorApplication.isPlaying,
+                recentErrors   = errors,
+                recentWarnings = warnings,
+                status         = (errors > 0 || EditorApplication.isCompiling) ? "issues" : "ok"
+            };
+
             return McpResponse.Success(new
             {
                 productName      = Application.productName,
@@ -378,6 +397,7 @@ namespace McpUnity.Server
                 buildScenes      = buildScenes,
                 assetCounts      = counts,
                 installedPackages = packages,
+                health           = health,
                 hint = "Use unity_get_editor_state for live state, unity_list_gameobjects for scene content."
             });
         }
