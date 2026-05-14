@@ -370,12 +370,15 @@ namespace McpUnity.Editor
 
         private string GenerateMcpJson(string rootKey)
         {
-            string serverPath = EffectiveServerPath.Replace("\\", "/");
-            string escapedPath = serverPath.Replace("\"", "\\\"");
+            // SEC-#337/#101: proper JSON string escaping for all interpolated values to prevent
+            // injection via newlines, control chars, or unicode escapes in user-supplied paths/secrets.
+            string escapedPath = EscapeJsonString(EffectiveServerPath.Replace("\\", "/"));
+            string escapedHost = EscapeJsonString(_host);
+            string escapedPort = EscapeJsonString(_port.ToString());
 
             string secretEnv = IsSecretEnabled
                 ? $@",
-        ""UNITY_SECRET"": ""{_sharedSecret.Replace("\"", "\\\"")}"""
+        ""UNITY_SECRET"": ""{EscapeJsonString(_sharedSecret)}"""
                 : "";
 
             return $@"{{
@@ -384,12 +387,41 @@ namespace McpUnity.Editor
       ""command"": ""node"",
       ""args"": [""{escapedPath}""],
       ""env"": {{
-        ""UNITY_PORT"": ""{_port}"",
-        ""UNITY_HOST"": ""{_host}""{secretEnv}
+        ""UNITY_PORT"": ""{escapedPort}"",
+        ""UNITY_HOST"": ""{escapedHost}""{secretEnv}
       }}
     }}
   }}
 }}";
+        }
+
+        /// <summary>
+        /// JSON-safe string escape (RFC 8259). Escapes ", \, control chars (incl. \n, \r, \t, \b, \f).
+        /// </summary>
+        private static string EscapeJsonString(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+            var sb = new System.Text.StringBuilder(value.Length + 8);
+            foreach (char c in value)
+            {
+                switch (c)
+                {
+                    case '"': sb.Append("\\\""); break;
+                    case '\\': sb.Append("\\\\"); break;
+                    case '\b': sb.Append("\\b"); break;
+                    case '\f': sb.Append("\\f"); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default:
+                        if (c < 0x20)
+                            sb.AppendFormat("\\u{0:x4}", (int)c);
+                        else
+                            sb.Append(c);
+                        break;
+                }
+            }
+            return sb.ToString();
         }
 
         /// <summary>
@@ -511,12 +543,14 @@ namespace McpUnity.Editor
         /// </summary>
         public string GenerateClaudeConfig()
         {
-            string serverPath = EffectiveServerPath.Replace("\\", "/");
-            string escapedPath = serverPath.Replace("\"", "\\\"");
+            // SEC-#337/#101: see EscapeJsonString — prevents injection in path/host/secret.
+            string escapedPath = EscapeJsonString(EffectiveServerPath.Replace("\\", "/"));
+            string escapedHost = EscapeJsonString(_host);
+            string escapedPort = EscapeJsonString(_port.ToString());
 
             string secretEnv = IsSecretEnabled
                 ? $@",
-        ""UNITY_SECRET"": ""{_sharedSecret.Replace("\"", "\\\"")}"""
+        ""UNITY_SECRET"": ""{EscapeJsonString(_sharedSecret)}"""
                 : "";
 
             return $@"{{
@@ -525,8 +559,8 @@ namespace McpUnity.Editor
       ""command"": ""node"",
       ""args"": [""{escapedPath}""],
       ""env"": {{
-        ""UNITY_PORT"": ""{_port}"",
-        ""UNITY_HOST"": ""{_host}""{secretEnv}
+        ""UNITY_PORT"": ""{escapedPort}"",
+        ""UNITY_HOST"": ""{escapedHost}""{secretEnv}
       }}
     }}
   }}

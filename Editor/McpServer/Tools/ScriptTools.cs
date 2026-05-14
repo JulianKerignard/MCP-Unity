@@ -28,11 +28,20 @@ namespace McpUnity.Server
             = new System.Collections.Concurrent.ConcurrentDictionary<string, Type>();
         private static readonly Type _typeCacheNotFound = typeof(void);
 
-        // H-03: Prefixes of assemblies to skip during type search (Unity internals, mscorlib, etc.)
+        // H-03 / #309: Prefixes of engine/framework assemblies to skip during type search.
+        // Use specific dotted prefixes so user assemblies like "UnityCustom" or "MySystem"
+        // are NOT excluded. Engine assemblies all follow the "Unity.<module>." pattern.
         private static readonly string[] _skipAssemblyPrefixes = {
-            "mscorlib", "System", "UnityEngine", "UnityEditor", "Unity.", "Mono.",
-            "nunit", "netstandard", "Microsoft.", "JetBrains.", "ExCSS", "Bee.",
-            "WebSocketSharp", "Newtonsoft"
+            "mscorlib", "System.", "System,", "System ",
+            "UnityEngine.", "UnityEngine,", "UnityEngine ",
+            "UnityEditor.", "UnityEditor,", "UnityEditor ",
+            "Unity.VisualScripting", "Unity.Collections", "Unity.Mathematics", "Unity.Burst",
+            "Unity.Jobs", "Unity.Profiling", "Unity.Properties", "Unity.Searcher",
+            "Unity.Timeline", "Unity.TextMeshPro", "Unity.RenderPipelines", "Unity.InputSystem",
+            "Unity.AI.", "Unity.Addressables", "Unity.ResourceManager", "Unity.Plastic",
+            "Unity.PerformanceTesting", "Unity.SourceGenerators", "Unity.Recorder",
+            "Mono.", "nunit.", "netstandard", "Microsoft.", "JetBrains.", "ExCSS", "Bee.",
+            "WebSocketSharp", "Newtonsoft", "log4net"
         };
 
         private const int MaxScriptSizeBytes = 100 * 1024; // 100 KB limit
@@ -75,7 +84,8 @@ namespace McpUnity.Server
                             @default = "MonoBehaviour"
                         },
                         ["namespace"] = new McpPropertySchema { type = "string", description = "Optional namespace to wrap the class in" },
-                        ["methods"] = new McpPropertySchema { type = "array", description = "Method stubs to include (e.g. Start, Update, Awake, OnEnable, OnDisable, OnDestroy, FixedUpdate, LateUpdate, OnCollisionEnter, OnTriggerEnter)" }
+                        ["methods"] = new McpPropertySchema { type = "array", description = "Method stubs to include (e.g. Start, Update, Awake, OnEnable, OnDisable, OnDestroy, FixedUpdate, LateUpdate, OnCollisionEnter, OnTriggerEnter)" },
+                        ["overwrite"] = new McpPropertySchema { type = "boolean", description = "Allow overwriting existing file (default false: refuses overwrite)", @default = false }
                     },
                     required = new List<string> { "scriptName", "savePath" }
                 }
@@ -189,6 +199,14 @@ namespace McpUnity.Server
                 if (content == null)
                 {
                     return McpToolResult.Error($"Unknown script type: '{scriptType}'. Valid types: MonoBehaviour, ScriptableObject, EditorWindow");
+                }
+
+                // SEC-#303: refuse silent overwrite. Require explicit overwrite=true.
+                bool overwrite = ArgumentParser.GetBool(args, "overwrite", false);
+                if (System.IO.File.Exists(savePath) && !overwrite)
+                {
+                    return McpToolResult.Error(
+                        $"Script already exists at '{savePath}'. Pass overwrite=true to replace, or use unity_write_script (with createBackup) for safe updates.");
                 }
 
                 // Ensure directory exists

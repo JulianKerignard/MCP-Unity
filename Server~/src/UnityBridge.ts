@@ -62,14 +62,11 @@ export class UnityBridge extends EventEmitter {
   }
 
   /**
-   * WebSocket URL for Unity connection (includes shared secret as query param if configured)
+   * WebSocket URL for Unity connection. SEC-#420: secret is sent via X-MCP-Secret header,
+   * not in the query string (query strings are recorded by proxies / browser history).
    */
   private get wsUrl(): string {
-    const base = `ws://${this.config.unityHost}:${this.config.unityPort}`;
-    if (this.config.unitySecret) {
-      return `${base}/?secret=${encodeURIComponent(this.config.unitySecret)}`;
-    }
-    return base;
+    return `ws://${this.config.unityHost}:${this.config.unityPort}`;
   }
 
   /**
@@ -147,7 +144,15 @@ export class UnityBridge extends EventEmitter {
       try {
         // SEC: cap incoming payload at 10 MB to prevent OOM from a malicious
         // or buggy Unity server. Default in `ws` is 100 MB.
-        this.ws = new WebSocket(this.wsUrl, { maxPayload: 10 * 1024 * 1024 });
+        // SEC-#420: shared secret travels in X-MCP-Secret header, not the URL.
+        const headers: Record<string, string> = {};
+        if (this.config.unitySecret) {
+          headers['X-MCP-Secret'] = this.config.unitySecret;
+        }
+        this.ws = new WebSocket(this.wsUrl, {
+          maxPayload: 10 * 1024 * 1024,
+          headers,
+        });
       } catch (error) {
         this.setState(ConnectionState.Failed);
         reject(
