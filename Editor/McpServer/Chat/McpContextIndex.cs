@@ -588,7 +588,9 @@ namespace McpUnity.Chat
                     namespaces.Add(scriptClass.Namespace);
                 }
 
-                // Group by folder (relative to Assets/)
+                // Group by folder (relative to Assets/).
+                // FIX-#111: guard against paths not under Assets/ (e.g. Packages/) and short paths.
+                if (!path.StartsWith("Assets/") || path.Length <= "Assets/".Length) continue;
                 string relativePath = path.Substring("Assets/".Length);
                 int slashIdx = relativePath.IndexOf('/');
                 string topFolder = slashIdx >= 0 ? relativePath.Substring(0, slashIdx) : "(root)";
