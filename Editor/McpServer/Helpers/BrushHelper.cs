@@ -30,9 +30,27 @@ namespace McpUnity.Helpers
         /// <summary>
         /// Maps lower-case brush name → loaded Texture2D pixels (read-only copy).
         /// Populated lazily on first use of a given brush name.
+        /// FIX-#125: capped to avoid unbounded growth across long Editor sessions.
         /// </summary>
+        private const int MaxCachedBrushes = 128;
         private static readonly Dictionary<string, CachedBrush> _textureCache
             = new Dictionary<string, CachedBrush>();
+
+        /// <summary>
+        /// FIX-#125: enforce a soft cap on _textureCache. When the cache is full and a new
+        /// brush is being added, clear the oldest half. Brush textures are inexpensive to
+        /// reload (just a Texture2D import) so the trade-off favors bounded memory.
+        /// </summary>
+        private static void EnforceCacheBound()
+        {
+            if (_textureCache.Count < MaxCachedBrushes) return;
+            int drop = _textureCache.Count / 2;
+            var keys = new List<string>(_textureCache.Keys);
+            for (int i = 0; i < drop && i < keys.Count; i++)
+            {
+                _textureCache.Remove(keys[i]);
+            }
+        }
 
         private struct CachedBrush
         {
@@ -163,6 +181,8 @@ namespace McpUnity.Helpers
             var pixels = ReadTexturePixels(found);
             if (pixels == null) return null;
 
+            // FIX-#125: enforce soft cap before inserting.
+            EnforceCacheBound();
             _textureCache[key] = new CachedBrush
             {
                 pixels = pixels,
