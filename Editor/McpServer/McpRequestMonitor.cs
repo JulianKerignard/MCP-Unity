@@ -14,7 +14,9 @@ namespace McpUnity.Editor
         /// </summary>
         private const int MaxEntries = 100;
 
-        private static readonly List<RequestEntry> _entries = new List<RequestEntry>();
+        // PERF-#325: Queue gives O(1) enqueue/dequeue, avoiding the O(n) shift of
+        // List.RemoveAt(0) when the ring trims to MaxEntries on every record after cap.
+        private static readonly Queue<RequestEntry> _entries = new Queue<RequestEntry>(MaxEntries);
         private static readonly object _lock = new object();
 
         // C-03: volatile ensures cross-thread reads see up-to-date values without a lock
@@ -75,13 +77,14 @@ namespace McpUnity.Editor
 
             lock (_lock)
             {
-                _entries.Add(entry);
+                _entries.Enqueue(entry);
                 _totalRequests++;
                 if (!success) _totalErrors++;
 
+                // PERF-#325: O(1) eviction
                 while (_entries.Count > MaxEntries)
                 {
-                    _entries.RemoveAt(0);
+                    _entries.Dequeue();
                 }
             }
 
