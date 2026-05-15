@@ -289,34 +289,38 @@ namespace McpUnity.Server
                 BuildTargetGroup targetGroup;
                 BuildTarget buildTarget;
 
-                switch (platform)
+                // FIX-#306: case-insensitive platform name. Users routinely type "windows",
+                // "android", "webgl" and were getting "Unknown platform" errors.
+                switch ((platform ?? "").ToLowerInvariant())
                 {
-                    case "Windows":
+                    case "windows":
                         targetGroup = BuildTargetGroup.Standalone;
                         buildTarget = BuildTarget.StandaloneWindows64;
                         break;
-                    case "Mac":
+                    case "mac":
+                    case "macos":
+                    case "osx":
                         targetGroup = BuildTargetGroup.Standalone;
                         buildTarget = BuildTarget.StandaloneOSX;
                         break;
-                    case "Linux":
+                    case "linux":
                         targetGroup = BuildTargetGroup.Standalone;
                         buildTarget = BuildTarget.StandaloneLinux64;
                         break;
-                    case "iOS":
+                    case "ios":
                         targetGroup = BuildTargetGroup.iOS;
                         buildTarget = BuildTarget.iOS;
                         break;
-                    case "Android":
+                    case "android":
                         targetGroup = BuildTargetGroup.Android;
                         buildTarget = BuildTarget.Android;
                         break;
-                    case "WebGL":
+                    case "webgl":
                         targetGroup = BuildTargetGroup.WebGL;
                         buildTarget = BuildTarget.WebGL;
                         break;
                     default:
-                        return McpToolResult.Error($"Unknown platform: '{platform}'. Valid platforms: Windows, Mac, Linux, iOS, Android, WebGL");
+                        return McpToolResult.Error($"Unknown platform: '{platform}'. Valid platforms: Windows, Mac, Linux, iOS, Android, WebGL (case-insensitive)");
                 }
 
                 // Check if already on this platform

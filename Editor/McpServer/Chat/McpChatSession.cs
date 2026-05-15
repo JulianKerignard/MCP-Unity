@@ -443,11 +443,12 @@ namespace McpUnity.Chat
         {
             var export = new Dictionary<string, object>();
             var provider = Providers.ProviderRegistry.GetActiveProvider();
-            string model = Providers.ProviderRegistry.GetModel(provider.Id);
+            // FIX-#102: guard against null provider (no active provider configured).
+            string model = provider != null ? Providers.ProviderRegistry.GetModel(provider.Id) : null;
 
             export["exportedAt"] = DateTime.UtcNow.ToString("o");
-            export["provider"] = provider.DisplayName;
-            export["model"] = model;
+            export["provider"] = provider?.DisplayName ?? "(none)";
+            export["model"] = model ?? "(unset)";
             export["totalInputTokens"] = totalInputTokens;
             export["totalOutputTokens"] = totalOutputTokens;
 
@@ -479,9 +480,11 @@ namespace McpUnity.Chat
         {
             var sb = new System.Text.StringBuilder();
             var provider = Providers.ProviderRegistry.GetActiveProvider();
-            string model = Providers.ProviderRegistry.GetModel(provider.Id);
+            // FIX-#102: guard against null provider.
+            string model = provider != null ? Providers.ProviderRegistry.GetModel(provider.Id) : "(unset)";
+            string providerName = provider?.DisplayName ?? "(none)";
 
-            sb.AppendLine($"# Chat Export — {provider.DisplayName} / {model}");
+            sb.AppendLine($"# Chat Export — {providerName} / {model}");
             sb.AppendLine($"*Exported: {DateTime.Now:yyyy-MM-dd HH:mm}*");
             sb.AppendLine($"*Tokens: {totalInputTokens} in / {totalOutputTokens} out*");
             sb.AppendLine();
@@ -555,9 +558,11 @@ namespace McpUnity.Chat
         {
             var sb = new System.Text.StringBuilder();
             var provider = Providers.ProviderRegistry.GetActiveProvider();
-            string model = Providers.ProviderRegistry.GetModel(provider.Id);
+            // FIX-#102: guard against null provider.
+            string model = provider != null ? Providers.ProviderRegistry.GetModel(provider.Id) : "(unset)";
+            string providerName = provider?.DisplayName ?? "(none)";
 
-            sb.AppendLine($"Chat Export — {provider.DisplayName} / {model}");
+            sb.AppendLine($"Chat Export — {providerName} / {model}");
             sb.AppendLine($"Exported: {DateTime.Now:yyyy-MM-dd HH:mm}");
             sb.AppendLine($"Tokens: {totalInputTokens} in / {totalOutputTokens} out");
             sb.AppendLine(new string('=', 60));

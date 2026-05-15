@@ -12,8 +12,11 @@ namespace McpUnity.Helpers
     /// </summary>
     public static class ComponentHelpers
     {
-        // Cache for resolved component types — avoids repeated assembly scanning
+        // Cache for resolved component types — avoids repeated assembly scanning.
+        // PERF-#440: stores a sentinel for "not found" so invalid type names don't
+        // re-trigger a full AppDomain scan on every call.
         private static readonly Dictionary<string, Type> _typeCache = new Dictionary<string, Type>();
+        private static readonly Type _typeNotFound = typeof(void);
 
         // Properties to skip during component serialization (allocated once)
         private static readonly HashSet<string> SkipPropsSet = new HashSet<string>
@@ -34,7 +37,7 @@ namespace McpUnity.Helpers
                 return null;
 
             if (_typeCache.TryGetValue(typeName, out var cached))
-                return cached;
+                return cached == _typeNotFound ? null : cached;
 
             // Common Unity namespaces to search
             var searchPrefixes = new[]
@@ -87,6 +90,8 @@ namespace McpUnity.Helpers
                 }
             }
 
+            // PERF-#440: remember the miss so a repeated "BadTypeName" lookup is O(1).
+            _typeCache[typeName] = _typeNotFound;
             return null;
         }
 

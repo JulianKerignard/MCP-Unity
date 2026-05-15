@@ -145,6 +145,9 @@ namespace McpUnity.Chat
 
         private static void OnEditorUpdate()
         {
+            // PERF-#332: fast-path early return. EditorApplication.update fires every frame,
+            // so avoid even touching timeSinceStartup when nothing is pending.
+            if (!_hierarchyDirty && !_assetsDirty && !_scriptsDirty) return;
             ProcessDirtyFlags();
         }
 

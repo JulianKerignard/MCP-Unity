@@ -28,17 +28,41 @@ namespace McpUnity.Server
             = new System.Collections.Concurrent.ConcurrentDictionary<string, Type>();
         private static readonly Type _typeCacheNotFound = typeof(void);
 
-        // H-03: Prefixes of assemblies to skip during type search (Unity internals, mscorlib, etc.)
+        // H-03 / #309: Prefixes of engine/framework assemblies to skip during type search.
+        // Use specific dotted prefixes so user assemblies like "UnityCustom" or "MySystem"
+        // are NOT excluded. Engine assemblies all follow the "Unity.<module>." pattern.
         private static readonly string[] _skipAssemblyPrefixes = {
-            "mscorlib", "System", "UnityEngine", "UnityEditor", "Unity.", "Mono.",
-            "nunit", "netstandard", "Microsoft.", "JetBrains.", "ExCSS", "Bee.",
-            "WebSocketSharp", "Newtonsoft"
+            "mscorlib", "System.", "System,", "System ",
+            "UnityEngine.", "UnityEngine,", "UnityEngine ",
+            "UnityEditor.", "UnityEditor,", "UnityEditor ",
+            "Unity.VisualScripting", "Unity.Collections", "Unity.Mathematics", "Unity.Burst",
+            "Unity.Jobs", "Unity.Profiling", "Unity.Properties", "Unity.Searcher",
+            "Unity.Timeline", "Unity.TextMeshPro", "Unity.RenderPipelines", "Unity.InputSystem",
+            "Unity.AI.", "Unity.Addressables", "Unity.ResourceManager", "Unity.Plastic",
+            "Unity.PerformanceTesting", "Unity.SourceGenerators", "Unity.Recorder",
+            "Mono.", "nunit.", "netstandard", "Microsoft.", "JetBrains.", "ExCSS", "Bee.",
+            "WebSocketSharp", "Newtonsoft", "log4net"
         };
 
         private const int MaxScriptSizeBytes = 100 * 1024; // 100 KB limit
 
+        // FIX-#157: C# reserved keywords (and contextual keywords commonly used as identifiers
+        // would cause compile errors). Compared part-by-part for dotted namespaces.
+        private static readonly HashSet<string> _csharpReservedKeywords = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "abstract","as","base","bool","break","byte","case","catch","char","checked","class",
+            "const","continue","decimal","default","delegate","do","double","else","enum","event",
+            "explicit","extern","false","finally","fixed","float","for","foreach","goto","if",
+            "implicit","in","int","interface","internal","is","lock","long","namespace","new",
+            "null","object","operator","out","override","params","private","protected","public",
+            "readonly","ref","return","sbyte","sealed","short","sizeof","stackalloc","static",
+            "string","struct","switch","this","throw","true","try","typeof","uint","ulong",
+            "unchecked","unsafe","ushort","using","virtual","void","volatile","while"
+        };
+
         /// <summary>
-        /// Validate a C# identifier (class name, namespace) against injection attacks.
+        /// Validate a C# identifier (class name, namespace) against injection attacks
+        /// and reserved keywords (FIX-#157).
         /// </summary>
         private static string ValidateIdentifier(string value, string paramName)
         {
@@ -48,6 +72,13 @@ namespace McpUnity.Server
                 return $"{paramName} '{value}' is not a valid C# identifier (letters, digits, underscores, dots for namespaces only)";
             if (value.Length > 256)
                 return $"{paramName} is too long (max 256 characters)";
+
+            // FIX-#157: reject reserved keywords (each dot-separated segment).
+            foreach (var segment in value.Split('.'))
+            {
+                if (_csharpReservedKeywords.Contains(segment))
+                    return $"{paramName} '{value}' uses C# reserved keyword '{segment}'. Use '@{segment}' or rename.";
+            }
             return null; // valid
         }
 
@@ -75,7 +106,8 @@ namespace McpUnity.Server
                             @default = "MonoBehaviour"
                         },
                         ["namespace"] = new McpPropertySchema { type = "string", description = "Optional namespace to wrap the class in" },
-                        ["methods"] = new McpPropertySchema { type = "array", description = "Method stubs to include (e.g. Start, Update, Awake, OnEnable, OnDisable, OnDestroy, FixedUpdate, LateUpdate, OnCollisionEnter, OnTriggerEnter)" }
+                        ["methods"] = new McpPropertySchema { type = "array", description = "Method stubs to include (e.g. Start, Update, Awake, OnEnable, OnDisable, OnDestroy, FixedUpdate, LateUpdate, OnCollisionEnter, OnTriggerEnter)" },
+                        ["overwrite"] = new McpPropertySchema { type = "boolean", description = "Allow overwriting existing file (default false: refuses overwrite)", @default = false }
                     },
                     required = new List<string> { "scriptName", "savePath" }
                 }
@@ -189,6 +221,14 @@ namespace McpUnity.Server
                 if (content == null)
                 {
                     return McpToolResult.Error($"Unknown script type: '{scriptType}'. Valid types: MonoBehaviour, ScriptableObject, EditorWindow");
+                }
+
+                // SEC-#303: refuse silent overwrite. Require explicit overwrite=true.
+                bool overwrite = ArgumentParser.GetBool(args, "overwrite", false);
+                if (System.IO.File.Exists(savePath) && !overwrite)
+                {
+                    return McpToolResult.Error(
+                        $"Script already exists at '{savePath}'. Pass overwrite=true to replace, or use unity_write_script (with createBackup) for safe updates.");
                 }
 
                 // Ensure directory exists

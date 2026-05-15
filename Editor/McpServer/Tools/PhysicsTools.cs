@@ -403,9 +403,10 @@ namespace McpUnity.Server
             if (collider == null)
                 return McpToolResult.Error($"No Collider found on '{go.name}'. Add a collider first.");
 
+            PhysicsMaterial mat = null;
             try
             {
-                var mat = new PhysicsMaterial();
+                mat = new PhysicsMaterial();
                 mat.dynamicFriction = ArgumentParser.GetFloat(args, "dynamicFriction", 0.6f);
                 mat.staticFriction = ArgumentParser.GetFloat(args, "staticFriction", 0.6f);
                 mat.bounciness = ArgumentParser.GetFloat(args, "bounciness", 0f);
@@ -421,7 +422,12 @@ namespace McpUnity.Server
                 if (!string.IsNullOrEmpty(savePath))
                 {
                     var (sanitizedPath, pathErr) = TrySanitizePath(savePath, "save path");
-                    if (pathErr != null) return pathErr;
+                    if (pathErr != null)
+                    {
+                        // FIX-#140: destroy the orphaned material before returning the error.
+                        UnityEngine.Object.DestroyImmediate(mat);
+                        return pathErr;
+                    }
                     savePath = sanitizedPath;
 
                     // SEC-#434: centralized helper replaces the copy-pasted folder creation loop.
@@ -435,6 +441,9 @@ namespace McpUnity.Server
                 Undo.RecordObject(collider, "MCP Set PhysicMaterial");
                 collider.sharedMaterial = mat;
                 EditorUtility.SetDirty(collider);
+                // Ownership transferred to the collider/asset — null out so the catch handler
+                // doesn't double-destroy on a later (unrelated) exception.
+                mat = null;
 
                 return McpResponse.Success(new Dictionary<string, object>
                 {
@@ -454,6 +463,12 @@ namespace McpUnity.Server
             }
             catch (Exception ex)
             {
+                // FIX-#140: clean up the orphaned material if anything threw before ownership
+                // transferred to the collider / asset database.
+                if (mat != null)
+                {
+                    try { UnityEngine.Object.DestroyImmediate(mat); } catch { /* best-effort */ }
+                }
                 return McpToolResult.Error($"Failed to set PhysicMaterial: {ex.Message}");
             }
         }

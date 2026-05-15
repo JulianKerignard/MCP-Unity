@@ -604,9 +604,10 @@ namespace McpUnity.Server
                 QualitySettings.SetQualityLevel(level, applyExpensive);
                 return McpResponse.Success($"Quality level set to {level}: {QualitySettings.names[level]}");
             }
-            else if (args.ContainsKey("levelName"))
+            else if (ArgumentParser.HasKey(args, "levelName"))
             {
-                var name = args["levelName"].ToString();
+                // FIX-#435: route through ArgumentParser for null/type safety.
+                var name = ArgumentParser.GetString(args, "levelName", "") ?? "";
                 var names = QualitySettings.names;
                 var index = Array.FindIndex(names, n => n.Equals(name, StringComparison.OrdinalIgnoreCase));
 
@@ -624,8 +625,9 @@ namespace McpUnity.Server
 
         private static McpToolResult HandleGetPhysicsLayerCollision(Dictionary<string, object> args)
         {
-            var layer1Name = args.ContainsKey("layer1") ? args["layer1"]?.ToString() : null;
-            var layer2Name = args.ContainsKey("layer2") ? args["layer2"]?.ToString() : null;
+            // FIX-#435: ArgumentParser handles null entries and type coercion uniformly.
+            var layer1Name = ArgumentParser.GetString(args, "layer1", null);
+            var layer2Name = ArgumentParser.GetString(args, "layer2", null);
 
             // If specific layers requested
             if (!string.IsNullOrEmpty(layer1Name) && !string.IsNullOrEmpty(layer2Name))
@@ -676,9 +678,10 @@ namespace McpUnity.Server
 
         private static McpToolResult HandleSetPhysicsLayerCollision(Dictionary<string, object> args)
         {
-            var layer1Name = args.ContainsKey("layer1") ? args["layer1"].ToString() : "";
-            var layer2Name = args.ContainsKey("layer2") ? args["layer2"].ToString() : "";
-            var collide = !args.ContainsKey("collide") || Convert.ToBoolean(args["collide"]);
+            // FIX-#435: consistent ArgumentParser usage.
+            var layer1Name = ArgumentParser.GetString(args, "layer1", "") ?? "";
+            var layer2Name = ArgumentParser.GetString(args, "layer2", "") ?? "";
+            var collide = ArgumentParser.GetBool(args, "collide", true);
 
             var layer1 = LayerMask.NameToLayer(layer1Name);
             var layer2 = LayerMask.NameToLayer(layer2Name);

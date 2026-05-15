@@ -102,6 +102,23 @@ namespace McpUnity.Server
 
                 // Check if NavMeshBuilder is available (Editor only)
 #if UNITY_EDITOR
+                // FIX-#305: surface agentTypeId limitation instead of silently ignoring it.
+                // The legacy UnityEditor.AI.NavMeshBuilder.BuildNavMesh() bakes using the
+                // Navigation window settings (Project default agent). Per-agent bakes require
+                // NavMeshSurface (AI Navigation package) with one surface component per agent.
+                string agentNote = null;
+                if (agentTypeId != 0)
+                {
+                    var settings = NavMesh.GetSettingsByID(agentTypeId);
+                    string agentName = settings.agentTypeID == agentTypeId
+                        ? NavMesh.GetSettingsNameFromID(agentTypeId)
+                        : null;
+                    agentNote = string.IsNullOrEmpty(agentName)
+                        ? $"agentTypeId={agentTypeId} not found in NavMesh settings."
+                        : $"agentTypeId={agentTypeId} ('{agentName}') was requested but the legacy NavMeshBuilder.BuildNavMesh() API only bakes the default agent. " +
+                          "Use NavMeshSurface (com.unity.ai.navigation) with a per-agent component to bake other agents.";
+                }
+
                 // NavMeshBuilder.BuildNavMesh() is deprecated but has no replacement API in Unity 6.
                 // The NavMeshSurface component (AI Navigation package) is the modern approach,
                 // but it requires scene setup — this legacy API works universally without config.
@@ -114,15 +131,18 @@ namespace McpUnity.Server
                 int triangleCount = triangulation.indices.Length / 3;
                 int vertexCount = triangulation.vertices.Length;
 
+                string hint = triangleCount == 0
+                    ? "No NavMesh generated. Ensure objects are marked as Navigation Static (use unity_set_navigation_static)"
+                    : agentNote;
+
                 return McpResponse.Success("NavMesh baked successfully", new
                 {
                     agentTypeId = agentTypeId,
                     triangleCount = triangleCount,
                     vertexCount = vertexCount,
                     hasNavMesh = triangleCount > 0,
-                    hint = triangleCount == 0
-                        ? "No NavMesh generated. Ensure objects are marked as Navigation Static (use unity_set_navigation_static)"
-                        : null
+                    warning = agentNote,
+                    hint = hint
                 });
 #else
                 return McpToolResult.Error("NavMesh baking is only available in the Unity Editor");

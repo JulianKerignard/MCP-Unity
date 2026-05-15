@@ -551,16 +551,12 @@ namespace McpUnity.Server
             // Parse returnBase64 (default: false for token efficiency)
             bool returnBase64 = ArgumentParser.GetBool(args, "returnBase64", false);
 
-            // Get the asset preview — Unity generates previews asynchronously.
-            // Retry for up to ~500ms to allow the preview texture to be ready.
-            Texture2D preview = null;
-            for (int attempt = 0; attempt < 10; attempt++)
-            {
-                preview = AssetPreview.GetAssetPreview(asset);
-                if (preview != null) break;
-                if (!AssetPreview.IsLoadingAssetPreviews()) break;
-                System.Threading.Thread.Sleep(50);
-            }
+            // FIX-#427: previously we Thread.Sleep'd up to 500ms on the main thread
+            // waiting for an asynchronous preview. That froze the editor and starved
+            // EditorApplication.update. Instead, request once, and fall back to the
+            // synchronous mini thumbnail. Repeat calls naturally retry as the preview
+            // becomes ready in subsequent frames.
+            Texture2D preview = AssetPreview.GetAssetPreview(asset);
 
             // Fallback to mini thumbnail (always available synchronously)
             if (preview == null)

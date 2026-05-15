@@ -62,14 +62,11 @@ export class UnityBridge extends EventEmitter {
   }
 
   /**
-   * WebSocket URL for Unity connection (includes shared secret as query param if configured)
+   * WebSocket URL for Unity connection. SEC-#420: secret is sent via X-MCP-Secret header,
+   * not in the query string (query strings are recorded by proxies / browser history).
    */
   private get wsUrl(): string {
-    const base = `ws://${this.config.unityHost}:${this.config.unityPort}`;
-    if (this.config.unitySecret) {
-      return `${base}/?secret=${encodeURIComponent(this.config.unitySecret)}`;
-    }
-    return base;
+    return `ws://${this.config.unityHost}:${this.config.unityPort}`;
   }
 
   /**
@@ -147,7 +144,15 @@ export class UnityBridge extends EventEmitter {
       try {
         // SEC: cap incoming payload at 10 MB to prevent OOM from a malicious
         // or buggy Unity server. Default in `ws` is 100 MB.
-        this.ws = new WebSocket(this.wsUrl, { maxPayload: 10 * 1024 * 1024 });
+        // SEC-#420: shared secret travels in X-MCP-Secret header, not the URL.
+        const headers: Record<string, string> = {};
+        if (this.config.unitySecret) {
+          headers['X-MCP-Secret'] = this.config.unitySecret;
+        }
+        this.ws = new WebSocket(this.wsUrl, {
+          maxPayload: 10 * 1024 * 1024,
+          headers,
+        });
       } catch (error) {
         this.setState(ConnectionState.Failed);
         reject(
@@ -307,17 +312,26 @@ export class UnityBridge extends EventEmitter {
   }
 
   /**
-   * Schedule a reconnection attempt
+   * Schedule a reconnection attempt with exponential backoff capped at
+   * the configured reconnectInterval. The first attempt fires in ~200 ms
+   * so a brief Unity recompile drop is recovered before the user notices.
    */
   private scheduleReconnect(): void {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
     }
 
+    // Backoff: 200, 500, 1000, then full reconnectInterval (default 5000).
+    const backoffSteps = [200, 500, 1000];
+    const delay =
+      this.reconnectAttempts < backoffSteps.length
+        ? backoffSteps[this.reconnectAttempts]
+        : this.config.reconnectInterval;
+
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectAttempts++;
       this.log(
-        `Reconnection attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts}`
+        `Reconnection attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts} (delay ${delay}ms)`
       );
 
       try {
@@ -331,7 +345,7 @@ export class UnityBridge extends EventEmitter {
           this.emit('reconnectFailed');
         }
       }
-    }, this.config.reconnectInterval);
+    }, delay);
   }
 
   /**

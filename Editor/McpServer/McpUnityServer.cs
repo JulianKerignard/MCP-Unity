@@ -792,12 +792,17 @@ namespace McpUnity.Server
 
             try
             {
+                // FIX-#75: Stop() alone leaves the WebSocketServer holding its listener socket
+                // and worker threads around until GC. Explicitly null the field after stopping
+                // so a subsequent Start() builds a fresh server instead of restarting a stale one,
+                // and the old instance becomes immediately eligible for collection.
                 _wss?.Stop();
             }
             catch (Exception ex)
             {
                 McpDebug.LogWarning($"[MCP Unity] Error stopping server: {ex.Message}");
             }
+            _wss = null;
 
             _connectedClients.Clear();
             _isRunning = false;
@@ -969,12 +974,22 @@ namespace McpUnity.Server
 
         protected override void OnOpen()
         {
-            // Shared secret validation: if a secret is configured, require it in the query string
+            // Shared secret validation: if a secret is configured, accept it from either
+            // the X-MCP-Secret header (preferred, SEC-#420) or the legacy ?secret=... query
+            // string. Header is preferred because query strings leak into proxy logs and
+            // browser history; the header is not logged by default and not URL-stored.
             var settings = McpUnity.Editor.McpSettings.Instance;
             if (settings.IsSecretEnabled)
             {
-                var query = Context?.QueryString;
-                string clientSecret = query?["secret"];
+                string clientSecret = Context?.Headers?["X-MCP-Secret"];
+                bool fromHeader = !string.IsNullOrEmpty(clientSecret);
+                if (!fromHeader)
+                {
+                    // Backwards-compat fallback to query param.
+                    var query = Context?.QueryString;
+                    clientSecret = query?["secret"];
+                }
+
                 // SEC-#412: constant-time comparison prevents a timing-based side channel
                 // that could otherwise let an attacker recover the secret one character at
                 // a time by measuring response latency (exploitable over the network when
@@ -984,6 +999,11 @@ namespace McpUnity.Server
                     McpDebug.LogWarning($"[MCP Unity] Client rejected: invalid or missing shared secret");
                     Context.WebSocket.Close(WebSocketSharp.CloseStatusCode.PolicyViolation, "Invalid shared secret");
                     return;
+                }
+
+                if (!fromHeader)
+                {
+                    McpDebug.LogWarning("[MCP Unity] Client authenticated via deprecated ?secret= query param. Update the bridge to pass X-MCP-Secret header (SEC-#420).");
                 }
             }
 
@@ -1015,10 +1035,15 @@ namespace McpUnity.Server
             {
                 var message = e.Data;
 
-                // S3: Reject oversized messages to prevent OOM from malicious/accidental huge payloads
+                // S3 / FIX-#131: Reject oversized messages with a JSON-RPC error response instead
+                // of dropping silently, so the client knows why its request never returned.
                 if (message.Length > MaxMessageSize)
                 {
                     McpDebug.LogWarning($"[MCP Unity] Rejected oversized message: {message.Length} bytes (max {MaxMessageSize})");
+                    // Send a generic protocol error. We cannot parse the message to recover id/method,
+                    // so use id=null (JSON-RPC permits null for parse/server errors).
+                    string err = $@"{{""jsonrpc"":""2.0"",""id"":null,""error"":{{""code"":-32600,""message"":""Message exceeds max size ({MaxMessageSize} bytes)""}}}}";
+                    try { Send(err); } catch { /* socket may already be torn down */ }
                     return;
                 }
 

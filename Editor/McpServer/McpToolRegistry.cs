@@ -37,12 +37,34 @@ namespace McpUnity.Server
         // against concurrent tools/list reads + unity_enable_tool_category writes.
         private readonly object _lock = new object();
 
+        // FIX-#183: allowed categories. Registering a tool under an unknown category
+        // silently loses it because EnableCategory() would never match. Validate here.
+        private static readonly HashSet<string> _knownCategories = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "core", "asset", "material", "ui", "animator", "terrain", "physics",
+            "audio", "rendering", "scripting", "build", "input", "particles",
+            "memory", "scene", "advanced", "diagnostics"
+        };
+
         /// <summary>
         /// Set the current category for subsequent RegisterTool calls.
+        /// FIX-#183: rejects unknown categories (logs and falls back to "core") so a typo
+        /// like "Animator" → "Anmator" won't silently strand tools.
         /// </summary>
         public void SetCurrentCategory(string category)
         {
-            _currentCategory = category ?? "core";
+            if (string.IsNullOrEmpty(category))
+            {
+                _currentCategory = "core";
+                return;
+            }
+            if (!_knownCategories.Contains(category))
+            {
+                McpDebug.LogWarning($"[MCP Registry] Unknown category '{category}' — tools would not be loadable. Falling back to 'core'. Add it to _knownCategories if intentional.");
+                _currentCategory = "core";
+                return;
+            }
+            _currentCategory = category;
         }
 
         /// <summary>

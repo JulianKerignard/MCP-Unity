@@ -27,6 +27,11 @@ namespace McpUnity.Editor
     {
         public const string Id = "McpUnity/Status";
 
+        // FIX-#288: store handler reference so it can be unsubscribed when the element
+        // is detached from the panel. Anonymous lambdas cannot be unsubscribed; this
+        // accumulated subscriptions every time the overlay was recreated.
+        private System.Action<bool> _onServerStateChanged;
+
         public McpStatusElement()
         {
             text = "MCP";
@@ -34,7 +39,20 @@ namespace McpUnity.Editor
             clicked += OnClick;
 
             UpdateStatus();
-            McpServerStatus.OnServerStateChanged += _ => UpdateStatus();
+            _onServerStateChanged = _ => UpdateStatus();
+            McpServerStatus.OnServerStateChanged += _onServerStateChanged;
+
+            RegisterCallback<DetachFromPanelEvent>(OnDetach);
+        }
+
+        private void OnDetach(DetachFromPanelEvent _)
+        {
+            clicked -= OnClick;
+            if (_onServerStateChanged != null)
+            {
+                McpServerStatus.OnServerStateChanged -= _onServerStateChanged;
+                _onServerStateChanged = null;
+            }
         }
 
         private void UpdateStatus()
@@ -73,11 +91,27 @@ namespace McpUnity.Editor
     {
         public const string Id = "McpUnity/Toggle";
 
+        // FIX-#288: see McpStatusElement.
+        private System.Action<bool> _onServerStateChanged;
+
         public McpToggleElement()
         {
             UpdateButton();
             clicked += OnClick;
-            McpServerStatus.OnServerStateChanged += _ => UpdateButton();
+            _onServerStateChanged = _ => UpdateButton();
+            McpServerStatus.OnServerStateChanged += _onServerStateChanged;
+
+            RegisterCallback<DetachFromPanelEvent>(OnDetach);
+        }
+
+        private void OnDetach(DetachFromPanelEvent _)
+        {
+            clicked -= OnClick;
+            if (_onServerStateChanged != null)
+            {
+                McpServerStatus.OnServerStateChanged -= _onServerStateChanged;
+                _onServerStateChanged = null;
+            }
         }
 
         private void UpdateButton()
