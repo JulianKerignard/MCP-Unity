@@ -689,6 +689,19 @@ namespace McpUnity.Server
             if (layer1 < 0) return McpToolResult.Error($"Layer '{layer1Name}' not found");
             if (layer2 < 0) return McpToolResult.Error($"Layer '{layer2Name}' not found");
 
+            // FIX-#384: record the DynamicsManager asset before mutating Physics layer matrix
+            // so Ctrl+Z reverts the change. Physics.IgnoreLayerCollision writes into
+            // ProjectSettings/DynamicsManager.asset which is a regular Unity Object.
+            try
+            {
+                var assets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/DynamicsManager.asset");
+                if (assets != null && assets.Length > 0 && assets[0] != null)
+                {
+                    UnityEditor.Undo.RecordObject(assets[0], "MCP Set Physics Layer Collision");
+                }
+            }
+            catch { /* best-effort — fall through to the actual change */ }
+
             // ignoreLayerCollision is the opposite of collide
             Physics.IgnoreLayerCollision(layer1, layer2, !collide);
 
