@@ -48,6 +48,18 @@ namespace McpUnity.Editor
                 changed = enabled ? reg.EnableCategory(category) : reg.DisableCategory(category);
             }
 
+            // FIX-#405: propagate to Chat panel's ToolCategoryManager so the Settings UI
+            // toggles also affect which tools the chat session can invoke. Without this,
+            // disabling a server-side category did nothing for chat tool filtering.
+            try
+            {
+                McpUnity.Chat.ToolCategoryManager.SetCategoryEnabled(category, enabled);
+            }
+            catch (System.Exception ex)
+            {
+                McpDebug.LogWarning($"[MCP] Could not mirror category '{category}' to chat tool filter: {ex.Message}");
+            }
+
             if (changed && McpUnityServer.IsRunning && McpUnityServer.ConnectedClientCount > 0)
             {
                 McpUnityServer.NotifyToolsListChanged();
@@ -70,6 +82,10 @@ namespace McpUnity.Editor
                 EditorPrefs.SetBool(PrefPrefix + info.name, enabled);
                 bool changed = enabled ? reg.EnableCategory(info.name) : reg.DisableCategory(info.name);
                 anyChanged |= changed;
+
+                // FIX-#405: mirror to Chat panel's tool filter.
+                try { McpUnity.Chat.ToolCategoryManager.SetCategoryEnabled(info.name, enabled); }
+                catch { /* category id may not exist in chat manager — safe to ignore */ }
             }
 
             if (anyChanged && McpUnityServer.IsRunning && McpUnityServer.ConnectedClientCount > 0)
