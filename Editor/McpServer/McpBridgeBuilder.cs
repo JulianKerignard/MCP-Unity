@@ -72,11 +72,26 @@ namespace McpUnity.Editor
                     return result;
                 }
 
-                string stdout = p.StandardOutput.ReadToEnd();
-                string stderr = p.StandardError.ReadToEnd();
-                p.WaitForExit();
+                // FIX-#397: drain pipes asynchronously to avoid OS pipe-buffer deadlock
+                // (npm/tsc can emit > 64KB), and cap WaitForExit at 5 minutes so a hung
+                // npm install does not freeze the editor indefinitely.
+                var stdoutBuilder = new System.Text.StringBuilder();
+                var stderrBuilder = new System.Text.StringBuilder();
+                p.OutputDataReceived += (_, e) => { if (e.Data != null) stdoutBuilder.AppendLine(e.Data); };
+                p.ErrorDataReceived  += (_, e) => { if (e.Data != null) stderrBuilder.AppendLine(e.Data); };
+                p.BeginOutputReadLine();
+                p.BeginErrorReadLine();
 
-                result.Output = stdout + stderr;
+                const int TimeoutMs = 5 * 60 * 1000;
+                if (!p.WaitForExit(TimeoutMs))
+                {
+                    try { p.Kill(); } catch { /* best-effort */ }
+                    result.Output = $"npm build timed out after {TimeoutMs / 1000}s. Check network / disk and retry from a terminal.";
+                    result.Success = false;
+                    return result;
+                }
+
+                result.Output = stdoutBuilder.ToString() + stderrBuilder.ToString();
                 result.Success = p.ExitCode == 0 && IsBuilt();
             }
             catch (Exception ex)
