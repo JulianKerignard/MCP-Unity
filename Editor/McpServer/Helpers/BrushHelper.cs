@@ -31,24 +31,26 @@ namespace McpUnity.Helpers
         /// Maps lower-case brush name → loaded Texture2D pixels (read-only copy).
         /// Populated lazily on first use of a given brush name.
         /// FIX-#125: capped to avoid unbounded growth across long Editor sessions.
+        /// REVIEW-#10: insertion order is tracked explicitly via _insertionOrder because
+        /// Dictionary enumeration order is officially unspecified (CoreCLR happens to
+        /// preserve it, older Mono hashes by bucket). Drop oldest from the queue, not from
+        /// a Dictionary.Keys snapshot.
         /// </summary>
         private const int MaxCachedBrushes = 128;
         private static readonly Dictionary<string, CachedBrush> _textureCache
             = new Dictionary<string, CachedBrush>();
+        private static readonly Queue<string> _insertionOrder = new Queue<string>(MaxCachedBrushes);
 
         /// <summary>
-        /// FIX-#125: enforce a soft cap on _textureCache. When the cache is full and a new
-        /// brush is being added, clear the oldest half. Brush textures are inexpensive to
-        /// reload (just a Texture2D import) so the trade-off favors bounded memory.
+        /// FIX-#125 / REVIEW-#10: enforce soft cap, dropping the oldest entry per LRU
+        /// insertion order. Called BEFORE inserting a new entry.
         /// </summary>
         private static void EnforceCacheBound()
         {
-            if (_textureCache.Count < MaxCachedBrushes) return;
-            int drop = _textureCache.Count / 2;
-            var keys = new List<string>(_textureCache.Keys);
-            for (int i = 0; i < drop && i < keys.Count; i++)
+            while (_textureCache.Count >= MaxCachedBrushes && _insertionOrder.Count > 0)
             {
-                _textureCache.Remove(keys[i]);
+                string oldest = _insertionOrder.Dequeue();
+                _textureCache.Remove(oldest);
             }
         }
 
@@ -165,6 +167,8 @@ namespace McpUnity.Helpers
                     var px = ReadTexturePixels(tex);
                     if (px == null) continue;
 
+                    // REVIEW-#10: bound the cache here too.
+                    EnforceCacheBound();
                     _textureCache[key] = new CachedBrush
                     {
                         pixels = px,
@@ -172,6 +176,7 @@ namespace McpUnity.Helpers
                         height = tex.height,
                         resolvedName = bName
                     };
+                    _insertionOrder.Enqueue(key);
                     return bName;
                 }
                 return null;
@@ -181,7 +186,8 @@ namespace McpUnity.Helpers
             var pixels = ReadTexturePixels(found);
             if (pixels == null) return null;
 
-            // FIX-#125: enforce soft cap before inserting.
+            // FIX-#125 / REVIEW-#10: enforce soft cap before inserting; track insertion
+            // order in a dedicated queue so eviction is deterministic across runtimes.
             EnforceCacheBound();
             _textureCache[key] = new CachedBrush
             {
@@ -190,6 +196,7 @@ namespace McpUnity.Helpers
                 height = found.height,
                 resolvedName = foundName
             };
+            _insertionOrder.Enqueue(key);
             return foundName;
         }
 
