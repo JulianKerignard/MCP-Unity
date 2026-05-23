@@ -434,6 +434,13 @@ namespace McpUnity.Editor
                 GUILayout.Width(width));
             if (newEnabled != isEnabled)
             {
+                // REVIEW-#2: write to both systems so the chat-section toggle is symmetric
+                // with the server-section toggle (which already mirrors to chat via
+                // FIX-#405). McpServerCategorySettings.SetCategoryEnabled internally calls
+                // ToolCategoryManager.SetCategoryEnabled, so the call below is the canonical
+                // path. We follow up with a direct ToolCategoryManager write so chat-only
+                // categories not known to the server registry still toggle.
+                McpServerCategorySettings.SetCategoryEnabled(cat.id, newEnabled);
                 ToolCategoryManager.SetCategoryEnabled(cat.id, newEnabled);
             }
         }

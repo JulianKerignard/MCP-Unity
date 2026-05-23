@@ -17,9 +17,11 @@ namespace McpUnity.Server
     /// </summary>
     public partial class McpUnityServer
     {
-        // SEC-04: Regex for valid C# identifiers — blocks code injection via scriptName/namespace
+        // SEC-04: Regex for valid C# identifiers — blocks code injection via scriptName/namespace.
+        // REVIEW-#9: each dotted segment may optionally start with `@` (verbatim-identifier prefix)
+        // so reserved-keyword segments auto-escaped by EscapeReservedKeywordSegments validate.
         private static readonly Regex ValidCSharpIdentifier = new Regex(
-            @"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$",
+            @"^@?[a-zA-Z_][a-zA-Z0-9_]*(\.@?[a-zA-Z_][a-zA-Z0-9_]*)*$",
             RegexOptions.Compiled);
 
         // H-03: Cache type lookups to avoid iterating all assemblies on every call (can be very slow).
@@ -74,12 +76,37 @@ namespace McpUnity.Server
                 return $"{paramName} is too long (max 256 characters)";
 
             // FIX-#157: reject reserved keywords (each dot-separated segment).
+            // REVIEW-#9: segments prefixed with `@` are already verbatim-escaped → allowed.
             foreach (var segment in value.Split('.'))
             {
+                if (segment.Length > 0 && segment[0] == '@') continue;
                 if (_csharpReservedKeywords.Contains(segment))
                     return $"{paramName} '{value}' uses C# reserved keyword '{segment}'. Use '@{segment}' or rename.";
             }
             return null; // valid
+        }
+
+        /// <summary>
+        /// REVIEW-#9: prefix each dotted segment that matches a reserved keyword with `@`,
+        /// turning e.g. "MyNamespace.true.Sub" → "MyNamespace.@true.Sub". The caller is
+        /// expected to run this BEFORE ValidateIdentifier so users / agents can pass
+        /// natural names without manually adding `@`.
+        /// </summary>
+        private static string EscapeReservedKeywordSegments(string value)
+        {
+            if (string.IsNullOrEmpty(value) || value.IndexOf('.') < 0 && !_csharpReservedKeywords.Contains(value))
+                return value;
+            var segments = value.Split('.');
+            bool changed = false;
+            for (int i = 0; i < segments.Length; i++)
+            {
+                if (_csharpReservedKeywords.Contains(segments[i]))
+                {
+                    segments[i] = "@" + segments[i];
+                    changed = true;
+                }
+            }
+            return changed ? string.Join(".", segments) : value;
         }
 
         /// <summary>
@@ -191,6 +218,10 @@ namespace McpUnity.Server
                 var (scriptName, scriptNameErr) = RequireArg(args, "scriptName");
                 if (scriptNameErr != null) return scriptNameErr;
 
+                // REVIEW-#9: auto-escape reserved-keyword segments before validation so
+                // callers can pass natural names ("MyNs.true.Sub") without manual `@`.
+                scriptName = EscapeReservedKeywordSegments(scriptName);
+
                 // SEC-04: Validate scriptName is a safe C# identifier
                 var nameValidation = ValidateIdentifier(scriptName, "scriptName");
                 if (nameValidation != null) return McpToolResult.Error(nameValidation);
@@ -211,6 +242,7 @@ namespace McpUnity.Server
                 // SEC-04: Validate namespace if provided
                 if (!string.IsNullOrEmpty(namespaceName))
                 {
+                    namespaceName = EscapeReservedKeywordSegments(namespaceName); // REVIEW-#9
                     var nsValidation = ValidateIdentifier(namespaceName, "namespace");
                     if (nsValidation != null) return McpToolResult.Error(nsValidation);
                 }

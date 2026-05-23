@@ -39,7 +39,20 @@ namespace McpUnity.Editor
             clicked += OnClick;
 
             UpdateStatus();
-            _onServerStateChanged = _ => UpdateStatus();
+            // REVIEW-#8: handler self-unsubscribes if the element is no longer attached
+            // to a panel. Guards against GC-without-detach: if the SceneView is destroyed
+            // without raising DetachFromPanelEvent, panel becomes null and the handler
+            // cleans itself up on the next state change. Without this, the static event
+            // held a strong ref to the element across SceneView opens.
+            _onServerStateChanged = _ =>
+            {
+                if (panel == null)
+                {
+                    McpServerStatus.OnServerStateChanged -= _onServerStateChanged;
+                    return;
+                }
+                UpdateStatus();
+            };
             McpServerStatus.OnServerStateChanged += _onServerStateChanged;
 
             RegisterCallback<DetachFromPanelEvent>(OnDetach);
@@ -98,7 +111,16 @@ namespace McpUnity.Editor
         {
             UpdateButton();
             clicked += OnClick;
-            _onServerStateChanged = _ => UpdateButton();
+            // REVIEW-#8: see McpStatusElement comment.
+            _onServerStateChanged = _ =>
+            {
+                if (panel == null)
+                {
+                    McpServerStatus.OnServerStateChanged -= _onServerStateChanged;
+                    return;
+                }
+                UpdateButton();
+            };
             McpServerStatus.OnServerStateChanged += _onServerStateChanged;
 
             RegisterCallback<DetachFromPanelEvent>(OnDetach);

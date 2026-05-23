@@ -397,13 +397,16 @@ namespace McpUnity.Editor
 
         /// <summary>
         /// JSON-safe string escape (RFC 8259). Escapes ", \, control chars (incl. \n, \r, \t, \b, \f).
+        /// REVIEW-#5: handle UTF-16 surrogate pairs by emitting both halves as \uXXXX\uYYYY
+        /// rather than letting a strict parser see a lone surrogate in the output.
         /// </summary>
         private static string EscapeJsonString(string value)
         {
             if (string.IsNullOrEmpty(value)) return string.Empty;
             var sb = new System.Text.StringBuilder(value.Length + 8);
-            foreach (char c in value)
+            for (int i = 0; i < value.Length; i++)
             {
+                char c = value[i];
                 switch (c)
                 {
                     case '"': sb.Append("\\\""); break;
@@ -415,9 +418,24 @@ namespace McpUnity.Editor
                     case '\t': sb.Append("\\t"); break;
                     default:
                         if (c < 0x20)
+                        {
                             sb.AppendFormat("\\u{0:x4}", (int)c);
+                        }
+                        else if (char.IsHighSurrogate(c) && i + 1 < value.Length && char.IsLowSurrogate(value[i + 1]))
+                        {
+                            // Emit the valid surrogate pair as two explicit \uXXXX escapes.
+                            sb.AppendFormat("\\u{0:x4}\\u{1:x4}", (int)c, (int)value[i + 1]);
+                            i++; // consume low surrogate
+                        }
+                        else if (char.IsSurrogate(c))
+                        {
+                            // Lone surrogate — escape as \uXXXX rather than emit raw (RFC 8259 §7).
+                            sb.AppendFormat("\\u{0:x4}", (int)c);
+                        }
                         else
+                        {
                             sb.Append(c);
+                        }
                         break;
                 }
             }
@@ -499,6 +517,7 @@ namespace McpUnity.Editor
         /// </summary>
         public void Save()
         {
+            string tmpPath = SettingsPath + ".tmp";
             try
             {
                 string directory = Path.GetDirectoryName(SettingsPath);
@@ -512,7 +531,6 @@ namespace McpUnity.Editor
                 // FIX-#151: atomic write — write to .tmp then move into place so a crash
                 // mid-write cannot corrupt the settings file. The OS-level rename is atomic
                 // on the same filesystem.
-                string tmpPath = SettingsPath + ".tmp";
                 File.WriteAllText(tmpPath, json);
                 if (File.Exists(SettingsPath))
                 {
@@ -526,6 +544,16 @@ namespace McpUnity.Editor
             catch (Exception e)
             {
                 Debug.LogError($"[MCP Unity] Failed to save settings: {e.Message}");
+            }
+            finally
+            {
+                // REVIEW-#7: clean up orphan .tmp on partial-write failure. Successful save
+                // already moved/replaced tmpPath, so this is a no-op in the happy path.
+                try
+                {
+                    if (File.Exists(tmpPath)) File.Delete(tmpPath);
+                }
+                catch { /* best-effort cleanup */ }
             }
         }
 

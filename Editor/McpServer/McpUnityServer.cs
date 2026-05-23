@@ -981,7 +981,23 @@ namespace McpUnity.Server
             var settings = McpUnity.Editor.McpSettings.Instance;
             if (settings.IsSecretEnabled)
             {
-                string clientSecret = Context?.Headers?["X-MCP-Secret"];
+                // REVIEW-#6: HTTP header names are case-insensitive (RFC 7230). Iterate
+                // AllKeys with OrdinalIgnoreCase compare so a client sending `x-mcp-secret`
+                // is accepted. WebSocketSharp's NameValueCollection ctor varies across
+                // versions — don't rely on its indexer being case-insensitive.
+                string clientSecret = null;
+                var headers = Context?.Headers;
+                if (headers != null)
+                {
+                    foreach (string key in headers.AllKeys)
+                    {
+                        if (key != null && string.Equals(key, "X-MCP-Secret", System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            clientSecret = headers[key];
+                            break;
+                        }
+                    }
+                }
                 bool fromHeader = !string.IsNullOrEmpty(clientSecret);
                 if (!fromHeader)
                 {
@@ -1035,15 +1051,22 @@ namespace McpUnity.Server
             {
                 var message = e.Data;
 
-                // S3 / FIX-#131: Reject oversized messages with a JSON-RPC error response instead
-                // of dropping silently, so the client knows why its request never returned.
+                // S3 / FIX-#131 / REVIEW-#3: Reject oversized messages. We try to peek at the
+                // first ~256 bytes for an `"id"` token to decide whether to reply: if the
+                // payload looks like a JSON-RPC request (has an id) we reply with an error
+                // so the caller's pending promise resolves; if it looks like a notification
+                // (no id) we drop silently, per JSON-RPC 2.0 which forbids responses to
+                // notifications.
                 if (message.Length > MaxMessageSize)
                 {
                     McpDebug.LogWarning($"[MCP Unity] Rejected oversized message: {message.Length} bytes (max {MaxMessageSize})");
-                    // Send a generic protocol error. We cannot parse the message to recover id/method,
-                    // so use id=null (JSON-RPC permits null for parse/server errors).
-                    string err = $@"{{""jsonrpc"":""2.0"",""id"":null,""error"":{{""code"":-32600,""message"":""Message exceeds max size ({MaxMessageSize} bytes)""}}}}";
-                    try { Send(err); } catch { /* socket may already be torn down */ }
+                    string head = message.Length > 1024 ? message.Substring(0, 1024) : message;
+                    bool looksLikeRequest = head.IndexOf("\"id\"", System.StringComparison.Ordinal) >= 0;
+                    if (looksLikeRequest)
+                    {
+                        string err = $@"{{""jsonrpc"":""2.0"",""id"":null,""error"":{{""code"":-32600,""message"":""Message exceeds max size ({MaxMessageSize} bytes)""}}}}";
+                        try { Send(err); } catch { /* socket may already be torn down */ }
+                    }
                     return;
                 }
 
