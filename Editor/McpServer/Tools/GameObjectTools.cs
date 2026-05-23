@@ -373,7 +373,8 @@ namespace McpUnity.Server
                     }
                     else
                     {
-                        resultData = HierarchyHelpers.GetObjectNames(rootObjects, includeInactive);
+                        // FIX-#fc2: pass rootOnly through (was previously ignored when no filters were set).
+                        resultData = HierarchyHelpers.GetObjectNames(rootObjects, includeInactive, rootOnly);
                     }
                     break;
 

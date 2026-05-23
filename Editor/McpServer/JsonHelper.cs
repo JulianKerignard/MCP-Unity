@@ -28,6 +28,16 @@ namespace McpUnity.Server
         private static System.Reflection.FieldInfo[] GetCachedFields(Type type)
             => _fieldsCache.GetOrAdd(type, t => t.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance));
 
+        // FIX-#fc1: reference-equality comparer for the circular-reference visited set.
+        // Mono / .NET Standard 2.1 (used by Unity) don't ship ReferenceEqualityComparer, so
+        // we use this lightweight equivalent.
+        private static readonly RefEqualityComparer _referenceEqualityComparer = new RefEqualityComparer();
+        private sealed class RefEqualityComparer : IEqualityComparer<object>
+        {
+            public new bool Equals(object x, object y) => object.ReferenceEquals(x, y);
+            public int GetHashCode(object obj) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
+        }
+
         public static string ToJson(object obj)
         {
             if (_sharedSb == null) _sharedSb = new System.Text.StringBuilder(4096);
@@ -117,8 +127,13 @@ namespace McpUnity.Server
                 return;
             }
 
-            // Complex objects — reflection-based
-            if (visited == null) visited = new HashSet<object>();
+            // Complex objects — reflection-based.
+            // FIX-#fc1: use reference equality so siblings with identical content (e.g. two
+            // Dictionary<string,object> with same {name, path} keys) aren't flagged as circular.
+            // Some .NET types override Equals to do value comparison — default HashSet<object>
+            // would then collapse equivalent-but-distinct instances. ReferenceEqualityComparer
+            // is .NET 5+; we use a hand-rolled equivalent for Mono / NetStandard 2.1 builds.
+            if (visited == null) visited = new HashSet<object>(_referenceEqualityComparer);
             if (!visited.Add(obj)) { sb.Append("\"[circular]\""); return; }
 
             var type = obj.GetType();

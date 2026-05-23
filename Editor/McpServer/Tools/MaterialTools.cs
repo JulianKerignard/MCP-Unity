@@ -101,7 +101,12 @@ namespace McpUnity.Server
             var material = MaterialHelpers.FindMaterial(materialPath, gameObjectPath, materialIndex);
             if (material == null)
             {
-                return McpToolResult.Error($"Material not found. Path: {materialPath}, GameObject: {gameObjectPath}");
+                // FIX-#fc5: actionable error message that explains the common cause
+                // (LODGroup root with no direct MeshRenderer — material is on the LOD children).
+                string hint = !string.IsNullOrEmpty(gameObjectPath)
+                    ? $"GameObject '{gameObjectPath}' has no Renderer in slot {materialIndex}, or the Renderer has no material assigned. Tip: if this is a prefab with a LODGroup, materials live on the LOD child Renderers (try '{gameObjectPath}/<LOD child name>')."
+                    : $"No material asset found at '{materialPath}'.";
+                return McpToolResult.Error(hint);
             }
 
             var result = MaterialHelpers.SerializeMaterial(material);
@@ -149,7 +154,12 @@ namespace McpUnity.Server
             var material = MaterialHelpers.FindMaterial(materialPath, gameObjectPath, materialIndex);
             if (material == null)
             {
-                return McpToolResult.Error($"Material not found. Path: {materialPath}, GameObject: {gameObjectPath}");
+                // FIX-#fc5: actionable error message that explains the common cause
+                // (LODGroup root with no direct MeshRenderer — material is on the LOD children).
+                string hint = !string.IsNullOrEmpty(gameObjectPath)
+                    ? $"GameObject '{gameObjectPath}' has no Renderer in slot {materialIndex}, or the Renderer has no material assigned. Tip: if this is a prefab with a LODGroup, materials live on the LOD child Renderers (try '{gameObjectPath}/<LOD child name>')."
+                    : $"No material asset found at '{materialPath}'.";
+                return McpToolResult.Error(hint);
             }
 
             // Record for undo
