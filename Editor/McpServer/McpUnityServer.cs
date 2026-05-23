@@ -386,6 +386,10 @@ namespace McpUnity.Server
             RegisterReferenceTools();         // set_reference, set_reference_array
             RegisterScriptableObjectTools();  // create, list_types, modify
 
+            // ── PLACEMENT ──────────────────────────────────────────────
+            _toolRegistry.SetCurrentCategory("placement");
+            RegisterPlacementTools();         // raycast_place, align_to_surface, scatter_on_surface, snap_to_grid, replace_with_prefab, array_3d
+
             _toolRegistry.SetCurrentCategory("core"); // reset
 
             McpDebug.Log($"[MCP Unity] Registered {_toolRegistry.Count} tools ({_toolRegistry.VisibleCount} visible in core). " +
@@ -956,6 +960,7 @@ namespace McpUnity.Server
         static partial void RegisterPackageManagerTools();
         static partial void RegisterAssetImportTools();
         static partial void RegisterInputSystemTools();
+        static partial void RegisterPlacementTools();
 
         #endregion
     }

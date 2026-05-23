@@ -391,6 +391,24 @@ namespace McpUnity.Chat
                     "unity_add_input_binding",
                 }
             },
+            // ----------------------------------------------------------------
+            // Placement / level design (6 tools — raycast-based placement,
+            // grid snap, scatter, prefab swap, 3D array)
+            // ----------------------------------------------------------------
+            new ToolCategory
+            {
+                id = "placement",
+                displayName = "Placement",
+                toolNames = new[]
+                {
+                    "unity_raycast_place",
+                    "unity_align_to_surface",
+                    "unity_scatter_on_surface",
+                    "unity_snap_to_grid",
+                    "unity_replace_with_prefab",
+                    "unity_array_3d",
+                }
+            },
         };
 
         static ToolCategoryManager()
