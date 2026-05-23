@@ -45,7 +45,7 @@ namespace McpUnity.Server
         {
             "core", "asset", "material", "ui", "animator", "terrain", "physics",
             "audio", "rendering", "scripting", "build", "input", "particles",
-            "memory", "scene", "advanced", "diagnostics", "settings"
+            "memory", "scene", "advanced", "diagnostics", "settings", "placement"
         };
 
         /// <summary>
