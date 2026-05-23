@@ -29,16 +29,26 @@ namespace McpUnity.Utils
             // Normalize path separators
             path = path.Replace("\\", "/");
 
+            // FIX-#fc3: collapse double slashes (e.g. "Assets//Foo" → "Assets/Foo") and strip
+            // trailing slash so "Assets/Foo/" and "Assets/Foo" are treated identically.
+            while (path.Contains("//")) path = path.Replace("//", "/");
+            if (path.Length > 1 && path.EndsWith("/")) path = path.Substring(0, path.Length - 1);
+
             // Block path traversal attempts
             if (path.Contains(".."))
                 throw new ArgumentException("Path traversal (..) is not allowed for security reasons");
 
-            // Verify path starts with required prefix
-            if (!path.StartsWith(requiredPrefix, StringComparison.OrdinalIgnoreCase))
+            // FIX-#fc3: accept either the bare prefix root (e.g. "Assets") or descendants
+            // ("Assets/Foo"). Without this, callers passing parentPath="Assets" were rejected
+            // even though that's an obviously valid root reference.
+            string prefixRoot = requiredPrefix.TrimEnd('/');
+            bool atRoot = string.Equals(path, prefixRoot, StringComparison.OrdinalIgnoreCase);
+            bool inside = path.StartsWith(prefixRoot + "/", StringComparison.OrdinalIgnoreCase);
+            if (!atRoot && !inside)
                 throw new ArgumentException($"Path must be within '{requiredPrefix}' folder");
 
             // Block absolute paths outside project
-            if (path.StartsWith("/") && !path.StartsWith(requiredPrefix, StringComparison.OrdinalIgnoreCase))
+            if (path.StartsWith("/") && !inside && !atRoot)
                 throw new ArgumentException("Absolute paths outside project are not allowed");
 
             // SEC-03: Resolve symlinks to prevent path traversal via symbolic links

@@ -137,25 +137,28 @@ namespace McpUnity.Helpers
         /// <summary>
         /// Get just the names of objects (minimal output)
         /// </summary>
-        public static List<string> GetObjectNames(List<GameObject> objects, bool includeInactive)
+        public static List<string> GetObjectNames(List<GameObject> objects, bool includeInactive, bool rootOnly = false)
         {
             var result = new List<string>();
             foreach (var obj in objects)
             {
                 if (!includeInactive && !obj.activeSelf) continue;
-                CollectNames(obj, result, includeInactive);
+                CollectNames(obj, result, includeInactive, rootOnly);
             }
             return result;
         }
 
-        private static void CollectNames(GameObject obj, List<string> result, bool includeInactive)
+        // FIX-#fc2: respect rootOnly so list_gameobjects with outputMode='names' + rootOnly=true
+        // returns only the root names instead of flattening the entire hierarchy.
+        private static void CollectNames(GameObject obj, List<string> result, bool includeInactive, bool rootOnly)
         {
             result.Add(obj.name);
+            if (rootOnly) return;
             for (int i = 0; i < obj.transform.childCount; i++)
             {
                 var child = obj.transform.GetChild(i).gameObject;
                 if (!includeInactive && !child.activeSelf) continue;
-                CollectNames(child, result, includeInactive);
+                CollectNames(child, result, includeInactive, false);
             }
         }
 
