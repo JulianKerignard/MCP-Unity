@@ -537,7 +537,9 @@ namespace McpUnity.Server
                 if (go == null)
                     return McpToolResult.Error($"GameObject not found: {gameObjectPath}");
 
-                var fitter = go.GetComponent<ContentSizeFitter>() ?? go.AddComponent<ContentSizeFitter>();
+                // SEC-#441: use Undo.AddComponent for newly added components so undo properly
+                // removes the component; RecordObject alone only reverts property changes.
+                var fitter = go.GetComponent<ContentSizeFitter>() ?? Undo.AddComponent<ContentSizeFitter>(go);
                 Undo.RecordObject(fitter, "Add ContentSizeFitter");
 
                 string hFit = ArgumentParser.GetString(args, "horizontalFit", "Unconstrained");
@@ -572,7 +574,9 @@ namespace McpUnity.Server
                 if (go == null)
                     return McpToolResult.Error($"GameObject not found: {gameObjectPath}");
 
-                var layoutElement = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
+                // SEC-#441: use Undo.AddComponent for newly added components so undo properly
+                // removes the component; RecordObject alone only reverts property changes.
+                var layoutElement = go.GetComponent<LayoutElement>() ?? Undo.AddComponent<LayoutElement>(go);
                 Undo.RecordObject(layoutElement, "Add LayoutElement");
 
                 var modified = new List<string>();

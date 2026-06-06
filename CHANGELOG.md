@@ -5,6 +5,15 @@ All notable changes to MCP Unity — AI Editor Assistant will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **UI EventSystem now works with the new Input System** — `unity_create_canvas` adds `InputSystemUIInputModule` (via reflection) when the new Input System is the active backend, instead of the non-functional `StandaloneInputModule` (UI was not clickable on Input-System-only projects)
+- **`ScreenSpaceCamera` canvas auto-assigns a render camera** — `unity_create_canvas` now sets `worldCamera` to `Camera.main` (or warns when none exists) so the canvas actually renders
+- **Undo now removes added layout components** — `unity_add_content_size_fitter` and `unity_add_layout_element` use `Undo.AddComponent` so Ctrl+Z removes the component (matching the existing layout-group fix), instead of only reverting properties
+- **UI tools report when an operation had no effect** — `unity_create_ui_element` / `unity_modify_ui_element` return `warnings` when a color can't be parsed or a sprite can't be loaded, instead of reporting success silently
+- Added `ColorParser.TryParse` so callers can distinguish an unparseable color from a valid one
+
 ## [1.1.0] - 2026-03-14
 
 ### Added
