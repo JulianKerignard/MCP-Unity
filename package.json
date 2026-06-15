@@ -1,6 +1,6 @@
 {
     "name": "com.juliank.mcp-unity",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "displayName": "Conductor MCP \u2014 AI Editor Assistant",
     "description": "Connect any AI assistant (Claude, GPT-4, Gemini, Ollama...) to your Unity Editor via Model Context Protocol. 165 Unity tools + multi-provider AI Chat panel built-in.",
     "unity": "6000.0",
