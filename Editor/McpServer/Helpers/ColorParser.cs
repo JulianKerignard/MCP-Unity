@@ -19,27 +19,42 @@ namespace McpUnity.Helpers
         /// <returns>Parsed Color or defaultColor</returns>
         public static Color Parse(string colorString, Color defaultColor)
         {
+            return TryParse(colorString, out var color) ? color : defaultColor;
+        }
+
+        /// <summary>
+        /// Try to parse a color string. Returns false when the value is empty or unrecognized,
+        /// so callers can surface a clear error instead of silently falling back to a default.
+        /// </summary>
+        /// <param name="colorString">The color string to parse</param>
+        /// <param name="color">Parsed color (Color.white when parsing fails)</param>
+        /// <returns>True if the string was parsed into a color</returns>
+        public static bool TryParse(string colorString, out Color color)
+        {
+            color = Color.white;
+
             if (string.IsNullOrWhiteSpace(colorString))
-                return defaultColor;
+                return false;
 
             colorString = colorString.Trim();
 
             // Try hex format
             if (colorString.StartsWith("#"))
             {
-                if (TryParseHex(colorString, out var hexColor))
-                    return hexColor;
+                if (TryParseHex(colorString, out color))
+                    return true;
             }
 
             // Try Unity's built-in ColorUtility
-            if (ColorUtility.TryParseHtmlString(colorString, out var htmlColor))
-                return htmlColor;
+            if (ColorUtility.TryParseHtmlString(colorString, out color))
+                return true;
 
             // Try named colors
-            if (TryParseNamedColor(colorString, out var namedColor))
-                return namedColor;
+            if (TryParseNamedColor(colorString, out color))
+                return true;
 
-            return defaultColor;
+            color = Color.white;
+            return false;
         }
 
         /// <summary>

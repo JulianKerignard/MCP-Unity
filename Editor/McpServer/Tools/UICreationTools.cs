@@ -227,6 +227,7 @@ namespace McpUnity.Server
                 string renderMode = ArgumentParser.GetString(args, "renderMode", "ScreenSpaceOverlay");
                 bool createEventSystem = ArgumentParser.GetBool(args, "createEventSystem", true);
 
+                var warnings = new List<string>();
                 var canvasGO = new GameObject(canvasName);
                 Undo.RegisterCreatedObjectUndo(canvasGO, $"Create Canvas '{canvasName}'");
 
@@ -241,6 +242,13 @@ namespace McpUnity.Server
                     case "screenspacecamera":
                     case "camera":
                         canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                        // ScreenSpaceCamera renders nothing without a worldCamera. Auto-assign
+                        // the main camera when available, otherwise warn so the caller can fix it.
+                        if (Camera.main != null)
+                            canvas.worldCamera = Camera.main;
+                        else
+                            warnings.Add("Render mode is ScreenSpaceCamera but no Camera.main was found. " +
+                                "The canvas will not render until you assign a render camera.");
                         break;
                     case "worldspace":
                     case "world":
@@ -283,14 +291,15 @@ namespace McpUnity.Server
                     var eventSystemGO = new GameObject("EventSystem");
                     Undo.RegisterCreatedObjectUndo(eventSystemGO, "Create EventSystem");
                     eventSystemGO.AddComponent<EventSystem>();
-                    eventSystemGO.AddComponent<StandaloneInputModule>();
+                    AddEventSystemInputModule(eventSystemGO);
                 }
 
                 return McpResponse.Success($"Created Canvas '{canvasName}'", new
                 {
                     name = canvasName,
                     renderMode = canvas.renderMode.ToString(),
-                    hasEventSystem = UnityEngine.Object.FindAnyObjectByType<EventSystem>() != null
+                    hasEventSystem = UnityEngine.Object.FindAnyObjectByType<EventSystem>() != null,
+                    warnings = warnings.Count > 0 ? warnings : null
                 });
             }
             catch (Exception ex)
@@ -312,6 +321,7 @@ namespace McpUnity.Server
                 string colorStr = ArgumentParser.GetString(args, "color", null);
                 string spritePath = ArgumentParser.GetString(args, "sprite", null);
                 int fontSize = ArgumentParser.GetInt(args, "fontSize", 14);
+                var warnings = new List<string>();
 
                 Transform parent = null;
                 if (!string.IsNullOrEmpty(parentPath))
@@ -394,25 +404,36 @@ namespace McpUnity.Server
 
                 if (!string.IsNullOrEmpty(colorStr))
                 {
-                    var color = ColorParser.Parse(colorStr, Color.white);
+                    if (ColorParser.TryParse(colorStr, out var color))
+                    {
+                        var image = uiElement.GetComponent<Image>();
+                        if (image != null)
+                            image.color = color;
 
-                    var image = uiElement.GetComponent<Image>();
-                    if (image != null)
-                        image.color = color;
-
-                    var textComp = uiElement.GetComponent<TMP_Text>() ?? uiElement.GetComponentInChildren<TMP_Text>();
-                    if (textComp != null && createdType != "button")
-                        textComp.color = color;
+                        var textComp = uiElement.GetComponent<TMP_Text>() ?? uiElement.GetComponentInChildren<TMP_Text>();
+                        if (textComp != null && createdType != "button")
+                            textComp.color = color;
+                    }
+                    else
+                    {
+                        warnings.Add($"Could not parse color '{colorStr}'; color was not applied.");
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(spritePath))
                 {
                     var image = uiElement.GetComponent<Image>();
-                    if (image != null)
+                    if (image == null)
+                    {
+                        warnings.Add($"Element type '{createdType}' has no Image component; sprite was not applied.");
+                    }
+                    else
                     {
                         var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
                         if (sprite != null)
                             image.sprite = sprite;
+                        else
+                            warnings.Add($"Sprite not found at '{spritePath}'; sprite was not applied.");
                     }
                 }
 
@@ -431,7 +452,8 @@ namespace McpUnity.Server
                     parent = parent.name,
                     color = colorStr,
                     sprite = spritePath,
-                    fontSize = ArgumentParser.HasKey(args, "fontSize") ? fontSize : (int?)null
+                    fontSize = ArgumentParser.HasKey(args, "fontSize") ? fontSize : (int?)null,
+                    warnings = warnings.Count > 0 ? warnings : null
                 });
             }
             catch (Exception ex)
@@ -491,6 +513,7 @@ namespace McpUnity.Server
                 if (goErr != null) return goErr;
 
                 var modified = new List<string>();
+                var warnings = new List<string>();
 
                 // Text modification (TMP_Text on self or first child)
                 if (ArgumentParser.HasKey(args, "text"))
@@ -510,26 +533,31 @@ namespace McpUnity.Server
                 if (ArgumentParser.HasKey(args, "color"))
                 {
                     string colorStr = ArgumentParser.GetString(args, "color", "");
-                    var color = ColorParser.Parse(colorStr, Color.white);
-
-                    // Apply to Image if present
-                    var image = go.GetComponent<Image>();
-                    if (image != null)
+                    if (!ColorParser.TryParse(colorStr, out var color))
                     {
-                        Undo.RecordObject(image, "Modify UI Color");
-                        image.color = color;
-                        EditorUtility.SetDirty(image);
-                        modified.Add("imageColor");
+                        warnings.Add($"Could not parse color '{colorStr}'; color was not applied.");
                     }
-
-                    // Apply to text if no Image or if it's a Text element
-                    var textComp = go.GetComponent<TMP_Text>();
-                    if (textComp != null && image == null)
+                    else
                     {
-                        Undo.RecordObject(textComp, "Modify UI Text Color");
-                        textComp.color = color;
-                        EditorUtility.SetDirty(textComp);
-                        modified.Add("textColor");
+                        // Apply to Image if present
+                        var image = go.GetComponent<Image>();
+                        if (image != null)
+                        {
+                            Undo.RecordObject(image, "Modify UI Color");
+                            image.color = color;
+                            EditorUtility.SetDirty(image);
+                            modified.Add("imageColor");
+                        }
+
+                        // Apply to text if no Image or if it's a Text element
+                        var textComp = go.GetComponent<TMP_Text>();
+                        if (textComp != null && image == null)
+                        {
+                            Undo.RecordObject(textComp, "Modify UI Text Color");
+                            textComp.color = color;
+                            EditorUtility.SetDirty(textComp);
+                            modified.Add("textColor");
+                        }
                     }
                 }
 
@@ -599,7 +627,11 @@ namespace McpUnity.Server
                 {
                     string spritePath = ArgumentParser.GetString(args, "sprite", "");
                     var image = go.GetComponent<Image>();
-                    if (image != null && !string.IsNullOrEmpty(spritePath))
+                    if (image == null)
+                    {
+                        warnings.Add("Element has no Image component; sprite was not applied.");
+                    }
+                    else if (!string.IsNullOrEmpty(spritePath))
                     {
                         var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
                         if (sprite != null)
@@ -608,6 +640,10 @@ namespace McpUnity.Server
                             image.sprite = sprite;
                             EditorUtility.SetDirty(image);
                             modified.Add("sprite");
+                        }
+                        else
+                        {
+                            warnings.Add($"Sprite not found at '{spritePath}'; sprite was not applied.");
                         }
                     }
                 }
@@ -646,12 +682,19 @@ namespace McpUnity.Server
                 }
 
                 if (modified.Count == 0)
-                    return McpToolResult.Error("No modifiable UI properties found on this element, or no valid parameters provided.");
+                {
+                    string detail = warnings.Count > 0
+                        ? " " + string.Join(" ", warnings)
+                        : "";
+                    return McpToolResult.Error(
+                        "No modifiable UI properties found on this element, or no valid parameters provided." + detail);
+                }
 
                 return McpResponse.Success($"Modified UI element '{gameObjectPath}'", new
                 {
                     gameObject = gameObjectPath,
-                    modifiedProperties = modified
+                    modifiedProperties = modified,
+                    warnings = warnings.Count > 0 ? warnings : null
                 });
             }
             catch (Exception ex)
@@ -661,6 +704,27 @@ namespace McpUnity.Server
         }
 
         #endregion
+
+        /// <summary>
+        /// Add the appropriate input module to a freshly created EventSystem.
+        /// StandaloneInputModule only works with the legacy Input Manager; when the new Input
+        /// System is the active backend it is non-functional and logs an error, so we add
+        /// InputSystemUIInputModule instead (via reflection — this assembly does not reference
+        /// Unity.InputSystem directly).
+        /// </summary>
+        private static void AddEventSystemInputModule(GameObject eventSystemGO)
+        {
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+            var moduleType = Type.GetType(
+                "UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
+            if (moduleType != null)
+            {
+                eventSystemGO.AddComponent(moduleType);
+                return;
+            }
+#endif
+            eventSystemGO.AddComponent<StandaloneInputModule>();
+        }
 
         #region UI Element Factory Methods
 
